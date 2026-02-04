@@ -72,13 +72,20 @@ export function Footer() {
                 <Mail className="w-5 h-5" />
                 <span>contact@imovisit.cm</span>
               </div>
-              <div className="flex items-center gap-3 text-gray-300">
-                <Phone className="w-5 h-5" />
-                <span>+237 6XX XXX XXX</span>
-              </div>
-              <div className="flex items-center gap-3 text-gray-300">
-                <MapPin className="w-5 h-5" />
-                <span>Yaoundé, Cameroun</span>
+              <div className="flex-none space-y-4 gap-3 text-gray-300">
+                <p>Suivez nous sur :</p>
+                <div className="flex items-center gap-4">
+                  {socialLinks.map((social) => (
+                    <a
+                      key={social.label}
+                      href={social.href}
+                      className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
+                      aria-label={social.label}
+                    >
+                      <social.icon className="w-5 h-5" />
+                    </a>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -136,22 +143,10 @@ export function Footer() {
         </div>
 
         {/* Bottom */}
-        <div className="mt-12 pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="mt-12 pt-8 border-t border-white/10 flex flex-col items-center justify-between gap-4">
           <p className="text-gray-400 text-sm">
             © {currentYear} Imovisit. Tous droits réservés.
           </p>
-          <div className="flex items-center gap-4">
-            {socialLinks.map((social) => (
-              <a
-                key={social.label}
-                href={social.href}
-                className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
-                aria-label={social.label}
-              >
-                <social.icon className="w-5 h-5" />
-              </a>
-            ))}
-          </div>
         </div>
       </div>
     </footer>

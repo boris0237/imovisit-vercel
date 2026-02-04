@@ -27,44 +27,28 @@ export function Header() {
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
-          <div className="w-10 h-10 bg-imo-primary rounded-lg flex items-center justify-center">
-            <Image 
-              src={logo} 
-              alt="Logo Imovisit" 
-              width={800} 
-              height={600}
-              placeholder="blur"
-              className="-mt-1 bg-white"
-              />
-          </div>
-          <div className='flex-none gap-y-0'>
-              <div className="flex-none space-x-0.5">
-                <span className="text-2xl font-bold text-imo-primary">Imovisit</span>
-                <span className='bg-primary text-white text-2xl'>.com</span>
-               </div>
-               <div className='-mt-3'>
-                <span className='text-[7px]'>La visite des biens imobiliers devient plus facile</span>
-               </div>
+          <div className='flex '>
+            <div className="w-10 h-10 bg-imo-primary rounded-lg flex items-center justify-center -mt-1">
+              <Image 
+                src={logo} 
+                alt="Logo Imovisit" 
+                width={800} 
+                height={600}
+                placeholder="blur"
+                className="bg-white"
+                />
+            </div>
+            <div className='flex-none'>
+                <div className="flex-none space-x-0.5">
+                  <span className="text-2xl font-bold text-imo-primary">Imovisit</span>
+                  <span className='bg-primary text-white text-2xl'>.com</span>
+                 </div>
+                 <div className='-mt-3.5'>
+                  <span className='text-[7px]'>La visite des biens imobiliers devient plus facile</span>
+                 </div>
+            </div>
           </div>
         </Link>
-
-        {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-6">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-2 text-sm font-medium transition-colors ${
-                isActive(item.href)
-                  ? 'text-imo-primary'
-                  : 'text-gray-600 hover:text-imo-primary'
-              }`}
-            >
-              <item.icon className="w-4 h-4" />
-              {item.label}
-            </Link>
-          ))}
-        </nav>
 
         {/* Desktop Actions */}
         <div className="hidden md:flex items-center gap-3">
