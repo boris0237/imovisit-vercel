@@ -14,6 +14,7 @@ import { cities } from '@/data/mock';
 import {Header} from '@/components/Header';
 import {Footer} from '@/components/Footer';
 
+
 export default function Register() {
   const [accountType, setAccountType] = useState<'visitor' | 'owner'>('visitor');
   const [formData, setFormData] = useState({
