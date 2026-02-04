@@ -2,6 +2,8 @@
 
 import Link from 'next/link'
 import { Building2, Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
+import Image from 'next/image';
+import logo from '@/static/logo.png';
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -40,12 +42,27 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
           {/* Brand */}
           <div className="lg:col-span-2">
-            <Link href="/" className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
-                <Building2 className="w-6 h-6 text-imo-primary" />
-              </div>
-              <span className="text-xl font-bold">Imovisit</span>
-            </Link>
+            <Link href="/" className="flex items-center gap-2">
+          <div className="w-10 h-10 bg-imo-primary rounded-lg flex items-center justify-center">
+            <Image 
+              src={logo} 
+              alt="Logo Imovisit" 
+              width={800} 
+              height={600}
+              placeholder="blur"
+              className="-mt-1 bg-white"
+              />
+          </div>
+          <div className='flex-none gap-y-0'>
+              <div className="flex-none space-x-0.5">
+                <span className="text-2xl font-bold text-imo text-white">Imovisit</span>
+                <span className='bg-white text-imo-primary text-2xl'>.com</span>
+               </div>
+               <div className='-mt-3'>
+                <span className='text-[7px]'>La visite des biens imobiliers devient plus facile</span>
+               </div>
+          </div>
+        </Link>
             <p className="text-gray-300 mb-6 max-w-sm">
               La plateforme de référence pour les visites immobilières au Cameroun. 
               Trouvez votre bien idéal en toute confiance.

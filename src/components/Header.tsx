@@ -6,6 +6,8 @@ import { Menu, Home, Search, Heart, User, LogIn, Building2 } from 'lucide-react'
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { usePathname } from 'next/navigation';
+import logo from '@/static/logo.png';
+import Image from 'next/image';
 
 export function Header() {
   const [isOpen, setIsOpen] = useState(false);
@@ -26,9 +28,24 @@ export function Header() {
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
           <div className="w-10 h-10 bg-imo-primary rounded-lg flex items-center justify-center">
-            <Building2 className="w-6 h-6 text-white" />
+            <Image 
+              src={logo} 
+              alt="Logo Imovisit" 
+              width={800} 
+              height={600}
+              placeholder="blur"
+              className="-mt-1 bg-white"
+              />
           </div>
-          <span className="text-xl font-bold text-imo-primary">Imovisit</span>
+          <div className='flex-none gap-y-0'>
+              <div className="flex-none space-x-0.5">
+                <span className="text-2xl font-bold text-imo-primary">Imovisit</span>
+                <span className='bg-primary text-white text-2xl'>.com</span>
+               </div>
+               <div className='-mt-3'>
+                <span className='text-[7px]'>La visite des biens imobiliers devient plus facile</span>
+               </div>
+          </div>
         </Link>
 
         {/* Desktop Navigation */}
