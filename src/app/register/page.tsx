@@ -248,16 +248,16 @@ export default function Register() {
             </Tabs>
 
             <div className="mt-6 text-center text-sm">
-              <span className="text-gray-600">Déjà un compte ? </span>
+              <span className="text-gray-600"> Pas encore de compte ? </span>
               <Link href="/login" className="text-imo-primary hover:underline font-medium">
-                Se connecter
+                S'inscrire
               </Link>
             </div>
           </CardContent>
         </Card>
 
         <p className="text-center text-white/70 text-sm mt-8">
-          © 2024 Imovisit. Tous droits réservés.
+          © 2026 Imovisit. Tous droits réservés.
         </p>
       </div>
     </div>

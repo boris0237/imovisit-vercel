@@ -44,7 +44,7 @@ export function Footer() {
               <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
                 <Building2 className="w-6 h-6 text-imo-primary" />
               </div>
-              <span className="text-xl font-bold">Imovisit</span>
+              <span className="text-xl font-bold">Imovisit <span className="text-xl font-bold bg- text-white px-2 py-1 rounded">.com </span> </span>
             </Link>
             <p className="text-gray-300 mb-6 max-w-sm">
               La plateforme de référence pour les visites immobilières au Cameroun. 
@@ -52,17 +52,25 @@ export function Footer() {
             </p>
             <div className="space-y-3">
               <div className="flex items-center gap-3 text-gray-300">
-                <Mail className="w-5 h-5" />
-                <span>contact@imovisit.cm</span>
+                <Mail className="w-5 h-5" /> 
+                <span>contact@imovisit.cm</span> 
               </div>
-              <div className="flex items-center gap-3 text-gray-300">
-                <Phone className="w-5 h-5" />
-                <span>+237 6XX XXX XXX</span>
-              </div>
-              <div className="flex items-center gap-3 text-gray-300">
-                <MapPin className="w-5 h-5" />
-                <span>Yaoundé, Cameroun</span>
-              </div>
+              <br/>
+              <span>Suivez-nous sur: </span>  
+            <div className="flex items-center gap-4">
+            {socialLinks.map((social) => (
+              <a
+                key={social.label}
+                href={social.href}
+                className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
+                aria-label={social.label}
+              >
+                <social.icon className="w-5 h-5" />
+              </a>
+            ))}
+          </div>
+
+
             </div>
           </div>
 
@@ -120,21 +128,10 @@ export function Footer() {
 
         {/* Bottom */}
         <div className="mt-12 pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-gray-400 text-sm">
+          <p className="text-gray-400 text-sm text-center md:text-left mx-auto">
             © {currentYear} Imovisit. Tous droits réservés.
           </p>
-          <div className="flex items-center gap-4">
-            {socialLinks.map((social) => (
-              <a
-                key={social.label}
-                href={social.href}
-                className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
-                aria-label={social.label}
-              >
-                <social.icon className="w-5 h-5" />
-              </a>
-            ))}
-          </div>
+          
         </div>
       </div>
     </footer>
