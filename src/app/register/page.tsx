@@ -211,7 +211,7 @@ export default function Register() {
                     )}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="name">{dictionary?.signup?.name || "Full Name"}</Label>
+                      <Label htmlFor="name">{dictionary?.signup?.name || "Nom complet"}</Label>
                       <div className="relative">
                         <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                         <Input
@@ -225,7 +225,7 @@ export default function Register() {
                         {renderError('name')}
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="phone">{dictionary?.signup?.tel || "Phone Number"}</Label>
+                      <Label htmlFor="phone">{dictionary?.signup?.tel || "Numéro de téléphone"}</Label>
                       <div className="relative">
                         <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                         <Input
@@ -265,7 +265,7 @@ export default function Register() {
                         onValueChange={(value) => setFormData({ ...formData, city: value })}
                       >
                         <SelectTrigger className="pl-10">
-                          <SelectValue placeholder={dictionary?.signup?.dropCity || "Select your city"} />
+                          <SelectValue placeholder={dictionary?.signup?.dropCity || "Sélectionnez votre ville"} />
                         </SelectTrigger>
                         <SelectContent>
                           {cities.map((city) => (
@@ -280,7 +280,7 @@ export default function Register() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="password">{dictionary?.signup?.password || "Password"}</Label>
+                      <Label htmlFor="password">{dictionary?.signup?.password || "Mot de passe"}</Label>
                       <div className="relative">
                         <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                         <Input
@@ -295,7 +295,7 @@ export default function Register() {
                         {renderError('password')}
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="confirmPassword">{dictionary?.signup?.confirmPassword || "Confirm Password"}</Label>
+                      <Label htmlFor="confirmPassword">{dictionary?.signup?.confirmPassword || "Confirmer le mot de passe"}</Label>
                       <div className="relative">
                         <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                         <Input
