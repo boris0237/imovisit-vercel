@@ -1,3 +1,18 @@
+// import { PrismaClient } from "@prisma/client";
+
+// declare global {
+//   var prisma: PrismaClient | undefined;
+// }
+
+// export const prisma =
+//   global.prisma ??
+//   new PrismaClient({
+//     log: ["query", "warn", "error"], // pour déboguer
+//   });
+
+// if (process.env.NODE_ENV !== "production") global.prisma = prisma;
+
+
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 
