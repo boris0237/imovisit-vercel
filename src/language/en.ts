@@ -37,7 +37,7 @@ export default {
     subtitle: "Join Imovisit community.",
     visteur: "Visitor",
     visiteurBio: "I'm looking for a property",
-    proprietaireBio: "I'm looking to sell a property",
+    proprietaireBio: "I'm owner owner of a property",
     proprietaire: "Owner",
     name: "Full Name",
     tel: "Phone Number",
