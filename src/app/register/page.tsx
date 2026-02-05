@@ -13,6 +13,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { cities } from '@/data/mock';
 import {Header} from '@/components/Header';
 import {Footer} from '@/components/Footer';
+import { useDictionary } from '@/hooks/useDictionary';
 
 
 export default function Register() {
@@ -26,6 +27,8 @@ export default function Register() {
     confirmPassword: '',
     acceptTerms: false,
   });
+  const { dictionary } = useDictionary();
+  const currentYear = new Date().getFullYear();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
@@ -148,9 +151,9 @@ export default function Register() {
       <div className="w-full max-w-lg">
         <Card>
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Créer un compte</CardTitle>
+            <CardTitle className="text-2xl">{dictionary?.signup?.title || "Créer un compte"}</CardTitle>
             <CardDescription>
-              Rejoignez la communauté Imovisit
+              {dictionary?.signup?.subtitle || "Rejoignez la communauté Imovisit"}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -167,9 +170,9 @@ export default function Register() {
               >
                 <Users className={`w-8 h-8 mx-auto mb-2 ${accountType === 'visitor' ? 'text-imo-primary' : 'text-gray-400'}`} />
                 <div className={`font-medium ${accountType === 'visitor' ? 'text-imo-primary' : 'text-gray-600'}`}>
-                  Visiteur
+                  {dictionary?.signup?.visteur || "Visiteur"}
                 </div>
-                <div className="text-xs text-gray-500 mt-1">Je cherche un bien</div>
+                <div className="text-xs text-gray-500 mt-1">{dictionary?.signup?.visiteurBio || "Je recherche un bien"}</div>
               </button>
               <button
                 type="button"
@@ -182,9 +185,9 @@ export default function Register() {
               >
                 <Building2 className={`w-8 h-8 mx-auto mb-2 ${accountType === 'owner' ? 'text-imo-primary' : 'text-gray-400'}`} />
                 <div className={`font-medium ${accountType === 'owner' ? 'text-imo-primary' : 'text-gray-600'}`}>
-                  Propriétaire
+                  {dictionary?.signup?.proprietaire || "Propriétaire"}
                 </div>
-                <div className="text-xs text-gray-500 mt-1">Je publie mes biens</div>
+                <div className="text-xs text-gray-500 mt-1">{dictionary?.signup?.proprietaireBio || "je suis propriétaire d'un bien"}</div>
               </button>
             </div>
 
@@ -208,7 +211,7 @@ export default function Register() {
                     )}
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="name">Nom complet</Label>
+                      <Label htmlFor="name">{dictionary?.signup?.name || "Full Name"}</Label>
                       <div className="relative">
                         <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                         <Input
@@ -222,7 +225,7 @@ export default function Register() {
                         {renderError('name')}
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="phone">Téléphone</Label>
+                      <Label htmlFor="phone">{dictionary?.signup?.tel || "Phone Number"}</Label>
                       <div className="relative">
                         <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                         <Input
@@ -254,7 +257,7 @@ export default function Register() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="city">Ville</Label>
+                    <Label htmlFor="city">{dictionary?.signup?.ville || "City"}</Label>
                     <div className="relative">
                       <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
                       <Select
@@ -262,7 +265,7 @@ export default function Register() {
                         onValueChange={(value) => setFormData({ ...formData, city: value })}
                       >
                         <SelectTrigger className="pl-10">
-                          <SelectValue placeholder="Sélectionnez une ville" />
+                          <SelectValue placeholder={dictionary?.signup?.dropCity || "Select your city"} />
                         </SelectTrigger>
                         <SelectContent>
                           {cities.map((city) => (
@@ -277,7 +280,7 @@ export default function Register() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="password">Mot de passe</Label>
+                      <Label htmlFor="password">{dictionary?.signup?.password || "Password"}</Label>
                       <div className="relative">
                         <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                         <Input
@@ -292,7 +295,7 @@ export default function Register() {
                         {renderError('password')}
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="confirmPassword">Confirmer</Label>
+                      <Label htmlFor="confirmPassword">{dictionary?.signup?.confirmPassword || "Confirm Password"}</Label>
                       <div className="relative">
                         <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                         <Input
@@ -318,13 +321,13 @@ export default function Register() {
                       className={`border ${errors.acceptTerms ? 'border-red-500' : ''}`}
                     />
                     <Label htmlFor="terms" className="text-sm font-normal">
-                      J'accepte les{' '}
+                      {dictionary.signup?.agree || "J'accepte les"}{' '}
                       <Link href="/terms" className="text-imo-primary hover:underline">
-                        conditions d'utilisation
+                        {dictionary.signup?.terms || "conditions d'utilisation"}
                       </Link>{' '}
-                      et la{' '}
+                      {dictionary.signup?.and || "et la"}{' '}
                       <Link href="/privacy" className="text-imo-primary hover:underline">
-                        politique de confidentialité
+                        {dictionary.signup?.conditions || "politique de confidentialité"}
                       </Link>
                     </Label>
                       {renderError('acceptTerms')}
@@ -334,7 +337,7 @@ export default function Register() {
                     type="submit"
                     className="w-full bg-imo-primary hover:bg-imo-secondary gap-2"
                   >
-                    Créer mon compte
+                    {dictionary.signup?.submit || "Créer mon compte"}
                     <ArrowRight className="w-4 h-4" />
                   </Button>
                 </form>
@@ -368,16 +371,16 @@ export default function Register() {
             </Tabs>
 
             <div className="mt-6 text-center text-sm">
-              <span className="text-gray-600">Déjà un compte ? </span>
+              <span className="text-gray-600">{dictionary.signup?.haveAccount || "Déjà un compte ? "}</span>
               <Link href="/login" className="text-imo-primary hover:underline font-medium">
-                Se connecter
+                {dictionary.signup?.login || "Se connecter"}
               </Link>
             </div>
           </CardContent>
         </Card>
 
         <p className="text-center text-white/70 text-sm mt-8">
-          © 2024 Imovisit. Tous droits réservés.
+          © {currentYear} {dictionary.signup?.rights || "Imovisit. Tous droits réservés."}
         </p>
       </div>
     </div>
