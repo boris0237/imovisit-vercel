@@ -187,7 +187,7 @@ export default function Register() {
                 <div className={`font-medium ${accountType === 'owner' ? 'text-imo-primary' : 'text-gray-600'}`}>
                   {dictionary?.signup?.proprietaire || "Propriétaire"}
                 </div>
-                <div className="text-xs text-gray-500 mt-1">{dictionary?.signup?.proprietaireBio || "je suis propriétaire d'un bien"}</div>
+                <div className="text-xs text-gray-500 mt-1">{dictionary?.signup?.proprietaireBio || "Je publie mes biens"}</div>
               </button>
             </div>
 
@@ -247,7 +247,7 @@ export default function Register() {
                       <Input
                         id="email"
                         type="email"
-                        placeholder="votre@email.com"
+                        placeholder={dictionary?.signup?.placeholderEmail || "votre@email.com"}
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                           className={`pl-10 ${errors.email ? 'border-red-500' : ''}`}
