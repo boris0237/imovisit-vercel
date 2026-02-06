@@ -119,8 +119,8 @@ export function FeaturedProperties() {
           spaceBetween={24}
           slidesPerView={1}
           navigation={{
-            prevEl: ".prev-btn-location",
-            nextEl: ".next-btn-location",
+            prevEl: ".prev-btn-vente",
+            nextEl: ".next-btn-vente",
           }}
           breakpoints={{
             640: { slidesPerView: 2 },
@@ -162,11 +162,11 @@ export function FeaturedProperties() {
         <br />
         {/* Navigation Buttons */}
         <div className="flex justify-end mb-6 gap-2">
-          <Button className="prev-btn-meubles bg-imo-primary w-12 h-12 rounded-full text-white">
+          <Button className="prev-btn-meub bg-imo-primary w-12 h-12 rounded-full text-white">
             <ArrowLeft className="w-4 h-4" />
           </Button>
 
-          <Button className="next-btn-meubles bg-imo-primary w-12 h-12 rounded-full text-white">
+          <Button className="next-btn-meub bg-imo-primary w-12 h-12 rounded-full text-white">
             <ArrowRight className="w-4 h-4" />
           </Button>
         </div>
@@ -178,8 +178,8 @@ export function FeaturedProperties() {
           spaceBetween={24}
           slidesPerView={1}
           navigation={{
-            prevEl: ".prev-btn-location",
-            nextEl: ".next-btn-location",
+            prevEl: ".prev-btn-meub",
+            nextEl: ".next-btn-meub",
           }}
           breakpoints={{
             640: { slidesPerView: 2 },
@@ -237,8 +237,8 @@ export function FeaturedProperties() {
           spaceBetween={24}
           slidesPerView={1}
           navigation={{
-            prevEl: ".prev-btn-location",
-            nextEl: ".next-btn-location",
+            prevEl: ".prev-btn-events",
+            nextEl: ".next-btn-events",
           }}
           breakpoints={{
             640: { slidesPerView: 2 },
