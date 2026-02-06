@@ -50,10 +50,25 @@ export default {
     terms: "terms",
     and: "and",
     conditions:"conditions",
+    letGoogle: "Let's go with Google",
     submit: "Create my account",
     haveAccount: "Already have an account? ",
     login: "Login",
     rights: "Imovisit. All rights reserved."
   },
+  login: {
+    connexion: "Login",
+    title: "Login to your account",
+    subtitle: "Access your Imovisit account",
+    placeholderEmail: "Enter your email address",
+    password: "Password",
+    rememberMe: "Remember me",
+    forgotPassword: "Forgot Password?",
+    submit: "Login",
+    neverHaveAccount: "Don't have an account? ",
+    signup: "Sign up",
+    letGoogle: "Let's go with Google",
+    rights : "Imovisit. All rights reserved."
+  }
 
 } as const
