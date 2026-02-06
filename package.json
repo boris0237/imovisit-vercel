@@ -11,7 +11,7 @@
   "dependencies": {
     "@next/swc-linux-x64-gnu": "^16.1.6",
     "@prisma/adapter-pg": "^7.3.0",
-    "@prisma/client": "^7.3.0",
+    "@prisma/client": "^4.16.2",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-alert-dialog": "^1.1.15",
     "@radix-ui/react-aspect-ratio": "^1.1.8",
@@ -44,9 +44,12 @@
     "jsonwebtoken": "^9.0.3",
     "lucide-react": "^0.344.0",
     "next": "14.2.3",
+    "prisma": "^4.16.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "sonner": "^1.4.3",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-react": "^5.31.0",
     "tailwind-merge": "^2.2.1",
     "tailwindcss-animate": "^1.0.7"
   },
@@ -56,9 +59,10 @@
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@types/swagger-jsdoc": "^6.0.4",
+    "@types/swagger-ui-react": "^5.18.0",
     "autoprefixer": "^10.0.1",
     "postcss": "^8",
-    "prisma": "^7.3.0",
     "tailwindcss": "^3.3.0",
     "typescript": "^5"
   }

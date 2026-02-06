@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/service/db";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { apiResponse } from "@/lib/api-response";
@@ -93,3 +93,35 @@ export async function POST(req: Request) {
     });
   }
 }
+
+
+
+/**
+ * @swagger
+ * /api/auth/login:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Connexion locale (email + mot de passe)
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: user@test.com
+ *               password:
+ *                 type: string
+ *                 example: secret123
+ *     responses:
+ *       200:
+ *         description: Connexion réussie
+ *       401:
+ *         description: Identifiants invalides
+ */
+
