@@ -2,6 +2,9 @@
 
 import Link from 'next/link'
 import { Building2, Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
+import Image from "next/image";
+import logoFooter from "@/images/logoFooter.png";
+
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -40,12 +43,15 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
           {/* Brand */}
           <div className="lg:col-span-2">
-            <Link href="/" className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
-                <Building2 className="w-6 h-6 text-imo-primary" />
-              </div>
-              <span className="text-xl font-bold">Imovisit <span className="text-xl font-bold bg- text-white px-2 py-1 rounded">.com </span> </span>
-            </Link>
+            <Link href="/">
+          <Image
+            src={logoFooter}
+              alt="Imovisit.com"
+              height={70}
+              priority
+          />
+        </Link>
+        <br />
             <p className="text-gray-300 mb-6 max-w-sm">
               La plateforme de référence pour les visites immobilières au Cameroun. 
               Trouvez votre bien idéal en toute confiance.
