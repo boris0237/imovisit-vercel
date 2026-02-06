@@ -1,10 +1,15 @@
 "use client"
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from "next/image";
+import logo from "@/images/logo.png"; 
 import { Menu, Home, Search, Heart, User, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { usePathname } from 'next/navigation';
+import { LanguageDropdown } from "@/components/LanguageDropdown";
+
+
 
 export function Header() {
   const [isOpen, setIsOpen] = useState(false);
@@ -26,10 +31,11 @@ export function Header() {
         <Link href="/" className="flex items-center gap-2">
           {/* Remplacement par ton image Logo-header.png */}
           <div className="relative h-10 w-auto">
-            <img
-              src="src/images/Logo-header.png"   // ← mets le bon chemin selon ton projet
-              alt="Imovisit Logo"
-              className="h-full w-auto object-contain"
+            <Image
+              src={logo}
+              alt="Imovisit.com"
+              height={55}
+              priority
             />
           </div>
         </Link>
@@ -46,8 +52,7 @@ export function Header() {
           ) : (
             <>
               <div className="flex gap-3">
-                <Link href="/" className="hover:bg-white">Fr</Link>
-                <Link href="/" className="hover:bg-white">Er</Link>
+                <LanguageDropdown />
               </div>
               <Link href="/login">
                 <Button variant="ghost" className="gap-2">
