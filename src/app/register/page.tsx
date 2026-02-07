@@ -49,31 +49,31 @@ export default function Register() {
     const validationErrors: Record<string, string> = {};
     
     if (!formData.name.trim()) {
-      validationErrors.name = "Le nom est requis";
+      validationErrors.name = dictionary?.signup?.errorNameRequired || "Le nom est requis";
     }
     
     if (!formData.phone.trim()) {
-      validationErrors.phone = "Le numéro de téléphone est requis";
+      validationErrors.phone = dictionary?.signup?.errorPhoneRequired || "Le numéro de téléphone est requis";
     }
     
     if (!formData.email.trim()) {
-      validationErrors.email = "L'email est requis";
+      validationErrors.email = dictionary?.signup?.errorEmailRequired || "L'email est requis";
     } else if (!/^\S+@\S+\.\S+$/.test(formData.email)) {
-      validationErrors.email = "Format d'email invalide";
+      validationErrors.email = dictionary?.signup?.errorEmailInvalid || "Format d'email invalide";
     }
     
     if (!formData.password) {
-      validationErrors.password = "Le mot de passe est requis";
+      validationErrors.password = dictionary?.signup?.errorPasswordRequired || "Le mot de passe est requis";
     } else if (formData.password.length < 8) {
-      validationErrors.password = "Le mot de passe doit contenir au moins 8 caractères";
+      validationErrors.password = dictionary?.signup?.errorPasswordLength || "Le mot de passe doit contenir au moins 8 caractères";
     }
 
     if (formData.password !== formData.confirmPassword) {
-      validationErrors.confirmPassword = "Les mots de passe ne correspondent pas";
+      validationErrors.confirmPassword = dictionary?.signup?.errorConfirmPassword || "Les mots de passe ne correspondent pas";
     }
     
     if (!formData.acceptTerms) {
-      validationErrors.acceptTerms = "Vous devez accepter les conditions d'utilisation";
+      validationErrors.acceptTerms = dictionary?.signup?.errorAgreeTerms || "Vous devez accepter les conditions d'utilisation";
     }
 
     if (Object.keys(validationErrors).length > 0) {
@@ -98,7 +98,7 @@ export default function Register() {
     const data = await response.json();
 
     if (response.ok) {
-      setSuccessMessage("Inscription réussie ! Vérifiez votre email pour confirmer votre compte.");
+      setSuccessMessage(dictionary?.signup?.success || "Inscription réussie ! Vérifiez votre email pour confirmer votre compte.");
       setFormData({
         name: '',
         email: '',
@@ -113,30 +113,30 @@ export default function Register() {
         window.location.href = '/login';
       }, 3000);
     } else {
-      if (data.message?.includes("Email et password sont obligatoires")) {
+      if (data.message?.includes(dictionary.signup?.errorEmail_PasswordRequired ||"Email et Le mot de passe sont obligatoires")) {
         setErrors({
-          email: "L'email est requis",
-          password: "Le mot de passe est requis",
+          email: dictionary?.signup?.errorEmailRequired || "L'email est requis",
+          password: dictionary?.signup?.errorPasswordRequired || "Le mot de passe est requis",
         });
-      } else if (data.message?.includes("email existe déjà")) {
+      } else if (data.message?.includes( dictionary.signup?.errorEmailAlreadyExists || "email existe déjà")) {
         setErrors({
-          email: "Cet email est déjà utilisé",
+          email: dictionary?.signup?.errorEmailAlreadyExists || "Cet email est déjà utilisé",
         });
-      } else if (data.message?.includes("password doit contenir au moins")) {
+      } else if (data.message?.includes(dictionary.signup?.errorPasswordLength || "password doit contenir au moins")) {
         setErrors({
-          password: "Le mot de passe doit contenir au moins 8 caractères",
+          password: dictionary?.signup?.errorPasswordLength || "Le mot de passe doit contenir au moins 8 caractères",
         });
       } else {
         // Erreur générique
         setErrors({
-          general: data.message || "Une erreur est survenue. Veuillez réessayer.",
+          general: data.message || dictionary?.signup?.errorGeneric || "Une erreur est survenue. Veuillez réessayer.",
         });
       }
     }
   } catch (error) {
-    console.error('Erreur réseau:', error);
+    console.error(dictionary.signup?.errorNetwork ||'Erreur réseau:', error);
     setErrors({
-      general: "Impossible de se connecter au serveur. Vérifiez votre connexion internet.",
+      general: dictionary.signup?.canConnect ||"Impossible de se connecter au serveur. Vérifiez votre connexion internet.",
     });
   } finally {
     setIsLoading(false);

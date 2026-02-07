@@ -1,3 +1,4 @@
+import { error } from "console";
 import { sign } from "crypto";
 import { title } from "process";
 
@@ -54,7 +55,20 @@ export default {
     submit: "Create my account",
     haveAccount: "Already have an account? ",
     login: "Login",
-    rights: "Imovisit. All rights reserved."
+    rights: "Imovisit. All rights reserved.",
+    canConnect: "Unable to connect to the server. Please check your internet connection.",
+    errorNameRequired: "Name is required",
+    errorPhoneRequired: "Phone number is required",
+    errorEmailRequired: "Email is required",
+    errorPasswordRequired: "Password is required",
+    errorEmailInvalid: "Invalid email format",
+    errorPasswordLength: "Password must be at least 8 characters long",
+    errorGeneric: "An error occurred. Please try again.",
+    errorEmailAlreadyExists: "This email is already in use",
+    errorEmail_PasswordRequired: "Email and password are required",
+    succes: "Your account has been created successfully! Verify your email to confirm",
+    errorAgreeTerms:"You must agree terms and conditions to create an account",
+    errorConfirmPassword: "Passwords do not match",
   },
   login: {
     connexion: "Login",
