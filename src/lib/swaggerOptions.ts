@@ -9,5 +9,5 @@ export const swaggerOptions = {
       { url: 'http://localhost:3000' },
     ],
   },
-  apis: ['./app/api/**/route.ts'],
+  apis: ['./ap/api/**/route.ts'],
 }

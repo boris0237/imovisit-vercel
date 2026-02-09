@@ -5,102 +5,47 @@ import { AuthProvider, UserRole } from "@prisma/client"
 import { authMiddleware } from "@/middlewares/auth-middleware"
 import { roleMiddleware } from "@/middlewares/role-middleware"
 
+
+
 /**
- * @swagger
- * /api/users:
- *   get:
- *     tags: [Users]
- *     summary: Liste des utilisateurs
- *     description: Récupère la liste des utilisateurs (admin uniquement)
- *     security:
- *       - BearerAuth: []
- *     parameters:
- *       - in: query
- *         name: authProvider
- *         schema:
- *           type: string
- *           enum: [local, google, facebook]
- *         description: Filtrer par type d’authentification
- *     responses:
- *       200:
- *         description: Liste des utilisateurs
- *       401:
- *         description: Non autorisé
- *       403:
- *         description: Accès interdit
+ * affiche les type de user google/local
  */
 export async function GET(req: Request) {
-  // Middleware auth
-  const authError = authMiddleware(req as any)
-  if (authError) return authError
+  try {
+    // Middleware auth
+    const authError = authMiddleware(req as any)
+    if (authError) return authError
+    const roleError = roleMiddleware([UserRole.admin])(req as any)
+    if (roleError) return roleError
 
-  const roleError = roleMiddleware([UserRole.admin])(req as any)
-  if (roleError) return roleError
+    const url = new URL(req.url)
+    const type = url.searchParams.get("authProvider")
 
-  const url = new URL(req.url)
-  const type = url.searchParams.get("authProvider")
+    const users = await prisma.user.findMany({
+      where: type ? { authProvider: type as AuthProvider } : undefined,
+      orderBy: { createdAt: "desc" },
+    })
 
-  const users = await prisma.user.findMany({
-    where: type ? { authProvider: type as AuthProvider } : undefined,
-    orderBy: { createdAt: "desc" },
-  })
+    const usersNotPassword = users.map(({ password, ...rest }) => rest)
 
-  const usersNotPassword = users.map(({ password, ...rest }) => rest)
-
-  return apiResponse({
-    status: 200,
-    message: `Liste des utilisateurs ${type ?? "tous types"}`,
-    data: usersNotPassword,
-  })
+    return apiResponse({
+      status: 200,
+      message: `Liste des utilisateurs ${type ?? "tous types"}`,
+      data: usersNotPassword,
+    })
+  } catch (err) {
+    console.error(err)
+    return ({
+      status: 500,
+      message: "Aucun utilisateur trouvé pour les critères fournis",
+      error: err instanceof Error ? err.message : null,
+    })
+  }
 }
 
+
 /**
- * @swagger
- * /api/users:
- *   post:
- *     tags: [Users]
- *     summary: Création d’un utilisateur
- *     description: Crée un nouvel utilisateur avec authentification locale ou sociale
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - name
- *               - email
- *               - password
- *               - city
- *               - country
- *               - authProvider
- *               - role
- *             properties:
- *               name:
- *                 type: string
- *               email:
- *                 type: string
- *               password:
- *                 type: string
- *               phone:
- *                 type: string
- *               city:
- *                 type: string
- *               country:
- *                 type: string
- *               authProvider:
- *                 type: string
- *                 enum: [local, google, facebook]
- *               role:
- *                 type: string
- *                 enum: [admin, user, visitor]
- *     responses:
- *       201:
- *         description: Utilisateur créé avec succès
- *       400:
- *         description: Erreur de validation
- *       500:
- *         description: Erreur serveur
+ * creat un user
  */
 export async function POST(req: Request) {
   try {
