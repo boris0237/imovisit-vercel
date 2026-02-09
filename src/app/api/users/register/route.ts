@@ -35,7 +35,7 @@ export async function GET(req: Request) {
     })
   } catch (err) {
     console.error(err)
-    return ({
+    return apiResponse({
       status: 500,
       message: "Aucun utilisateur trouvé pour les critères fournis",
       error: err instanceof Error ? err.message : null,
@@ -103,7 +103,7 @@ export async function POST(req: Request) {
     })
   } catch (err) {
     console.error(err)
-    return ({
+    return apiResponse({
       status: 500,
       message: "Erreur survenue lors de l'inscription",
       error: err instanceof Error ? err.message : null,

@@ -81,7 +81,7 @@ export async function POST(req: Request) {
     return res;
   } catch (err) {
     console.error(err);
-    return ({
+    return apiResponse({
       status: 500,
       message: "Erreur lors de l'authentification",
       error: err instanceof Error ? err.message : null,
