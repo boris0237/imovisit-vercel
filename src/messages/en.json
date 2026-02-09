@@ -1,0 +1,20 @@
+{
+  "hero": {
+    "badge": "The #1 real estate visit platform",
+    "title_1": "Find the",
+    "title_2": "property",
+    "title_3": "you want to visit",
+    "description": "Visit thousands of rental, sale or furnished properties remotely or in person",
+    "city": "City",
+    "propertyType": "Property type",
+    "offerType": "Offer type",
+    "search": "Search",
+    "popular": "Popular",
+    "stats": {
+      "properties": "Available properties",
+      "users": "Active users",
+      "visits": "Completed visits",
+      "satisfaction": "Customer satisfaction"
+    }
+  }
+}
