@@ -2,30 +2,44 @@
  * fontion pour envoie de mail
  */
 
-import nodemailer from "nodemailer";
+import Mailjet from "node-mailjet"
 
-type EmailOptions = {
-  to: string;
-  subject: string;
-  html: string;
-};
+const mailjet = Mailjet.apiConnect(
+  process.env.MJ_APIKEY_PUBLIC!,
+  process.env.MJ_APIKEY_PRIVATE!
+)
 
-export async function sendEmail({ to, subject, html }: EmailOptions) {
-  // Crée un transporteur SMTP
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT),
-    secure: false, // true si port 465
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-  });
+type SendEmailProps = {
+  to: string
+  subject: string
+  html: string
+}
 
-  await transporter.sendMail({
-    from: `"imoVisite" <${process.env.SMTP_USER}>`,
-    to,
-    subject,
-    html,
-  });
+export async function sendEmail({ to, subject, html }: SendEmailProps) {
+  try {
+    await mailjet
+      .post("send", { version: "v3.1" })
+      .request({
+        Messages: [
+          {
+            From: {
+              Email: "no-reply@shopia-app.com",
+              Name: "imoVisite",
+            },
+            To: [
+              {
+                Email: to,
+              },
+            ],
+            Subject: subject,
+            HTMLPart: html,
+          },
+        ],
+      })
+
+    return true
+  } catch (error) {
+    console.error("Mailjet error:", error)
+    throw new Error("Erreur lors de l'envoi de l'email")
+  }
 }

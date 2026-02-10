@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
 
     // Création du token pour confirmer le mail
     const token = jwt.sign({ id: user.id, newEmail }, JWT_SECRET, { expiresIn: "1h" })
-    const confirmLink = `${process.env.NEXT_PUBLIC_APP_URL}/confirm-email-change?token=${token}`
+    const confirmLink = `${process.env.NEXT_PUBLIC_APP_URL}/users/confirm-email-change?token=${token}`
 
     await sendEmail({
       to: newEmail,
