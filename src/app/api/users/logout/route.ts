@@ -1,3 +1,48 @@
+/**
+ * @swagger
+ * /api/users/logout:
+ *   post:
+ *     tags:
+ *       - Authentification
+ *     summary: Déconnexion utilisateur
+ *     description: Supprime le cookie JWT pour déconnecter l'utilisateur.
+ *     responses:
+ *       200:
+ *         description: Déconnexion réussie
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: "Déconnexion réussie"
+ *                 data:
+ *                   type: null
+ *                 error:
+ *                   type: null
+ *       500:
+ *         description: Erreur serveur lors de la déconnexion
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: integer
+ *                   example: 500
+ *                 message:
+ *                   type: string
+ *                   example: "Erreur lors de la déconnexion"
+ *                 error:
+ *                   type: string
+ */
+
+
+
 import { apiResponse } from "@/lib/api-response";
 import { NextResponse } from "next/server";
 

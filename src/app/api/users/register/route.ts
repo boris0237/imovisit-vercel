@@ -1,3 +1,96 @@
+/**
+ * @swagger
+ * /api/users/register:
+ *   post:
+ *     tags:
+ *       - Authentification
+ *     summary: Création d'un nouvel utilisateur
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - email
+ *               - password
+ *               - city
+ *               - country
+ *               - authProvider
+ *               - role
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: "royal tech"
+ *               email:
+ *                 type: string
+ *                 example: "royaltech.sarl@gmail.com"
+ *               password:
+ *                 type: string
+ *                 example: "123123123"
+ *               phone:
+ *                 type: string
+ *                 example: "692134087"
+ *               city:
+ *                 type: string
+ *                 example: "Yaounde"
+ *               country:
+ *                 type: string
+ *                 example: "Cameroun"
+ *               authProvider:
+ *                 type: string
+ *                 enum: [local, google]
+ *                 example: "local"
+ *               role:
+ *                 type: string
+ *                 enum: [admin, user]
+ *                 example: "admin"
+ *     responses:
+ *       201:
+ *         description: Utilisateur créé avec succès
+ */
+
+/**
+ * @swagger
+ * /api/users/register:
+ *   get:
+ *     tags:
+ *       - Users
+ *     summary: Liste de tous les utilisateurs
+ *     description: Retourne tous les utilisateurs (local + google)
+ *     responses:
+ *       200:
+ *         description: Liste de tous les utilisateurs
+ */
+
+/**
+ * @swagger
+ * /api/users/register?authProvider=local:
+ *   get:
+ *     tags:
+ *       - Users
+ *     summary: Liste des utilisateurs locaux
+ *     description: Retourne uniquement les utilisateurs avec authProvider=local
+ *     responses:
+ *       200:
+ *         description: Liste des utilisateurs locaux
+ */
+
+/**
+ * @swagger
+ * /api/users/register?authProvider=google:
+ *   get:
+ *     tags:
+ *       - Users
+ *     summary: Liste des utilisateurs Google
+ *     description: Retourne uniquement les utilisateurs avec authProvider=google
+ *     responses:
+ *       200:
+ *         description: Liste des utilisateurs Google
+ */
+
+
 import { prisma } from "@/service/db";
 import bcrypt from "bcryptjs"
 import { apiResponse } from "@/lib/api-response"

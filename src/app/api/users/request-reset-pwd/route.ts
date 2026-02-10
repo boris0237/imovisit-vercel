@@ -1,6 +1,43 @@
 /**
- * envoie un mail de redirection pour le reset pwd
+ * @swagger
+ * /api/users/request-reset-pwd:
+ *   post:
+ *     tags:
+ *       - Authentification
+ *     summary: Demande de réinitialisation de mot de passe
+ *     description: Envoie un email contenant un lien sécurisé pour réinitialiser le mot de passe d'un utilisateur existant.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: "utilisateur@example.com"
+ *     responses:
+ *       200:
+ *         description: Email de réinitialisation envoyé
+ *         content:
+ *           application/json:
+ *             example:
+ *               status: 200
+ *               message: "Email de réinitialisation envoyé !"
+ *               data: null
+ *               error: null
+ *       401:
+ *         description: Utilisateur non trouvé
+ *       400:
+ *         description: Requête invalide (email manquant ou mal formaté)
+ *       500:
+ *         description: Erreur serveur lors de l'envoi de l'email
  */
+
+
 import { prisma } from "@/service/db";
 import jwt from "jsonwebtoken";
 import { sendEmail } from "@/lib/send-email";

@@ -1,3 +1,142 @@
+/**
+ * @swagger
+ * /api/users/login:
+ *   post:
+ *     tags:
+ *       - Authentification
+ *     summary: Connexion utilisateur
+ *     description: |
+ *       Authentifie un utilisateur. 
+ *       Si le compte est de type `local`, vérifie le mot de passe. 
+ *       Génère un token JWT et le renvoie avec les informations de l'utilisateur. 
+ *       Le token est également placé dans un cookie HTTPOnly.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 description: Email de l'utilisateur
+ *                 example: ulrichkageu@gmail.com
+ *               password:
+ *                 type: string
+ *                 description: Mot de passe de l'utilisateur (pour auth local)
+ *                 example: 123123123
+ *     responses:
+ *       200:
+ *         description: Connexion réussie
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: number
+ *                   example: 200
+ *                 message:
+ *                   type: string
+ *                   example: Connexion réussie
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     user:
+ *                       type: object
+ *                       description: Informations de l'utilisateur (sans mot de passe)
+ *                       example:
+ *                         id: 1
+ *                         name: Ulrich Kageu
+ *                         email: ulrichkageu@gmail.com
+ *                         role: admin
+ *                         authProvider: local
+ *                         avatar: null
+ *                         typeCompte: basic
+ *                         verified: true
+ *                     token:
+ *                       type: string
+ *                       description: JWT token
+ *                       example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *                 error:
+ *                   type: null
+ *                   example: null
+ *       400:
+ *         description: Champs manquants
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: number
+ *                   example: 400
+ *                 message:
+ *                   type: string
+ *                   example: Email requis
+ *                 data:
+ *                   type: null
+ *                 error:
+ *                   type: null
+ *                   example: null
+ *       401:
+ *         description: Authentification invalide
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: number
+ *                   example: 401
+ *                 message:
+ *                   type: string
+ *                   example: Mot de passe incorrect
+ *                 data:
+ *                   type: null
+ *                 error:
+ *                   type: null
+ *       404:
+ *         description: Utilisateur non trouvé
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: number
+ *                   example: 404
+ *                 message:
+ *                   type: string
+ *                   example: Utilisateur non trouvé
+ *                 data:
+ *                   type: null
+ *                 error:
+ *                   type: null
+ *       500:
+ *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: number
+ *                   example: 500
+ *                 message:
+ *                   type: string
+ *                   example: Erreur lors de l'authentification
+ *                 data:
+ *                   type: null
+ *                 error:
+ *                   type: string
+ *                   example: Internal Server Error
+ */
+
+
 import { prisma } from "@/service/db";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -6,9 +145,6 @@ import { AuthProvider } from "@prisma/client";
 import { apiResponse } from "@/lib/api-response";
 
 
-/**
- * connexion user
- */
 const JWT_SECRET = process.env.JWT_SECRET!;
 export async function POST(req: Request) {
   try {

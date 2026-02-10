@@ -1,6 +1,66 @@
 /**
- * update chant user
+ * @swagger
+ * /api/users/update-profile:
+ *   patch:
+ *     tags:
+ *       - Authentification
+ *     summary: Mise à jour du profil utilisateur
+ *     description: Permet à un utilisateur connecté de mettre à jour ses informations personnelles.
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: "Merveille Joys"
+ *               age:
+ *                 type: integer
+ *                 example: 25
+ *               phone:
+ *                 type: string
+ *                 example: "692134087"
+ *               city:
+ *                 type: string
+ *                 example: "Douala"
+ *               country:
+ *                 type: string
+ *                 example: "France"
+ *               profession:
+ *                 type: string
+ *                 example: "Ingénieur Telecom"
+ *     responses:
+ *       200:
+ *         description: Profil mis à jour avec succès
+ *         content:
+ *           application/json:
+ *             example:
+ *               status: 200
+ *               message: "Profil mis à jour avec succès"
+ *               data:
+ *                 id: "123456"
+ *                 name: "Merveille Joys"
+ *                 age: 25
+ *                 phone: "692134087"
+ *                 city: "Douala"
+ *                 country: "France"
+ *                 profession: "Ingénieur Telecom"
+ *                 email: "exemple@mail.com"
+ *                 authProvider: "local"
+ *               error: null
+ *       400:
+ *         description: Aucun champ fourni pour la mise à jour
+ *       401:
+ *         description: Non authentifié
+ *       500:
+ *         description: Erreur serveur lors de la mise à jour
  */
+
+
 import { prisma } from "@/service/db";
 import { apiResponse } from "@/lib/api-response";
 import { authMiddleware } from "@/middlewares/auth-middleware";

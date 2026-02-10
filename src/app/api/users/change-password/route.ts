@@ -2,6 +2,53 @@
  * change password
  */
 
+/**
+ * @swagger
+ * /api/users/change-password:
+ *   post:
+ *     tags:
+ *       - Authentification
+ *     summary: Changer le mot de passe utilisateur (compte local)
+ *     description: |
+ *       Permet à un utilisateur authentifié de changer son mot de passe.
+ *       ❗ Cette action est autorisée uniquement pour les comptes **local**.
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - oldPassword
+ *               - newPassword
+ *               - confirmPassword
+ *             properties:
+ *               oldPassword:
+ *                 type: string
+ *                 example: ancienMotDePasse123
+ *               newPassword:
+ *                 type: string
+ *                 example: nouveauMotDePasse123
+ *               confirmPassword:
+ *                 type: string
+ *                 example: nouveauMotDePasse123
+ *     responses:
+ *       200:
+ *         description: Mot de passe changé avec succès
+ *       400:
+ *         description: Champs manquants ou mots de passe non correspondants
+ *       401:
+ *         description: Ancien mot de passe incorrect ou utilisateur non authentifié
+ *       403:
+ *         description: Compte non local (Google, etc.)
+ *       404:
+ *         description: Utilisateur non trouvé
+ *       500:
+ *         description: Erreur serveur
+ */
+
 import { prisma } from "@/service/db";
 import bcrypt from "bcryptjs";
 import { apiResponse } from "@/lib/api-response";

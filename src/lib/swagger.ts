@@ -1,26 +1,28 @@
-import { createSwaggerSpec } from 'next-swagger-doc';
+import swaggerJsdoc from "swagger-jsdoc"
 
-export const getApiDocs = async () => {
-  const spec = createSwaggerSpec({
-    apiFolder: 'src/app/api',
-    definition: {
-      openapi: '3.0.0',
-      info: {
-        title: 'Next Swagger API Example',
-        version: '1.0.0',
+export const swaggerSpec = swaggerJsdoc({
+  definition: {
+    openapi: "3.0.0",
+    info: {
+      title: "imoVisit API",
+      version: "1.0.0",
+      description: "Documentation officielle des APIs imoVisit",
+    },
+    servers: [
+      {
+        url: "http://localhost:3000",
       },
-      components: {
-        securitySchemes: {
-          bearerAuth: {
-            type: 'http',
-            scheme: 'bearer',
-            bearerFormat: 'JWT',
-          },
+    ],
+    components: {
+      securitySchemes: {
+        BearerAuth: {
+          type: "http",
+          scheme: "bearer",
+          bearerFormat: "JWT",
         },
       },
-      security: [],
     },
-  });
+  },
+ apis: ["./src/app/api/**/*.ts"],
 
-  return spec;
-};
+})

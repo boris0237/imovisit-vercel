@@ -1,3 +1,47 @@
+/**
+ * @swagger
+ * /api/users/request-email-change:
+ *   post:
+ *     tags:
+ *       - Authentification
+ *     summary: Demande de changement d'email
+ *     description: Envoie un email de confirmation pour changer l'adresse email d'un utilisateur. Nécessite d'être connecté.
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - newEmail
+ *             properties:
+ *               newEmail:
+ *                 type: string
+ *                 format: email
+ *                 example: "nouveau.email@gmail.com"
+ *     responses:
+ *       200:
+ *         description: Email de confirmation envoyé au nouveau mail
+ *         content:
+ *           application/json:
+ *             example:
+ *               status: 200
+ *               message: "Email de confirmation envoyé au nouveau mail !"
+ *               data: null
+ *               error: null
+ *       400:
+ *         description: Requête invalide (email manquant ou déjà utilisé)
+ *       403:
+ *         description: Compte Google, impossible de changer l'email
+ *       404:
+ *         description: Utilisateur non trouvé
+ *       500:
+ *         description: Erreur serveur lors de l'envoi de l'email
+ */
+
+
 import { prisma } from "@/service/db";
 import jwt from "jsonwebtoken";
 import { sendEmail } from "@/lib/send-email";

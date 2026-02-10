@@ -1,6 +1,52 @@
 /**
- * reset password
+ * @swagger
+ * /api/users/reset-password:
+ *   post:
+ *     tags:
+ *       - Authentification
+ *     summary: Réinitialisation du mot de passe
+ *     description: Permet de réinitialiser le mot de passe d'un utilisateur via un lien envoyé par email contenant un token JWT valide.
+ *     parameters:
+ *       - in: query
+ *         name: token
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Token JWT reçu par email pour valider la réinitialisation
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - newPassword
+ *               - confirmPassword
+ *             properties:
+ *               newPassword:
+ *                 type: string
+ *                 example: "azerty123"
+ *               confirmPassword:
+ *                 type: string
+ *                 example: "azerty123"
+ *     responses:
+ *       200:
+ *         description: Mot de passe réinitialisé avec succès
+ *         content:
+ *           application/json:
+ *             example:
+ *               status: 200
+ *               message: "Mot de passe réinitialisé avec succès"
+ *               data: null
+ *               error: null
+ *       400:
+ *         description: Token manquant, mot de passe invalide ou lien expiré
+ *       403:
+ *         description: Impossible de modifier le mot de passe pour un compte Google
+ *       404:
+ *         description: Utilisateur non trouvé
  */
+
 
 import { prisma } from "@/service/db";
 import bcrypt from "bcryptjs";
