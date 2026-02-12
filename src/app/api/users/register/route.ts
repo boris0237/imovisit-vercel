@@ -1,41 +1,145 @@
-import { prisma } from "@/lib/prisma"
+/**
+ * @swagger
+ * /api/users/register:
+ *   post:
+ *     tags:
+ *       - Authentification
+ *     summary: Création d'un nouvel utilisateur
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - email
+ *               - password
+ *               - city
+ *               - country
+ *               - authProvider
+ *               - role
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: "royal tech"
+ *               email:
+ *                 type: string
+ *                 example: "royaltech.sarl@gmail.com"
+ *               password:
+ *                 type: string
+ *                 example: "123123123"
+ *               phone:
+ *                 type: string
+ *                 example: "692134087"
+ *               city:
+ *                 type: string
+ *                 example: "Yaounde"
+ *               country:
+ *                 type: string
+ *                 example: "Cameroun"
+ *               authProvider:
+ *                 type: string
+ *                 enum: [local, google]
+ *                 example: "local"
+ *               role:
+ *                 type: string
+ *                 enum: [admin, user]
+ *                 example: "admin"
+ *     responses:
+ *       201:
+ *         description: Utilisateur créé avec succès
+ */
+
+/**
+ * @swagger
+ * /api/users/register:
+ *   get:
+ *     tags:
+ *       - Users
+ *     summary: Liste de tous les utilisateurs
+ *     description: Retourne tous les utilisateurs (local + google)
+ *     responses:
+ *       200:
+ *         description: Liste de tous les utilisateurs
+ */
+
+/**
+ * @swagger
+ * /api/users/register?authProvider=local:
+ *   get:
+ *     tags:
+ *       - Users
+ *     summary: Liste des utilisateurs locaux
+ *     description: Retourne uniquement les utilisateurs avec authProvider=local
+ *     responses:
+ *       200:
+ *         description: Liste des utilisateurs locaux
+ */
+
+/**
+ * @swagger
+ * /api/users/register?authProvider=google:
+ *   get:
+ *     tags:
+ *       - Users
+ *     summary: Liste des utilisateurs Google
+ *     description: Retourne uniquement les utilisateurs avec authProvider=google
+ *     responses:
+ *       200:
+ *         description: Liste des utilisateurs Google
+ */
+
+
+import { prisma } from "@/service/db";
 import bcrypt from "bcryptjs"
 import { apiResponse } from "@/lib/api-response"
-import { AuthProvider } from "@prisma/client";
-import { UserRole } from "@prisma/client";
-import { authMiddleware } from "@/middlewares/auth-middleware";
-import { roleMiddleware } from "@/middlewares/role-middleware";
+import { AuthProvider, UserRole } from "@prisma/client"
+import { authMiddleware } from "@/middlewares/auth-middleware"
+import { roleMiddleware } from "@/middlewares/role-middleware"
 
 
-// #Voir les type user
+
+/**
+ * affiche les type de user google/local
+ */
 export async function GET(req: Request) {
+  try {
+    // Middleware auth
+    const authError = authMiddleware(req as any)
+    if (authError) return authError
+    const roleError = roleMiddleware([UserRole.admin])(req as any)
+    if (roleError) return roleError
 
-  //middleware
-  const authError = authMiddleware(req as any);
-  if (authError) return authError;
-  const roleError = roleMiddleware([UserRole.admin])(req as any);
-  if (roleError) return roleError;
+    const url = new URL(req.url)
+    const type = url.searchParams.get("authProvider")
 
+    const users = await prisma.user.findMany({
+      where: type ? { authProvider: type as AuthProvider } : undefined,
+      orderBy: { createdAt: "desc" },
+    })
 
-  const url = new URL(req.url);
-  const type = url.searchParams.get("authProvider");
+    const usersNotPassword = users.map(({ password, ...rest }) => rest)
 
-  const users = await prisma.user.findMany({
-    where: type ? { authProvider: type as AuthProvider } : undefined,
-    orderBy: { createdAt: "desc" },
-  });
-
-  const usersNotPassword = users.map(({ password, ...rest }) => rest);
-
-  return apiResponse({
-    status: 200,
-    message: `Liste des utilisateurs ${type ?? "tous types"}`,
-    data: usersNotPassword,
-  });
+    return apiResponse({
+      status: 200,
+      message: `Liste des utilisateurs ${type ?? "tous types"}`,
+      data: usersNotPassword,
+    })
+  } catch (err) {
+    console.error(err)
+    return apiResponse({
+      status: 500,
+      message: "Aucun utilisateur trouvé pour les critères fournis",
+      error: err instanceof Error ? err.message : null,
+    })
+  }
 }
 
 
-// #Create user
+/**
+ * creat un user
+ */
 export async function POST(req: Request) {
   try {
     const body = await req.json()
@@ -63,9 +167,8 @@ export async function POST(req: Request) {
       })
     }
 
-    // Hash du mot de passe si local
     let hashedPassword: string | null = null
-    if (authProvider === "local" && password) {
+    if (authProvider === "local") {
       hashedPassword = await bcrypt.hash(password, 10)
     }
 
@@ -75,17 +178,17 @@ export async function POST(req: Request) {
         email,
         password: hashedPassword,
         phone: phone || null,
-        city: city || null,
-        country: country || null,
-        role: role || "visitor",
+        city,
+        country,
+        role,
         verified: false,
-        authProvider: authProvider || "local",
+        authProvider,
         typeCompte: "classique",
       },
     })
 
-
     const { password: _, ...userWithoutPassword } = user
+
     return apiResponse({
       status: 201,
       message: "Utilisateur créé avec succès",
@@ -93,7 +196,7 @@ export async function POST(req: Request) {
     })
   } catch (err) {
     console.error(err)
-    return ({
+    return apiResponse({
       status: 500,
       message: "Erreur survenue lors de l'inscription",
       error: err instanceof Error ? err.message : null,

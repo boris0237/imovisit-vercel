@@ -6,7 +6,7 @@ export type ApiResponseOptions = {
   status?: number | undefined
   message?: string
   data?: any
-  error?: Error | null         
+  error?: Error | string | null
 }
 
 export function apiResponse({
