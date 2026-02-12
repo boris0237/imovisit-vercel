@@ -3,16 +3,15 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mongodb"
+  url      = env("DATABASE_URL") //error est du au update de version de prima
 }
 
-//# shemat de User
 model User {
-  //id           String       @id @default(auto()) @map("_id") @db.ObjectId
-  id        String   @id @default(uuid())
+  id           String       @id @default(auto()) @map("_id") @db.ObjectId
   name         String
   age          Int?
-  typeCompte   typeCompte?  @default(classique)
+  typeCompte   typeCompte   @default(classique)
   email        String       @unique
   password     String?
   phone        String?
@@ -35,10 +34,12 @@ enum UserRole {
   agent
   admin
 }
+
 enum AuthProvider {
   local
   google
 }
+
 enum typeCompte {
   classique
   premium
