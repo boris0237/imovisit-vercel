@@ -33,7 +33,7 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     "dist/types/**/*.ts"
-  ],
+, "src/contexts/LanguageContext.js", "src/components/LanguageDropdown.tsx"  ],
   "exclude": [
     "node_modules"
   ]
