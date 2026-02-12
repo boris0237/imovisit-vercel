@@ -20,65 +20,53 @@ export function OwnerCTA() {
           <div className="text-white">
             <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 mb-6">
               <Building2 className="w-4 h-4" />
-              <span className="text-sm">Espace propriétaire</span>
+              <span className="text-sm">Espace Bailleur</span>
             </div>
 
             <h2 className="text-3xl md:text-4xl font-bold mb-6">
-              Vous êtes propriétaire ?
+              Que vous soyez un proporiétaire, un agent, une agence immobilière, un gestionnaire de bien
             </h2>
 
             <p className="text-white/80 text-lg mb-8">
-              Publiez vos biens gratuitement et gérez vos visites en toute simplicité. 
-              Rejoignez des milliers de propriétaires qui nous font confiance.
+              La solution imovisit vous accompagne au quotidien en augmentant vos revenu et en professionnalisant vos activités immobilières.
+              <br />
+              Ajoutez vos biens gratuitement et gérer vos visites en toute simplicité. <br /> Rejoignez des milliers de bailleurs qui nous font confiance. 
+              <br /><br />
+              Inscrivez vous gratuitement en cliquant ici:
             </p>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-              {benefits.map((benefit, index) => (
-                <div key={index} className="flex items-center gap-3">
-                  <div className="w-6 h-6 bg-imo-highlight rounded-full flex items-center justify-center flex-shrink-0">
-                    <Check className="w-4 h-4 text-imo-primary" />
-                  </div>
-                  <span className="text-white/90 text-sm">{benefit}</span>
-                </div>
-              ))}
-            </div>
 
             <div className="flex flex-col sm:flex-row gap-4">
               <Link href="/register?type=owner">
                 <Button className="bg-imo-highlight hover:bg-yellow-400 text-imo-primary font-semibold gap-2">
-                  Devenir propriétaire
+                  Je suis un bailleur
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>
-              <Link href="/owner-info">
-                <Button variant="outline" className="border-white/30 text-white hover:bg-white/10 gap-2">
-                  En savoir plus
-                </Button>
-              </Link>
+          
             </div>
           </div>
 
           {/* Stats Cards */}
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 text-white">
-              <TrendingUp className="w-10 h-10 mb-4 text-imo-highlight" />
-              <div className="text-3xl font-bold mb-1">+45%</div>
-              <div className="text-white/70 text-sm">Taux de conversion moyen</div>
-            </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 text-white">
               <Users className="w-10 h-10 mb-4 text-imo-highlight" />
-              <div className="text-3xl font-bold mb-1">5,000+</div>
-              <div className="text-white/70 text-sm">Propriétaires actifs</div>
-            </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 text-white">
-              <Shield className="w-10 h-10 mb-4 text-imo-highlight" />
-              <div className="text-3xl font-bold mb-1">100%</div>
-              <div className="text-white/70 text-sm">Bailleurs vérifiés</div>
+              <div className="text-3xl font-bold mb-1">100+</div>
+              <div className="text-white/70 text-sm">bailleurs actifs </div>
             </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 text-white">
               <Building2 className="w-10 h-10 mb-4 text-imo-highlight" />
-              <div className="text-3xl font-bold mb-1">10,000+</div>
-              <div className="text-white/70 text-sm">Biens publiés</div>
+              <div className="text-3xl font-bold mb-1">200+</div>
+              <div className="text-white/70 text-sm">biens publiés</div>
+            </div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 text-white">
+              <TrendingUp className="w-10 h-10 mb-4 text-imo-highlight" />
+              <div className="text-3xl font-bold mb-1">500+</div>
+              <div className="text-white/70 text-sm">visites réalisées</div>
+            </div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 text-white">
+              <Users className="w-10 h-10 mb-4 text-imo-highlight" />
+              <div className="text-3xl font-bold mb-1">150+</div>
+              <div className="text-white/70 text-sm">locataires</div>
             </div>
           </div>
         </div>

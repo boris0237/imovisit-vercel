@@ -1,0 +1,20 @@
+{
+  "hero": {
+    "badge": "Plateforme #1 des visites immobilières",
+    "title_1": "Trouvez le",
+    "title_2": "bien",
+    "title_3": "que vous souhaitez visiter",
+    "description": "Visitez de milliers de biens immobiliers en location, en vente ou meublés à distance ou en présentiel",
+    "city": "Ville",
+    "propertyType": "Type de bien",
+    "offerType": "Type d'offre",
+    "search": "Rechercher",
+    "popular": "Populaires",
+    "stats": {
+      "properties": "Biens disponibles",
+      "users": "Utilisateurs actifs",
+      "visits": "Visites réalisées",
+      "satisfaction": "Satisfaction client"
+    }
+  }
+}

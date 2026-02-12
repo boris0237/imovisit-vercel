@@ -48,15 +48,14 @@ export function Hero() {
 
           {/* Title */}
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
-            Trouvez votre <span className="text-imo-highlight">bien idéal</span>
+            Trouvez le <span className="text-imo-highlight">bien </span>que
             <br />
-            en toute confiance
+             vous souhaitez visiter 
           </h1>
 
           {/* Description */}
           <p className="text-lg md:text-xl text-white/80 mb-10 max-w-2xl mx-auto">
-            Découvrez des milliers de biens immobiliers vérifiés au Cameroun. 
-            Réservez vos visites en ligne et trouvez le logement de vos rêves.
+            Visitez de milliers de biens immobiliers en location, en <br /> vente ou meublés à distance ou en préssentiel
           </p>
 
           {/* Search Box */}

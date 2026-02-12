@@ -57,7 +57,6 @@
 
 
 import { prisma } from "@/service/db";
-import jwt from "jsonwebtoken";
 import { apiResponse } from "@/lib/api-response";
 
 const JWT_SECRET = process.env.JWT_SECRET!;
