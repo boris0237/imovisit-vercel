@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { LanguageProvider } from '@/contexts/LanguageContext'
 import "./globals.css";
 import "./App.css";
 
@@ -20,7 +21,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr">
-      <body className="antialiased">{children}</body>
+      <LanguageProvider>
+          <body className="antialiased">{children}</body>
+      </LanguageProvider>
     </html>
   );
 }
