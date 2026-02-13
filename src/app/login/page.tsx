@@ -10,6 +10,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useRouter } from 'next/navigation'
+import { Header } from '@/components/Header';
+import { Footer } from '@/components/Footer';
 
 export default function Login() {
 const router = useRouter()
@@ -28,17 +30,12 @@ const router = useRouter()
   };
 
   return (
+    <div>
+       <Header />
     <div className="min-h-screen bg-gradient-to-br from-imo-primary via-imo-secondary to-imo-primary flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo */}
-        <div className="text-center mb-8">
-          <Link href="/"  className="inline-flex items-center gap-2">
-            <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center">
-              <Building2 className="w-8 h-8 text-imo-primary" />
-            </div>
-            <span className="text-2xl font-bold text-white">Imovisit</span>
-          </Link>
-        </div>
+   
 
         <Card>
           <CardHeader className="text-center">
@@ -153,10 +150,10 @@ const router = useRouter()
           </CardContent>
         </Card>
 
-        <p className="text-center text-white/70 text-sm mt-8">
-          © 2024 Imovisit. Tous droits réservés.
-        </p>
+      
       </div>
+    </div>
+       <Footer />
     </div>
   );
 }

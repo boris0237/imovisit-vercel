@@ -30,7 +30,7 @@ export function Header() {
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
           {/* Remplacement par ton image Logo-header.png */}
-          <div className="relative h-10 w-auto">
+          <div className="relative w-auto">
             <Image
               src={logo}
               alt="Imovisit.com"
