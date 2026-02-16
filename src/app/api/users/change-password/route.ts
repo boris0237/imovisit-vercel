@@ -54,6 +54,7 @@ import bcrypt from "bcryptjs";
 import { apiResponse } from "@/lib/api-response";
 import { authMiddleware } from "@/middlewares/auth-middleware"; 
 import { NextRequest } from "next/server";
+import { validatePassword } from "@/utils/validatePassword";
 
 export async function POST(req: NextRequest) {
   try {
@@ -96,6 +97,10 @@ export async function POST(req: NextRequest) {
     if (!isOldPasswordValid) {
       return apiResponse({ status: 401, message: "Ancien mot de passe incorrect" });
     }
+    
+    // verified structure pwd
+    const isValid = validatePassword(newPassword);
+    if (isValid !== true) return isValid;
 
     // Hasher le nouveau mot de passe
     const hashedPassword = await bcrypt.hash(newPassword, 10);

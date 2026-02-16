@@ -101,6 +101,7 @@ import { apiResponse } from "@/lib/api-response"
 import { AuthProvider, UserRole } from "@prisma/client"
 import { authMiddleware } from "@/middlewares/auth-middleware"
 import { roleMiddleware } from "@/middlewares/role-middleware"
+import { validatePassword } from "@/utils/validatePassword";
 
 
 
@@ -162,6 +163,10 @@ export async function POST(req: Request) {
         message: "Le mot de passe est obligatoire pour un compte local",
       })
     }
+
+    // verified structure pwd
+    const isValid = validatePassword(password);
+    if (isValid !== true) return isValid;
 
     const existingUser = await prisma.user.findUnique({ where: { email } })
     if (existingUser) {

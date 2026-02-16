@@ -3,7 +3,7 @@
  * /api/users/reset-password:
  *   post:
  *     tags:
- *       - Authentification
+ *       - Upload
  *     summary: Réinitialisation du mot de passe
  *     description: Permet de réinitialiser le mot de passe d'un utilisateur via un lien envoyé par email contenant un token JWT valide.
  *     parameters:
@@ -54,6 +54,7 @@ import jwt from "jsonwebtoken";
 import { apiResponse } from "@/lib/api-response";
 import { NextRequest } from "next/server";
 import { AuthProvider } from "@prisma/client";
+import { validatePassword } from "@/utils/validatePassword";
 
 const JWT_SECRET = process.env.JWT_SECRET!;
 
@@ -83,6 +84,11 @@ export async function POST(req: NextRequest) {
         message: "Les mots de passe ne correspondent pas",
       });
     }
+
+    // verified structure pwd
+    const isValid = validatePassword(newPassword);
+    if (isValid !== true) return isValid;
+
 
     // Vérification du token
     const decoded = jwt.verify(token, JWT_SECRET) as { id: string };
