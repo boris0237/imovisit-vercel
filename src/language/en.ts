@@ -18,7 +18,7 @@ export default {
     title2: "Support",
     title3: "Legal",
     rights: "Imovisit. All rights reserved.",
-    bio: "Cameroon's leading platform for real estate tours. Find your dream property confidently.",
+    bio: "Leading platform for real estate tours. Find your dream property confidently.",
     text: "Follow us :",
     translateLabel11: "About",
     translateLabel12: "How it works",

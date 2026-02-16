@@ -66,13 +66,13 @@ export function Footer() {
                </div>
           </div>
         </Link>
-            <p className="text-gray-300 mb-6 max-w-sm">
-              {dictionary.footer?.bio || 'La plateforme de référence pour les visites immobilières au Cameroun. Trouvez votre bien idéal en toute confiance.'}
+            <p className="text-gray-300 mb-6 max-w-sm mt-2">
+              {dictionary.footer?.bio || 'La plateforme de référence pour les visites immobilières. Trouvez votre bien idéal en toute confiance.'}
             </p>
             <div className="space-y-3">
               <div className="flex items-center gap-3 text-gray-300">
                 <Mail className="w-5 h-5" />
-                <span>contact@imovisit.cm</span>
+                <span>contact@imovisit.com</span>
               </div>
               <div className="flex-none space-y-4 gap-3 text-gray-300">
                 <p>{dictionary.footer?.text || "Suivez nous sur :"}</p>

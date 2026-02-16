@@ -145,7 +145,7 @@ export async function POST(req: Request) {
     const body = await req.json()
     const { name, email, password, phone, city, country, authProvider, role } = body
 
-    if (!email || !name || !password || !city || !country || !authProvider || !role) {
+    if (!email || !name || !password || !city  || !authProvider || !role) {
       return apiResponse({
         status: 400,
         message: "Certains champs sont obligatoires",

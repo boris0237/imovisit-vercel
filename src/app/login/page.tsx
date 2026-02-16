@@ -255,10 +255,6 @@ const router = useRouter()
             </div>
           </CardContent>
         </Card>
-
-        <p className="text-center text-white/70 text-sm mt-8">
-          © {currentYear} {dictionary.login?.rights || "Imovisit. Tous droits réservés."}
-        </p>
       </div>
     </div>
       <Footer />

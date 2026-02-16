@@ -93,9 +93,9 @@ export default function Register() {
           email: formData.email,
           password: formData.password,
           phone: formData.phone || null,
-          city: formData.city || null,
+          city: formData.city || "local",
           authProvider: 'local',
-          role: 'admin',
+          role: accountType,
         }),
       });
 
@@ -273,28 +273,6 @@ export default function Register() {
                       {renderError('email')}
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="city">{dictionary?.signup?.ville || "City"}</Label>
-                      <div className="relative">
-                        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 z-10" />
-                        <Select
-                          value={formData.city}
-                          onValueChange={(value) => setFormData({ ...formData, city: value })}
-                        >
-                          <SelectTrigger className="pl-10">
-                            <SelectValue placeholder={dictionary?.signup?.dropCity || "Sélectionnez votre ville"} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {cities.map((city) => (
-                              <SelectItem key={city} value={city}>
-                                {city}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="password">{dictionary?.signup?.password || "Mot de passe"}</Label>
@@ -384,9 +362,7 @@ export default function Register() {
             </CardContent>
           </Card>
 
-          <p className="text-center text-white/70 text-sm mt-8">
-            © {currentYear} {dictionary.signup?.rights || "Imovisit. Tous droits réservés."}
-          </p>
+     
         </div>
       </div>
       <Footer />

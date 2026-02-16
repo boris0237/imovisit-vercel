@@ -55,12 +55,11 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         disabled={loading || props.disabled}
         {...props}
       >
-        {loading && (
+        {loading ? (
           <div className="absolute inset-0 flex items-center justify-center">
             <LoadingSpinner time={loadingTime} fullScreen={loadingFull}/>
           </div>
-        )}
-        <span className={loading ? "invisible" : ""}>{children}</span>
+        ):children}
       </Comp>
     )
   }
