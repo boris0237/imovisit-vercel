@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link'
 import { Eye, EyeOff, Mail, Lock, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,8 @@ import { useRouter } from 'next/navigation'
 import {Header} from '@/components/Header';
 import {Footer} from '@/components/Footer';
 import { useDictionary } from '@/hooks/useDictionary';
+import { useGoogleAuth } from '@/hooks/useGoogleAuth';
+import GoogleLoginButton from '@/components/ui/GoogleButton';
 
 export default function Login() {
 const router = useRouter()
@@ -22,16 +24,113 @@ const router = useRouter()
     password: '',
     rememberMe: false,
   });
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  interface LoginResponse {
+  status: number;
+  message: string;
+  data: {
+    user: {
+      id: number;
+      name: string;
+      email: string;
+      role: string;
+      authProvider: string;
+      avatar: string | null;
+      typeCompte: string;
+      verified: boolean;
+    };
+    token: string;
+  } | null;
+  error: string | null;
+}
    
   const {dictionary} = useDictionary();
   const currentYear = new Date().getFullYear();
+  const { withGoogle, googleLoading, error, } = useGoogleAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    const loadGoogleScript = () => {
+      if (typeof window !== 'undefined' && !window.google) {
+        const script = document.createElement('script');
+        script.src = 'https://accounts.google.com/gsi/client';
+        script.async = true;
+        script.defer = true;
+        script.onload = () => {
+          console.log('Google Platform script loaded');
+        };
+        document.head.appendChild(script);
+      }
+    };
+
+    loadGoogleScript();
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    router.push("/dashboard/user")
-    // TODO: Implement login logic
-    console.log('Login:', formData);
+    setLoading(true);
+    setErrors(null);
+    setSuccessMessage(null);
+
+    try {
+      const validationErrors: Record<string, string> = {};
+      if (!formData.email.trim()){
+        validationErrors.email = dictionary.login?.errorEmailRequired || "L'email est requis";
+      } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+        validationErrors.email = dictionary.login?.errorEmailInvalid || "Format d'email invalide";
+      }
+      if (!formData.password.trim()){
+        validationErrors.password = dictionary.login?.errorPasswordRequired || "Le mot de passe est requis";
+      } else if (formData.password.length < 8) {
+        validationErrors.password = dictionary.login?.errorPasswordLength || "Le mot de passe doit contenir au moins 8 caractères";
+      }
+      const response = await fetch('/api/users/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const result: LoginResponse = await response.json();
+
+      if (response.ok && result.status === 200) {
+        // Connexion réussie
+        console.log('Login successful:', result.data);
+        setSuccessMessage(dictionary?.login?.success || "Connexion réussie, redirection...");
+        
+        // Stocker le token si nécessaire (déjà dans cookie HTTPOnly)
+        // Rediriger vers le dashboard
+        router.push("/dashboard/user");
+        router.refresh(); // Rafraîchir l'état de session
+        
+      } else {
+        // Gérer les erreurs selon le statut
+        switch (result.status) {
+          case 400:
+            setErrors(dictionary.login?.errorInvalidCredentials || "Veuillez remplir tous les champs requis");
+            break;
+          case 401:
+            setErrors(dictionary.login?.errorInvalidCredentials || "Email ou mot de passe incorrect");
+            break;
+          case 404:
+            setErrors(dictionary.login?.errorUserNotFound || "Utilisateur non trouvé");
+            break;
+          default:
+            setErrors(result.error || dictionary.login?.errorGeneric || "Une erreur est survenue. Veuillez réessayer.");
+        }
+      }
+    } catch (err) {
+      // Erreurs réseau ou autres
+      setErrors(dictionary.login?.errorNetwork || "Problème de connexion au serveur. Veuillez réessayer.");
+      console.error('Login error:', err);
+    } finally {
+      setLoading(loading);
+    }
   };
+
 
   return (
     <div>
@@ -67,6 +166,16 @@ const router = useRouter()
 
               <TabsContent value="email">
                 <form onSubmit={handleSubmit} className="space-y-4">
+                  {errors && (
+                      <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-md mb-4">
+                        {errors}
+                      </div>
+                    )}                    
+                    {successMessage && (
+                      <div className="bg-green-50 border border-green-200 text-green-600 p-3 rounded-md mb-4">
+                        {successMessage}
+                      </div>
+                    )}
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
                     <div className="relative">
@@ -122,7 +231,7 @@ const router = useRouter()
                     </Link>
                   </div>
 
-                  <Button type="submit" className="w-full bg-imo-primary hover:bg-imo-secondary">
+                  <Button type="submit" className="w-full bg-imo-primary hover:bg-imo-secondary" loading={loading} loadingTime={0.5} loadingFull={false}>
                     {dictionary.login?.submit || "Se connecter"}
                   </Button>
                 </form>
@@ -130,15 +239,10 @@ const router = useRouter()
 
               <TabsContent value="google">
                 <div className="space-y-4">
-                  <Button variant="outline" className="w-full gap-2">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className='-mb-1'>
-                    <path d="M21.8055 10.0415H21V10H12V14H17.6515C16.827 16.3285 14.6115 18 12 18C8.6865 18 6 15.3135 6 12C6 8.6865 8.6865 6 12 6C13.5295 6 14.921 6.577 15.9805 7.5195L18.809 4.691C17.023 3.0265 14.634 2 12 2C6.4775 2 2 6.4775 2 12C2 17.5225 6.4775 22 12 22C17.5225 22 22 17.5225 22 12C22 11.3295 21.931 10.675 21.8055 10.0415Z" fill="#FFC107"/>
-                    <path d="M3.15308 7.3455L6.43858 9.755C7.32758 7.554 9.48058 6 12.0001 6C13.5296 6 14.9211 6.577 15.9806 7.5195L18.8091 4.691C17.0231 3.0265 14.6341 2 12.0001 2C8.15908 2 4.82808 4.1685 3.15308 7.3455Z" fill="#FF3D00"/>
-                    <path d="M11.9999 22C14.5829 22 16.9299 21.0115 18.7044 19.404L15.6094 16.785C14.5719 17.5745 13.3037 18.0014 11.9999 18C9.39891 18 7.19041 16.3415 6.35841 14.027L3.09741 16.5395C4.75241 19.778 8.11341 22 11.9999 22Z" fill="#4CAF50"/>
-                    <path d="M21.8055 10.0415H21V10H12V14H17.6515C17.2571 15.1082 16.5467 16.0766 15.608 16.7855L15.6095 16.7845L18.7045 19.4035C18.4855 19.6025 22 17 22 12C22 11.3295 21.931 10.675 21.8055 10.0415Z" fill="#1976D2"/>
-                  </svg>
-                    {dictionary.login?.letGoogle || "Se connecter avec Google"}
-                  </Button>
+                  <GoogleLoginButton 
+                    onClick={withGoogle}
+                    loading={googleLoading}
+                  />
                 </div>
               </TabsContent>
             </Tabs>
@@ -151,10 +255,6 @@ const router = useRouter()
             </div>
           </CardContent>
         </Card>
-
-        <p className="text-center text-white/70 text-sm mt-8">
-          © {currentYear} {dictionary.login?.rights || "Imovisit. Tous droits réservés."}
-        </p>
       </div>
     </div>
       <Footer />
