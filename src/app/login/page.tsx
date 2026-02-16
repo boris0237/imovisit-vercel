@@ -14,7 +14,7 @@ import {Header} from '@/components/Header';
 import {Footer} from '@/components/Footer';
 import { useDictionary } from '@/hooks/useDictionary';
 import { useGoogleAuth } from '@/hooks/useGoogleAuth';
-import GoogleLoginButton from '@/components/ui/GoogleButton';
+import GoogleLoginButton from '@/components/ui/GoogleLoginButton';
 
 export default function Login() {
 const router = useRouter()

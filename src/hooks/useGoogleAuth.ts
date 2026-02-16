@@ -1,6 +1,7 @@
 // src/hooks/useGoogleAuth.ts
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { AuthProvider } from '@prisma/client';
 
 declare global {
   interface Window {
@@ -15,7 +16,7 @@ interface UseGoogleAuthReturn {
 }
 
 export const useGoogleAuth = (): UseGoogleAuthReturn => {
-  const [googleLoading, setgoogleLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
@@ -38,22 +39,30 @@ export const useGoogleAuth = (): UseGoogleAuthReturn => {
   }, []);
 
   const withGoogle = () => {
-    setgoogleLoading(true);
+    setGoogleLoading(true);
     setError(null);
+
+    // Vérifier que le client_id est défini
+    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    if (!clientId) {
+      setError('Configuration Google manquante');
+      setGoogleLoading(false);
+      return;
+    }
 
     if (typeof window !== 'undefined' && window.google) {
       window.google.accounts.id.initialize({
-        client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!,
+        client_id: clientId, // Utilise la variable corrigée
         callback: async (response: any) => {
           try {
             if (response.credential) {
               // Envoyer le credential au backend pour vérification
-              const backendResponse = await fetch('/api/auth/google', {
+              const backendResponse = await fetch('/api/users/login', {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ credential: response.credential }),
+                body: JSON.stringify({ AuthProvider: AuthProvider.google, credential: response.credential }),
               });
 
               const data = await backendResponse.json();
@@ -71,7 +80,7 @@ export const useGoogleAuth = (): UseGoogleAuthReturn => {
             setError('Erreur réseau');
             console.error(err);
           } finally {
-            setgoogleLoading(false);
+            setGoogleLoading(false);
           }
         },
       });
@@ -79,7 +88,7 @@ export const useGoogleAuth = (): UseGoogleAuthReturn => {
       window.google.accounts.id.prompt();
     } else {
       setError('Google Sign-In n\'est pas disponible');
-      setgoogleLoading(false);
+      setGoogleLoading(false);
     }
   };
 
