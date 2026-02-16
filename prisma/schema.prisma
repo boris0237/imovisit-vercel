@@ -11,7 +11,7 @@ model User {
   id           String       @id @default(auto()) @map("_id") @db.ObjectId
   name         String
   age          Int?
-  typeCompte   typeCompte   @default(classique)
+  typeCompte   TypeCompte   @default(classique)
   email        String       @unique
   password     String?
   phone        String?
@@ -24,6 +24,7 @@ model User {
   profession   String?
   services     String?
   authProvider AuthProvider @default(local)
+  isActive     Boolean      @default(true)
   createdAt    DateTime     @default(now())
 }
 
@@ -40,7 +41,7 @@ enum AuthProvider {
   google
 }
 
-enum typeCompte {
+enum TypeCompte {
   classique
   premium
 }
