@@ -8,22 +8,32 @@ datasource db {
 }
 
 model User {
-  id           String       @id @default(auto()) @map("_id") @db.ObjectId
-  name         String
-  age          Int?
-  typeCompte   typeCompte   @default(classique)
-  email        String       @unique
-  password     String?
-  phone        String?
-  avatar       String?
-  role         UserRole     @default(visitor)
-  verified     Boolean      @default(false)
-  city         String?
-  country      String?
-  docJust      String?
-  profession   String?
-  services     String?
+  id         String     @id @default(auto()) @map("_id") @db.ObjectId
+  name       String
+  age        Int?
+  typeCompte TypeCompte @default(classique)
+  email      String     @unique
+  password   String?
+  phone      String?
+  avatar     String?
+  role       UserRole   @default(visitor)
+
+  accountStatus AccountStatus @default(unverified)
+
+  city       String?
+  country    String?
+  profession String?
+  services   String?
+
+  docJust         String?
+  docCNI          String?
+  docDiplome      String?
+  docContribuable String?
+  docRCCM         String?
+  docTitreFoncier String?
+
   authProvider AuthProvider @default(local)
+  isActive     Boolean      @default(true)
   createdAt    DateTime     @default(now())
 }
 
@@ -40,7 +50,14 @@ enum AuthProvider {
   google
 }
 
-enum typeCompte {
+enum TypeCompte {
   classique
   premium
+}
+
+enum AccountStatus {
+  unverified
+  pending
+  verified
+  suspended
 }
