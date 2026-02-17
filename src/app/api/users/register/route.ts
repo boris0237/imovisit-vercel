@@ -5,6 +5,7 @@
  *     tags:
  *       - Authentification
  *     summary: Création d'un nouvel utilisateur
+ *     description: Permet de créer un utilisateur local ou Google
  *     requestBody:
  *       required: true
  *       content:
@@ -14,30 +15,28 @@
  *             required:
  *               - name
  *               - email
- *               - password
- *               - city
- *               - country
  *               - authProvider
  *               - role
  *             properties:
  *               name:
  *                 type: string
- *                 example: "royal tech"
+ *                 example: "Royal Tech"
  *               email:
  *                 type: string
  *                 example: "royaltech.sarl@gmail.com"
  *               password:
  *                 type: string
+ *                 description: Obligatoire si authProvider = local
  *                 example: "123123123"
  *               phone:
  *                 type: string
  *                 example: "692134087"
- *               city:
- *                 type: string
- *                 example: "Yaounde"
  *               country:
  *                 type: string
  *                 example: "Cameroun"
+ *               avatar:
+ *                 type: string
+ *                 example: "https://example.com/avatar.png"
  *               authProvider:
  *                 type: string
  *                 enum: [local, google]
@@ -49,7 +48,12 @@
  *     responses:
  *       201:
  *         description: Utilisateur créé avec succès
+ *       400:
+ *         description: Champs manquants ou email déjà existant
+ *       500:
+ *         description: Erreur serveur
  */
+
 
 /**
  * @swagger
@@ -143,16 +147,16 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const body = await req.json()
-    const { name, email, password, phone, city, country, authProvider, role } = body
+    const { name, email, password, phone, country, authProvider, role, avatar } = body
 
-    if (!email || !name || !password || !city  || !authProvider || !role) {
+    if (!email || !name || !authProvider || !role) {
       return apiResponse({
         status: 400,
         message: "Certains champs sont obligatoires",
       })
     }
 
-    if (authProvider === "local" && !password) {
+    if (authProvider === AuthProvider.local && !password) {
       return apiResponse({
         status: 400,
         message: "Le mot de passe est obligatoire pour un compte local",
@@ -168,7 +172,7 @@ export async function POST(req: Request) {
     }
 
     let hashedPassword: string | null = null
-    if (authProvider === "local") {
+    if (authProvider === AuthProvider.local) {
       hashedPassword = await bcrypt.hash(password, 10)
     }
 
@@ -177,13 +181,11 @@ export async function POST(req: Request) {
         name,
         email,
         password: hashedPassword,
-        phone: phone || null,
-        city,
+        phone,
         country,
         role,
-        verified: false,
+        avatar,
         authProvider,
-        typeCompte: "classique",
       },
     })
 

@@ -2,11 +2,13 @@
 import React from 'react';
 
 interface LoadingSpinnerProps {
+    loading: boolean;
     fullScreen?: boolean;
     time?: number; // Temps en secondes pour une rotation complète
 }
 
 const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ 
+    loading = false,
     fullScreen = false, 
     time = 1 
 }) => {
@@ -40,9 +42,10 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
     return (
         <>
             <style>{keyframes}</style>
-            <div className={containerClasses}>
+            {!loading && (
+            <div className={containerClasses } >
                 <div style={spinnerStyle} />
-            </div>
+            </div>)}
         </>
     );
 };

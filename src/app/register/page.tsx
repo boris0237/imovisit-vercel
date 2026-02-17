@@ -8,12 +8,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { cities } from '@/data/mock';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { useDictionary } from '@/hooks/useDictionary';
+import { useGoogleAuth } from '@/hooks/useGoogleAuth';
+import InternationalPhoneInput from '@/components/ui/InternationalPhoneInput';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
 
 
 export default function Register() {
@@ -22,11 +23,12 @@ export default function Register() {
     name: '',
     email: '',
     phone: '',
-    city: '',
     password: '',
     confirmPassword: '',
-    authProvider: 'local',
-    role: 'admin',
+    avatar: '',
+    country:'',
+    authProvider: '',
+    role: '',
     acceptTerms: false,
   });
   const { dictionary } = useDictionary();
@@ -40,6 +42,90 @@ export default function Register() {
     ) : null;
   };
 
+  const { withGoogle, googleLoading, error, userData } = useGoogleAuth();
+  const submitGoogle = async () => {
+  try {
+    withGoogle();
+    setIsLoading(true);
+    setErrors({}); // Réinitialiser les erreurs
+
+    // Validation des données de base
+    if (!userData?.name || !userData?.email) {
+      setErrors({
+        general: "Données utilisateur Google incomplètes"
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    // Préparer les données avec les informations Google
+    const userDataToSend = {
+      name: userData.name,
+      email: userData.email,
+      phone: formData.phone || "", // Utiliser le téléphone du formulaire s'il existe
+      country: formData.country || "", // Utiliser le pays du formulaire s'il existe
+      avatar: userData.picture || "",
+      authProvider: "google", // Doit être une string, pas un enum
+      role: accountType,
+    };
+
+    const response = await fetch('/api/users/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(userDataToSend),
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      setSuccessMessage(dictionary?.signup?.success || "Inscription réussie ! Vous allez être redirigé.");
+      
+      // Réinitialiser le formulaire
+      setFormData({
+        name: '',
+        email: '',
+        password: '',
+        confirmPassword: '',
+        phone: '',
+        avatar: '',
+        country: '',
+        authProvider: '',
+        role: accountType,
+        acceptTerms: false,
+      });
+      
+      // Redirection après succès
+      setTimeout(() => {
+        window.location.href = '/dashboard/user';
+      }, 3000);
+    } else {
+      // Gestion spécifique des erreurs connues
+      if (data.message?.includes("email existe déjà")) {
+        setErrors({
+          email: "Cet email est déjà utilisé"
+        });
+      } else if (data.message?.includes("champs sont obligatoires")) {
+        setErrors({
+          general: "Veuillez remplir tous les champs obligatoires"
+        });
+      } else {
+        setErrors({
+          general: data.message || dictionary?.signup?.errorGeneric || "Une erreur est survenue. Veuillez réessayer."
+        });
+      }
+    }
+  } catch (error) {
+    console.error(dictionary?.signup?.errorNetwork || 'Erreur réseau:', error);
+    setErrors({
+      general: dictionary?.signup?.canConnect || "Impossible de se connecter au serveur. Vérifiez votre connexion internet."
+    });
+  } finally {
+    setIsLoading(false);
+  }
+};
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -49,6 +135,8 @@ export default function Register() {
 
     try {
       const validationErrors: Record<string, string> = {};
+      console.log(formData);
+
 
       if (!formData.name.trim()) {
         validationErrors.name = dictionary?.signup?.errorNameRequired || "Le nom est requis";
@@ -93,7 +181,7 @@ export default function Register() {
           email: formData.email,
           password: formData.password,
           phone: formData.phone || null,
-          city: formData.city || "local",
+          country:'',
           authProvider: 'local',
           role: accountType,
         }),
@@ -109,9 +197,10 @@ export default function Register() {
           password: '',
           confirmPassword: '',
           phone: '',
-          city: '',
-          authProvider: 'local',
-          role: 'admin',
+          avatar: '',
+          country:'',
+          authProvider: '',
+          role: accountType,
           acceptTerms: false,
         });
 
@@ -242,18 +331,21 @@ export default function Register() {
                         {renderError('name')}
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="phone">{dictionary?.signup?.tel || "Numéro de téléphone"}</Label>
+                        <Label htmlFor="phone">Téléphone</Label>
                         <div className="relative">
-                          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                          <Input
-                            id="phone"
-                            placeholder="+237 6XX XXX XXX"
+                          <InternationalPhoneInput
                             value={formData.phone}
-                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                            className={`pl-10 ${errors.phone ? 'border-red-500' : ''}`}
+                            onChange={(value) => setFormData({ ...formData, phone: value })}
+                            onCountryChange={(countryCode) => {
+                              setFormData({ 
+                                ...formData, 
+                                phone: formData.phone,
+                                country: countryCode
+                              });
+                            }}
+                            error={errors.phone}
                           />
                         </div>
-                        {renderError('phone')}
                       </div>
                     </div>
 
@@ -340,19 +432,56 @@ export default function Register() {
 
                 <TabsContent value="google">
                   <div className="space-y-4">
-                    <Button variant="outline" className="w-full gap-2">
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className='-mb-1'>
-                        <path d="M21.8055 10.0415H21V10H12V14H17.6515C16.827 16.3285 14.6115 18 12 18C8.6865 18 6 15.3135 6 12C6 8.6865 8.6865 6 12 6C13.5295 6 14.921 6.577 15.9805 7.5195L18.809 4.691C17.023 3.0265 14.634 2 12 2C6.4775 2 2 6.4775 2 12C2 17.5225 6.4775 22 12 22C17.5225 22 22 17.5225 22 12C22 11.3295 21.931 10.675 21.8055 10.0415Z" fill="#FFC107" />
-                        <path d="M3.15308 7.3455L6.43858 9.755C7.32758 7.554 9.48058 6 12.0001 6C13.5296 6 14.9211 6.577 15.9806 7.5195L18.8091 4.691C17.0231 3.0265 14.6341 2 12.0001 2C8.15908 2 4.82808 4.1685 3.15308 7.3455Z" fill="#FF3D00" />
-                        <path d="M11.9999 22C14.5829 22 16.9299 21.0115 18.7044 19.404L15.6094 16.785C14.5719 17.5745 13.3037 18.0014 11.9999 18C9.39891 18 7.19041 16.3415 6.35841 14.027L3.09741 16.5395C4.75241 19.778 8.11341 22 11.9999 22Z" fill="#4CAF50" />
-                        <path d="M21.8055 10.0415H21V10H12V14H17.6515C17.2571 15.1082 16.5467 16.0766 15.608 16.7855L15.6095 16.7845L18.7045 19.4035C18.4855 19.6025 22 17 22 12C22 11.3295 21.931 10.675 21.8055 10.0415Z" fill="#1976D2" />
-                      </svg>
-                      {dictionary.signup?.letGoogle || "Se connecter avec Google"}
-                    </Button>
-                  </div>
+                      <Button 
+                        variant="outline" 
+                        className="w-full gap-2" 
+                        onClick={submitGoogle} // ← Activation directe de withGoogle
+                        disabled={googleLoading || isLoading} // ← Désactivation pendant le chargement
+                      >
+                        {googleLoading || isLoading ? (
+                          <>
+                            <LoadingSpinner loading={isLoading} fullScreen={false}/>
+                            {dictionary.signup?.loading || "Chargement..."}
+                          </>
+                        ) : (
+                          <>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className='-mb-1'>
+                              <path d="M21.8055 10.0415H21V10H12V14H17.6515C16.827 16.3285 14.6115 18 12 18C8.6865 18 6 15.3135 6 12C6 8.6865 8.6865 6 12 6C13.5295 6 14.921 6.577 15.9805 7.5195L18.809 4.691C17.023 3.0265 14.634 2 12 2C6.4775 2 2 6.4775 2 12C2 17.5225 6.4775 22 12 22C17.5225 22 22 17.5225 22 12C22 11.3295 21.931 10.675 21.8055 10.0415Z" fill="#FFC107" />
+                              <path d="M3.15308 7.3455L6.43858 9.755C7.32758 7.554 9.48058 6 12.0001 6C13.5296 6 14.9211 6.577 15.9806 7.5195L18.8091 4.691C17.0231 3.0265 14.6341 2 12.0001 2C8.15908 2 4.82808 4.1685 3.15308 7.3455Z" fill="#FF3D00" />
+                              <path d="M11.9999 22C14.5829 22 16.9299 21.0115 18.7044 19.404L15.6094 16.785C14.5719 17.5745 13.3037 18.0014 11.9999 18C9.39891 18 7.19041 16.3415 6.35841 14.027L3.09741 16.5395C4.75241 19.778 8.11341 22 11.9999 22Z" fill="#4CAF50" />
+                              <path d="M21.8055 10.0415H21V10H12V14H17.6515C17.2571 15.1082 16.5467 16.0766 15.608 16.7855L15.6095 16.7845L18.7045 19.4035C18.4855 19.6025 22 17 22 12C22 11.3295 21.931 10.675 21.8055 10.0415Z" fill="#1976D2" />
+                            </svg>
+                            {dictionary.signup?.letGoogle || "S'inscrire avec Google"}
+                          </>
+                        )}
+                      </Button>
+                      
+                      {/* Affichage des erreurs Google */}
+                      {error && (
+                        <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-md">
+                             {errors && (
+                         <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-md mb-4">
+                           {errors.general}
+                           {error}
+                         </div>
+                       )}                    
+                       {successMessage && (
+                         <div className="bg-green-50 border border-green-200 text-green-600 p-3 rounded-md mb-4">
+                           {successMessage}
+                         </div>
+                       )}                    
+                      </div>
+                      )}
+                      
+                      {/* Affichage du succès */}
+                      {successMessage && (
+                        <div className="bg-green-50 border border-green-200 text-green-600 p-3 rounded-md">
+                          {successMessage}
+                        </div>
+                      )}
+                    </div>
                 </TabsContent>
               </Tabs>
-
               <div className="mt-6 text-center text-sm">
                 <span className="text-gray-600">{dictionary.signup?.haveAccount || "Déjà un compte ? "}</span>
                 <Link href="/login" className="text-imo-primary hover:underline font-medium">
@@ -361,8 +490,6 @@ export default function Register() {
               </div>
             </CardContent>
           </Card>
-
-     
         </div>
       </div>
       <Footer />
