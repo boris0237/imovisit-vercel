@@ -54,7 +54,7 @@
     "axios": "^1.13.4",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
-    "i18next": "^25.8.4",
+    "i18next": "^25.8.10",
     "lucide-react": "^0.344.0",
     "next": "^14.2.35",
     "next-intl": "^4.8.2",

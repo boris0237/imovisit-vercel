@@ -1,4 +1,6 @@
 "use client"
+import { useTranslation } from 'react-i18next';
+import i18next from 'i18next';
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from "next/image";
@@ -8,21 +10,35 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { usePathname } from 'next/navigation';
 import { LanguageDropdown } from "@/components/LanguageDropdown";
-
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useDictionary } from '@/hooks/useDictionary'
 
 
 export function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
   const isLoggedIn = false; // TODO: Replace with auth context
+  const { language } = useLanguage()
+  const { dictionary } = useDictionary()
+
+  const changeLanguage = (lang: string) => {
+    i18next.changeLanguage(lang);
+    document.dir = lang === "ar" ? "rtl" : "ltr";
+    document.documentElement.lang = lang;
+  };
 
   const navItems = [
-    { href: '/', label: 'Accueil', icon: Home },
-    { href: '/search', label: 'Rechercher', icon: Search },
-    { href: '/favorites', label: 'Favoris', icon: Heart },
+   { href: '/', label: dictionary?.header?.accueil || 'Accueil', icon: Home },
+   { href: '/search', label: dictionary?.header?.recherche || 'Rechercher', icon: Search },
+   { href: '/favorites', label: dictionary?.header?.favoris || 'Favoris', icon: Heart },
   ];
 
   const isActive = (path: string) => pathname === path;
+
+  const languages = [
+    { code: 'fr', name: 'Français', flag: "FR" },
+    { code: 'en', name: 'English', flag: "EN" },
+  ];
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white border-b border-gray-100 shadow-sm">
@@ -46,7 +62,7 @@ export function Header() {
             <Link href="/dashboard">
               <Button variant="ghost" className="gap-2">
                 <User className="w-4 h-4" />
-                Mon compte
+                {dictionary.header?.myaccount || "Mon compte"}
               </Button>
             </Link>
           ) : (
@@ -57,13 +73,13 @@ export function Header() {
               <Link href="/login">
                 <Button variant="ghost" className="gap-2">
                   <LogIn className="w-4 h-4" />
-                  Connexion
+                  {dictionary.header?.connexion || "Connexion"}
                 </Button>
               </Link>
               <Link href="/register">
                 <Button className="bg-imo-primary hover:bg-imo-secondary gap-2">
                   <User className="w-4 h-4" />
-                  S'inscrire
+                  {dictionary.header?.inscrire || "S'inscrire"}
                 </Button>
               </Link>
             </>
@@ -122,7 +138,7 @@ export function Header() {
                   <Link href="/dashboard" onClick={() => setIsOpen(false)}>
                     <Button className="w-full bg-imo-primary hover:bg-imo-secondary">
                       <User className="w-4 h-4 mr-2" />
-                      Mon compte
+                      {dictionary.header?.myaccount || "Mon compte"}
                     </Button>
                   </Link>
                 ) : (
@@ -130,13 +146,13 @@ export function Header() {
                     <Link href="/login" onClick={() => setIsOpen(false)}>
                       <Button variant="outline" className="w-full">
                         <LogIn className="w-4 h-4 mr-2" />
-                        Connexion
+                         {dictionary.header?.connexion || 'Connexion'}
                       </Button>
                     </Link>
                     <Link href="/register" onClick={() => setIsOpen(false)}>
                       <Button className="w-full bg-imo-primary hover:bg-imo-secondary">
                         <User className="w-4 h-4 mr-2" />
-                        S'inscrire
+                       {dictionary.header?.inscrire || 'S\'inscrire'}
                       </Button>
                     </Link>
                   </>

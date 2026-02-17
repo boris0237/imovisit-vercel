@@ -4,11 +4,11 @@ import Link from 'next/link'
 import { Building2, Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
 import Image from "next/image";
 import logoFooter from "@/images/logoFooter.png";
-
+import { useDictionary } from '@/hooks/useDictionary'
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
-
+  const { dictionary } = useDictionary()
   const footerLinks = {
     company: [
       { label: 'À propos', href: '/about' },
@@ -82,7 +82,7 @@ export function Footer() {
 
           {/* Company Links */}
           <div>
-            <h3 className="font-semibold text-lg mb-4">Entreprise</h3>
+            <h3 className="font-semibold text-lg mb-4">{dictionary.footer?.title1 || 'Entreprise'}</h3>
             <ul className="space-y-2">
               {footerLinks.company.map((link) => (
                 <li key={link.href}>
@@ -99,7 +99,7 @@ export function Footer() {
 
           {/* Support Links */}
           <div>
-            <h3 className="font-semibold text-lg mb-4">Support</h3>
+            <h3 className="font-semibold text-lg mb-4">{dictionary.footer?.title2 || 'Support'}</h3>
             <ul className="space-y-2">
               {footerLinks.support.map((link) => (
                 <li key={link.href}>
@@ -116,7 +116,7 @@ export function Footer() {
 
           {/* Legal Links */}
           <div>
-            <h3 className="font-semibold text-lg mb-4">Légal</h3>
+            <h3 className="font-semibold text-lg mb-4">{dictionary.footer?.title3 || 'Légal'}</h3>
             <ul className="space-y-2">
               {footerLinks.legal.map((link) => (
                 <li key={link.href}>
@@ -135,7 +135,7 @@ export function Footer() {
         {/* Bottom */}
         <div className="mt-12 pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-gray-400 text-sm text-center md:text-left mx-auto">
-            © {currentYear} Imovisit. Tous droits réservés.
+             © {currentYear} {dictionary.footer?.rights || 'Imovisit. All rights reserved.'}.
           </p>
           
         </div>

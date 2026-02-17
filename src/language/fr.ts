@@ -1,35 +1,17 @@
-// src/i18n/dictionaries/fr.tss
-export const fr = {
-  home: {
-    title: "Trouvez votre bien idéal",
-    subtitle: "Découvrez les meilleures propriétés"
+// dictionaries/fr.ts
+export default {
+  navigation: {
+    about: "À propos",
+    contact: "Contact",
+    services: "Services"
   },
   header: {
-    searchPlaceholder: "Rechercher un bien...",
-    login: "Connexion",
-    register: "Inscription"
+    Connexion: "Connexion",
+    welcome: "Bienvenue",
+    logout: "Se déconnecter",
+    login: "Se connecter"
   },
-
-  hero: {
-    title: "Trouvez votre bien idéal",
-    subtitle: "Découvrez les meilleures propriétés",
-    buy: "Acheter",
-    rent: "Louer",
-    city: "Ville",
-    propertyType: "Type de bien",
-    search: "Rechercher"
-  },
-
-  property: {
-    bedrooms: "Chambres",
-    bathrooms: "Salles de bain",
-    area: "Surface",
-    viewDetails: "Voir détails"
-  },
-
-  events: {
-    title: "Événements immobiliers",
-    location: "Lieu",
-    time: "Heure"
+  footer: {
+    rights: "Tous droits réservés"
   }
-}
+} as const
