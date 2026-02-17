@@ -309,3 +309,42 @@ export const amenitiesList = [
   { id: 'cleaning', name: 'Ménage', icon: 'Sparkles' },
   { id: 'fenced', name: 'Clôturé', icon: 'Fence' },
 ];
+
+export const events = [
+  {
+    id: 1,
+    image: "/images/property1.jpg",
+    title: "Open House - Residence Panorama",
+    location: "Bastos, Yaoundé",
+    startTime: "10h00",
+    endTime: "15h00",
+    views: 150,
+    visitsCount: 20,
+    ownerName: "Jean Dupont",
+    ownerVerified: true
+  },
+  {
+    id: 2,
+    image: "/images/property2.jpg",
+    title: "Open House - Residence Panorama",
+    location: "Bastos, Yaoundé",
+    startTime: "10h00",
+    endTime: "15h00",
+    views: 120,
+    visitsCount: 45,
+    ownerName: "Marie Dubois",
+    ownerVerified: false
+  },
+  {
+    id: 3,
+    image: "/images/property3.jpg",
+    title: "Open House - Residence Panorama",
+    location: "Bastos, Yaoundé",
+    startTime: "10h00",
+    endTime: "15h00",
+    views: 90,
+    visitsCount: 30,
+    ownerName: "Pierre Martin",
+    ownerVerified: true
+  }
+]

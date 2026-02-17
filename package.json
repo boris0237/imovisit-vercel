@@ -16,7 +16,7 @@
   },
   "license": "ISC",
   "author": "jeff",
-  "type": "commonjs",
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "dev": "next dev",

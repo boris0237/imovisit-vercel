@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image"
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation } from "swiper/modules";
 import "swiper/css";
@@ -10,9 +11,14 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PropertyCard } from "@/components/PropertyCard";
 import { mockProperties } from "@/data/mock";
+import { EventsSection } from "@/components/events/EventsSection" 
+import { EventCard } from "@/components/events/EventCard"
+
+
 
 export function FeaturedProperties() {
   const featuredProperties = mockProperties.slice(0, 6);
+  const events = [];
 
   return (
     <section className="py-16 md:py-24 bg-gray-50">
@@ -200,7 +206,7 @@ export function FeaturedProperties() {
             <br />
             <br />
             <h2 className="text-3xl md:text-4xl font-bold text-imo-primary mb-3">
-              Evènements
+              Évènements
             </h2>
             <p className="text-gray-600 max-w-xl">
               Assister à nos évènements afin d'intégrer notre communauté <br />{" "}
@@ -219,37 +225,24 @@ export function FeaturedProperties() {
           </Link>
         </div>
         <br />
-        {/* Navigation Buttons */}
-        <div className="flex justify-end mb-6 gap-2">
-          <Button className="prev-btn-events bg-imo-primary w-12 h-12 rounded-full text-white">
-            <ArrowLeft className="w-4 h-4" />
-           </Button>
 
-           <Button className="next-btn-events bg-imo-primary w-12 h-12 rounded-full text-white">
-            <ArrowRight className="w-4 h-4" />
-          </Button>
-        </div>
-
-
+        
         {/* Properties Grid */}
         <Swiper
           modules={[Navigation]}
           spaceBetween={24}
           slidesPerView={1}
           navigation={{
-            prevEl: ".prev-btn-events",
-            nextEl: ".next-btn-events",
+            prevEl: ".prev-btn-event",
+            nextEl: ".next-btn-event",
           }}
           breakpoints={{
             640: { slidesPerView: 2 },
             1024: { slidesPerView: 3 },
-          }}
-        >
-          {featuredProperties.map((property) => (
-            <SwiperSlide key={property.id}>
-              <PropertyCard property={property} />
-            </SwiperSlide>
-          ))}
+          }}>
+            
+         <EventsSection />
+         
         </Swiper>
 
         {/* CTA */}
