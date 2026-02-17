@@ -3,7 +3,7 @@
  * /api/users/reset-password:
  *   post:
  *     tags:
- *       - Upload
+ *       - Authentification
  *     summary: Réinitialisation du mot de passe
  *     description: Permet de réinitialiser le mot de passe d'un utilisateur via un lien envoyé par email contenant un token JWT valide.
  *     parameters:
@@ -54,7 +54,7 @@ import jwt from "jsonwebtoken";
 import { apiResponse } from "@/lib/api-response";
 import { NextRequest } from "next/server";
 import { AuthProvider } from "@prisma/client";
-import { validatePassword } from "@/utils/validatePassword";
+import { validatePassword } from "@/utils/validate-password";
 
 const JWT_SECRET = process.env.JWT_SECRET!;
 

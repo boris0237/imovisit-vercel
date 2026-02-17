@@ -1,6 +1,5 @@
 import { apiResponse } from "@/lib/api-response";
 
-
 export function validatePassword(password: string) {
   const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
   if (!passwordRegex.test(password)) {

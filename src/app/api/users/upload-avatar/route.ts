@@ -54,6 +54,7 @@ import { apiResponse } from "@/lib/api-response";
 import { authMiddleware } from "@/middlewares/auth-middleware";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 import { NextRequest } from "next/server";
+import { UPLOAD_FOLDERS } from "@/types/constant";
 
 export async function PATCH(req: NextRequest) {
   try {
@@ -78,7 +79,7 @@ export async function PATCH(req: NextRequest) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    const uploadResult: any = await uploadToCloudinary(buffer, "avatars");
+    const uploadResult: any = await uploadToCloudinary(buffer, UPLOAD_FOLDERS.AVATAR);
 
     // Update avatar en BD
     const updatedUser = await prisma.user.update({

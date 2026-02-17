@@ -7,7 +7,7 @@
  * /api/users/change-password:
  *   post:
  *     tags:
- *       - Authentification
+ *       - Upload
  *     summary: Changer le mot de passe utilisateur (compte local)
  *     description: |
  *       Permet à un utilisateur authentifié de changer son mot de passe.
@@ -54,7 +54,7 @@ import bcrypt from "bcryptjs";
 import { apiResponse } from "@/lib/api-response";
 import { authMiddleware } from "@/middlewares/auth-middleware"; 
 import { NextRequest } from "next/server";
-import { validatePassword } from "@/utils/validatePassword";
+import { validatePassword } from "@/utils/validate-password";
 
 export async function POST(req: NextRequest) {
   try {
@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
     if (!isOldPasswordValid) {
       return apiResponse({ status: 401, message: "Ancien mot de passe incorrect" });
     }
-    
+
     // verified structure pwd
     const isValid = validatePassword(newPassword);
     if (isValid !== true) return isValid;
