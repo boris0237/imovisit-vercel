@@ -101,6 +101,7 @@ import { apiResponse } from "@/lib/api-response"
 import { AuthProvider, UserRole } from "@prisma/client"
 import { authMiddleware } from "@/middlewares/auth-middleware"
 import { roleMiddleware } from "@/middlewares/role-middleware"
+import { stringify } from "querystring";
 import { validatePassword } from "@/utils/validatePassword";
 
 
@@ -153,7 +154,7 @@ export async function POST(req: Request) {
     if (!email || !name || !authProvider || !role) {
       return apiResponse({
         status: 400,
-        message: "Certains champs sont obligatoires",
+        message: stringify(body),
       })
     }
 
