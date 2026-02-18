@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link'
 import { Mail, Lock, Users, Phone, MapPin, Building2, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,8 @@ import { useDictionary } from '@/hooks/useDictionary';
 import { useGoogleAuth } from '@/hooks/useGoogleAuth';
 import InternationalPhoneInput from '@/components/ui/InternationalPhoneInput';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+
+
 
 
 export default function Register() {
@@ -42,87 +44,162 @@ export default function Register() {
     ) : null;
   };
 
-  const { withGoogle, googleLoading, error, userData } = useGoogleAuth();
-  const submitGoogle = async () => {
-  try {
-    withGoogle();
-    setIsLoading(true);
-    setErrors({}); // Réinitialiser les erreurs
+  const { withGoogle, googleLoading, error, userData, resetError } = useGoogleAuth();
+// 1. L'effet "Moteur" : Surveille l'arrivée des données Google et lance l'inscription automatiquement
+useEffect(() => {
+  if (userData?.email && !isLoading && !successMessage) {
+    registerUserBackend();
+  }
+}, [userData]); // Se déclenche dès que userData change après l'appel à withGoogle()
 
-    // Validation des données de base
-    if (!userData?.name || !userData?.email) {
-      setErrors({
-        general: "Données utilisateur Google incomplètes"
-      });
-      setIsLoading(false);
-      return;
-    }
+const handleBackendLogin = (email: string) => {
+  setIsLoading(true);
+  setErrors({});
+  resetError();
 
-    // Préparer les données avec les informations Google
-    const userDataToSend = {
-      name: userData.name,
-      email: userData.email,
-      phone: formData.phone || "", // Utiliser le téléphone du formulaire s'il existe
-      country: formData.country || "", // Utiliser le pays du formulaire s'il existe
-      avatar: userData.picture || "",
-      authProvider: "google", // Doit être une string, pas un enum
-      role: accountType,
-    };
+  const loginData = { email: email };
 
-    const response = await fetch('/api/users/register', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(userDataToSend),
-    });
-
-    const data = await response.json();
-
-    if (response.ok) {
-      setSuccessMessage(dictionary?.signup?.success || "Inscription réussie ! Vous allez être redirigé.");
-      
-      // Réinitialiser le formulaire
-      setFormData({
-        name: '',
-        email: '',
-        password: '',
-        confirmPassword: '',
-        phone: '',
-        avatar: '',
-        country: '',
-        authProvider: '',
-        role: accountType,
-        acceptTerms: false,
-      });
-      
-      // Redirection après succès
-      setTimeout(() => {
-        window.location.href = '/dashboard/user';
-      }, 3000);
-    } else {
-      // Gestion spécifique des erreurs connues
-      if (data.message?.includes("email existe déjà")) {
-        setErrors({
-          email: "Cet email est déjà utilisé"
-        });
-      } else if (data.message?.includes("champs sont obligatoires")) {
-        setErrors({
-          general: "Veuillez remplir tous les champs obligatoires"
-        });
+  fetch('/api/users/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(loginData),
+  })
+    .then((response) => {
+      // On capture le statut HTTP pour le switch case plus bas
+      return response.json().then((data) => ({
+        ok: response.ok,
+        status: response.status,
+        data: data
+      }));
+    })
+    .then(({ ok, status, data }) => {
+      if (ok) {
+        setSuccessMessage(dictionary?.login?.success || "Connexion réussie !");
+        
+        // Redirection après un court délai
+        setTimeout(() => {
+          window.location.href = '/dashboard/user';
+        }, 2000);
       } else {
-        setErrors({
-          general: data.message || dictionary?.signup?.errorGeneric || "Une erreur est survenue. Veuillez réessayer."
-        });
+        // Gestion précise des erreurs via le statut HTTP
+        switch (status) {
+          case 400:
+            setErrors({ email: data.message || "Email requis" });
+            break;
+          case 401:
+            setErrors({ general: data.message || "Authentification invalide" });
+            break;
+          // ... à l'intérieur de handleBackendLogin, dans le switch(status)
+          case 404:
+            // Au lieu de mettre une erreur, on informe l'utilisateur et on crée le compte
+            setSuccessMessage("Compte non trouvé. Création de votre compte en cours...");
+
+            // On attend un tout petit peu pour que l'utilisateur puisse lire le message
+            setTimeout(() => {
+              registerUserBackend();
+            }, 1500);
+            break;
+            break;
+          default:
+            setErrors({
+              general: data.message || dictionary?.login?.errorGeneric || "Une erreur est survenue."
+            });
+        }
       }
-    }
-  } catch (error) {
-    console.error(dictionary?.signup?.errorNetwork || 'Erreur réseau:', error);
-    setErrors({
-      general: dictionary?.signup?.canConnect || "Impossible de se connecter au serveur. Vérifiez votre connexion internet."
+    })
+    .catch((error) => {
+      console.error('Erreur réseau:', error);
+      setErrors({
+        general: dictionary?.login?.canConnect || "Impossible de se connecter au serveur."
+      });
+    })
+    .finally(() => {
+      setIsLoading(false);
     });
-  } finally {
-    setIsLoading(false);
+};
+
+// 2. La fonction de traitement Backend
+const registerUserBackend = () => {
+  setIsLoading(true);
+  setErrors({});
+
+  const userDataToSend = {
+    name: userData?.name,
+    email: userData?.email,
+    phone: formData.phone || "",
+    country: formData.country || "",
+    avatar: userData?.picture || "",
+    authProvider: "google",
+    role: accountType,
+  };
+
+  fetch('/api/users/register', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(userDataToSend),
+  })
+    .then((response) => {
+      return response.json().then((data) => ({
+        ok: response.ok,
+        data: data
+      }));
+    })
+    .then(({ ok, data }) => {
+      if (ok) {
+        setSuccessMessage(dictionary?.signup?.success || "Inscription réussie !");
+        
+        // Réinitialisation du formulaire
+        setFormData({
+          name: '', email: '', password: '', confirmPassword: '',
+          phone: '', avatar: '', country: '', authProvider: '',
+          role: accountType, acceptTerms: false,
+        });
+
+        // Redirection
+        setTimeout(() => {
+          window.location.href = '/dashboard/user';
+        }, 3000);
+      } else {
+        // --- CAS : L'EMAIL EXISTE DÉJÀ ---
+        if (data.message?.includes("email existe déjà") || data.message?.includes("déjà utilisé")) {
+          setErrors({ email: "Vous avez déjà un compte. Connexion automatique..." });
+          
+          // On appelle le login en passant l'email de userData
+          setTimeout(() => {
+            if (userData?.email && !isLoading && !successMessage) {
+             handleBackendLogin(userData.email);
+            }     
+          }, 1500);
+        } else {
+          setErrors({
+            general: data.message || "Une erreur est survenue lors de l'inscription."
+          });
+        }
+      }
+    })
+    .catch((error) => {
+      console.error('Erreur réseau:', error);
+      setErrors({ general: "Impossible de joindre le serveur. Vérifiez votre connexion." });
+    })
+    .finally(() => {
+      setIsLoading(false);
+    });
+};
+
+// 3. La fonction déclenchée par ton bouton "Google"
+const submitGoogle = () => {
+  setErrors({}); 
+
+  if (!userData?.email) {
+    // Si on n'a pas encore les infos, on ouvre la popup Google
+    withGoogle();
+  } else {
+    // Si on les a déjà (cas rare d'un reclic rapide), on lance le backend
+    registerUserBackend();
   }
 };
 
@@ -429,58 +506,51 @@ export default function Register() {
                     </Button>
                   </form>
                 </TabsContent>
-
                 <TabsContent value="google">
                   <div className="space-y-4">
-                      <Button 
-                        variant="outline" 
-                        className="w-full gap-2" 
-                        onClick={submitGoogle} // ← Activation directe de withGoogle
-                        disabled={googleLoading || isLoading} // ← Désactivation pendant le chargement
-                      >
-                        {googleLoading || isLoading ? (
-                          <>
-                            <LoadingSpinner loading={isLoading} fullScreen={false}/>
-                            {dictionary.signup?.loading || "Chargement..."}
-                          </>
-                        ) : (
-                          <>
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className='-mb-1'>
-                              <path d="M21.8055 10.0415H21V10H12V14H17.6515C16.827 16.3285 14.6115 18 12 18C8.6865 18 6 15.3135 6 12C6 8.6865 8.6865 6 12 6C13.5295 6 14.921 6.577 15.9805 7.5195L18.809 4.691C17.023 3.0265 14.634 2 12 2C6.4775 2 2 6.4775 2 12C2 17.5225 6.4775 22 12 22C17.5225 22 22 17.5225 22 12C22 11.3295 21.931 10.675 21.8055 10.0415Z" fill="#FFC107" />
-                              <path d="M3.15308 7.3455L6.43858 9.755C7.32758 7.554 9.48058 6 12.0001 6C13.5296 6 14.9211 6.577 15.9806 7.5195L18.8091 4.691C17.0231 3.0265 14.6341 2 12.0001 2C8.15908 2 4.82808 4.1685 3.15308 7.3455Z" fill="#FF3D00" />
-                              <path d="M11.9999 22C14.5829 22 16.9299 21.0115 18.7044 19.404L15.6094 16.785C14.5719 17.5745 13.3037 18.0014 11.9999 18C9.39891 18 7.19041 16.3415 6.35841 14.027L3.09741 16.5395C4.75241 19.778 8.11341 22 11.9999 22Z" fill="#4CAF50" />
-                              <path d="M21.8055 10.0415H21V10H12V14H17.6515C17.2571 15.1082 16.5467 16.0766 15.608 16.7855L15.6095 16.7845L18.7045 19.4035C18.4855 19.6025 22 17 22 12C22 11.3295 21.931 10.675 21.8055 10.0415Z" fill="#1976D2" />
-                            </svg>
-                            {dictionary.signup?.letGoogle || "S'inscrire avec Google"}
-                          </>
-                        )}
-                      </Button>
-                      
-                      {/* Affichage des erreurs Google */}
-                      {error && (
-                        <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-md">
-                             {errors && (
-                         <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-md mb-4">
-                           {errors.general}
-                           {error}
-                         </div>
-                       )}                    
-                       {successMessage && (
-                         <div className="bg-green-50 border border-green-200 text-green-600 p-3 rounded-md mb-4">
-                           {successMessage}
-                         </div>
-                       )}                    
+                    <Button
+                      variant="outline"
+                      className="w-full gap-2"
+                      onClick={submitGoogle}
+                      disabled={googleLoading || isLoading}
+                    >
+                      {googleLoading || isLoading ? (
+                        <>
+                          <LoadingSpinner loading={true} fullScreen={false} />
+                          {dictionary.signup?.loading || "Chargement..."}
+                        </>
+                      ) : (
+                        <>
+                          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="-mb-1">
+                            <path d="M21.8055 10.0415H21V10H12V14H17.6515C16.827 16.3285 14.6115 18 12 18C8.6865 18 6 15.3135 6 12C6 8.6865 8.6865 6 12 6C13.5295 6 14.921 6.577 15.9805 7.5195L18.809 4.691C17.023 3.0265 14.634 2 12 2C6.4775 2 2 6.4775 2 12C2 17.5225 6.4775 22 12 22C17.5225 22 22 17.5225 22 12C22 11.3295 21.931 10.675 21.8055 10.0415Z" fill="#FFC107" />
+                            <path d="M3.15308 7.3455L6.43858 9.755C7.32758 7.554 9.48058 6 12.0001 6C13.5296 6 14.9211 6.577 15.9806 7.5195L18.8091 4.691C17.0231 3.0265 14.6341 2 12.0001 2C8.15908 2 4.82808 4.1685 3.15308 7.3455Z" fill="#FF3D00" />
+                            <path d="M11.9999 22C14.5829 22 16.9299 21.0115 18.7044 19.404L15.6094 16.785C14.5719 17.5745 13.3037 18.0014 11.9999 18C9.39891 18 7.19041 16.3415 6.35841 14.027L3.09741 16.5395C4.75241 19.778 8.11341 22 11.9999 22Z" fill="#4CAF50" />
+                            <path d="M21.8055 10.0415H21V10H12V14H17.6515C17.2571 15.1082 16.5467 16.0766 15.608 16.7855L15.6095 16.7845L18.7045 19.4035C18.4855 19.6025 22 17 22 12C22 11.3295 21.931 10.675 21.8055 10.0415Z" fill="#1976D2" />
+                          </svg>
+                          {dictionary.signup?.letGoogle || "S'inscrire avec Google"}
+                        </>
+                      )}
+                    </Button>
+                    
+                    {/* Section des Messages d'Erreur */}
+                    {(errors?.general || errors?.email || error) && (
+                      <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-md text-sm space-y-1">
+                        {errors.general && <p>{errors.general}</p>}
+                        {errors.email && <p>{errors.email}</p>}
+                        {error && !errors.general && <p>{error.toString()}</p>}
                       </div>
-                      )}
-                      
-                      {/* Affichage du succès */}
-                      {successMessage && (
-                        <div className="bg-green-50 border border-green-200 text-green-600 p-3 rounded-md">
-                          {successMessage}
-                        </div>
-                      )}
-                    </div>
+                    )}
+                
+                    {/* Section du Message de Succès */}
+                    {successMessage && (
+                      <div className="bg-green-50 border border-green-200 text-green-600 p-3 rounded-md text-sm flex items-center gap-2">
+                        <span className="h-2 w-2 bg-green-500 rounded-full animate-pulse" />
+                        {successMessage}
+                      </div>
+                    )}
+                  </div>
                 </TabsContent>
+                
               </Tabs>
               <div className="mt-6 text-center text-sm">
                 <span className="text-gray-600">{dictionary.signup?.haveAccount || "Déjà un compte ? "}</span>
