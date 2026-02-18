@@ -15,6 +15,7 @@ import { useDictionary } from '@/hooks/useDictionary';
 import { useGoogleAuth } from '@/hooks/useGoogleAuth';
 import InternationalPhoneInput from '@/components/ui/InternationalPhoneInput';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { isValidPhoneNumber } from 'react-phone-number-input';
 
 
 
@@ -247,21 +248,23 @@ const submitGoogle = () => {
         setErrors(validationErrors);
         return;
       }
-
+       const userDataToSend = {
+          name: formData?.name,
+          email: formData?.email,
+          phone: formData.phone || "",
+          country: formData.country || "",
+          password: formData.password,
+          avatar:"noavatar",
+          authProvider: "local",
+          role: accountType,
+        };
       const response = await fetch('/api/users/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          password: formData.password,
-          phone: formData.phone || null,
-          country:'',
-          authProvider: 'local',
-          role: accountType,
-        }),
+        
+        body: JSON.stringify(userDataToSend),
       });
 
       const data = await response.json();
@@ -276,7 +279,7 @@ const submitGoogle = () => {
           phone: '',
           avatar: '',
           country:'',
-          authProvider: '',
+          authProvider: 'local',
           role: accountType,
           acceptTerms: false,
         });
@@ -408,22 +411,33 @@ const submitGoogle = () => {
                         {renderError('name')}
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="phone">Téléphone</Label>
-                        <div className="relative">
-                          <InternationalPhoneInput
-                            value={formData.phone}
-                            onChange={(value) => setFormData({ ...formData, phone: value })}
-                            onCountryChange={(countryCode) => {
-                              setFormData({ 
-                                ...formData, 
-                                phone: formData.phone,
-                                country: countryCode
+                        <Label htmlFor="phone" className={errors.phone ? "text-red-400" : ""}>
+                          Téléphone
+                        </Label>
+                        <InternationalPhoneInput
+                          value={formData.phone}
+                          error={errors.phone}
+                          onChange={(value) => {
+                            // 1. Mise à jour de la valeur
+                            setFormData(prev => ({ ...prev, phone: value }));
+
+                            // 2. Validation en temps réel
+                            if (value && !isValidPhoneNumber(value)) {
+                              setErrors(prev => ({ ...prev, phone: "Format de numéro invalide" }));
+                            } else {
+                              // On efface l'erreur si le numéro devient valide
+                              setErrors(prev => {
+                                const newErrors = { ...prev };
+                                delete newErrors.phone;
+                                return newErrors;
                               });
-                            }}
-                            error={errors.phone}
-                          />
-                        </div>
-                      </div>
+                            }
+                          }}
+                          onCountryChange={(countryCode) => {
+                            setFormData(prev => ({ ...prev, country: countryCode }));
+                          }}
+                        />
+                     </div>
                     </div>
 
                     <div className="space-y-2">

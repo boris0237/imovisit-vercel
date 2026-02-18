@@ -1,95 +1,120 @@
 'use client';
 
 import React, { forwardRef } from 'react';
-import PhoneInput from 'react-phone-number-input';
+import PhoneInput, { isValidPhoneNumber } from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import { cn } from "@/lib/utils";
+import { parsePhoneNumberWithError } from 'libphonenumber-js';
 
 interface InternationalPhoneInputProps {
   value?: string;
   onChange?: (value: string) => void;
-  onCountryChange?: (countryCode: string) => void; // ← Simplifié : seulement le code pays
+  onCountryChange?: (countryCode: string) => void;
   error?: string;
   className?: string;
 }
 
-// Style personnalisé pour matcher votre Input
-const customInputStyle = `
-  flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm 
-  ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium 
-  placeholder:text-muted-foreground focus-visible:outline-none 
-  focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 
-  disabled:cursor-not-allowed disabled:opacity-50
-`;
-
-
 const InternationalPhoneInput = forwardRef<HTMLDivElement, InternationalPhoneInputProps>(
   ({ value, onChange, onCountryChange, error, className }, ref) => {
+    
     const handleChange = (newValue: string | undefined) => {
       const phoneNumber = newValue || '';
+      
+      // On envoie la valeur brute au parent
       onChange?.(phoneNumber);
 
-      // Extraire automatiquement le code pays du numéro
-      if (onCountryChange && phoneNumber) {
-        // Utiliser libphonenumber-js pour une extraction précise
-        try {
-          console.log(phoneNumber)
-          const { parsePhoneNumber } = require('libphonenumber-js');
-          const parsed = parsePhoneNumber(phoneNumber);
-          if (parsed && parsed.country) {
-            onCountryChange(parsed.country);
-          }
-        } catch (error) {
-          // Fallback : extraction manuelle basique
-          const countryMap: Record<string, string> = {
-            '+237': 'CM', // Cameroun
-            '+33': 'FR',  // France
-            '+1': 'US',   // USA/Canada
-            '+44': 'GB',  // Royaume-Uni
-            '+49': 'DE',  // Allemagne
-            '+39': 'IT',  // Italie
-            '+34': 'ES',  // Espagne
-            '+234': 'NG', // Nigeria
-            '+254': 'KE', // Kenya
-            '+27': 'ZA',  // Afrique du Sud
-            '+221': 'SN', // Sénégal
-            '+225': 'CI', // Côte d'Ivoire
-            '+233': 'GH', // Ghana
-            '+229': 'BJ', // Bénin
-            '+228': 'TG', // Togo
-            '+223': 'ML', // Mali
-            '+226': 'BF', // Burkina Faso
-            '+227': 'NE', // Niger
-            '+235': 'TD', // Tchad
-          };
+      // 1. Validation de format en console pour debug (Optionnel)
+      if (phoneNumber) {
+        const isComplete = isValidPhoneNumber(phoneNumber);
+        console.log(`Numéro: ${phoneNumber} | Complet: ${isComplete}`);
+      }
 
-          for (const [prefix, code] of Object.entries(countryMap)) {
-            if (phoneNumber.startsWith(prefix)) {
-              onCountryChange(code);
-              break;
-            }
+      // 2. Extraction intelligente du pays
+      if (onCountryChange && phoneNumber.startsWith('+')) {
+        try {
+          const parsed = parsePhoneNumberWithError(phoneNumber);
+          if (parsed && parsed.country) {
+            onCountryChange(parsed.country as string);
           }
+        } catch (e) {
+          // On ignore l'erreur pendant que l'utilisateur tape le début du code
         }
       }
     };
 
     return (
-      <div className={cn("relative", className)}>
-        <PhoneInput
-          international
-          countryCallingCodeEditable={false}
-          defaultCountry="FR"
-          value={value}
-          onChange={handleChange}
-          placeholder="Entrez votre numéro"
-          className={error ? 'ring-2 ring-red-500 rounded-md' : ''}
-          numberInputProps={{
-            className: customInputStyle,
-          }}
-        />
+      <div className={cn("flex flex-col gap-1.5", className)} ref={ref}>
+        <div 
+          className={cn(
+            "flex h-10 w-full items-center rounded-md border bg-background px-3 py-2 text-sm ring-offset-background transition-all duration-200 focus-within:ring-2",
+            // Style d'erreur subtil : bordure rosée et ombre légère rouge très claire
+            error 
+              ? "border-red-200 bg-red-50/20 focus-within:ring-red-100/50" 
+              : "border-input focus-within:ring-ring"
+          )}
+        >
+          <PhoneInput
+            international
+            countryCallingCodeEditable={false}
+            defaultCountry="FR"
+            value={value}
+            onChange={handleChange}
+            // Mise à jour du pays quand on change le drapeau manuellement
+            onCountryChange={(country) => onCountryChange?.(country as string)}
+            placeholder="Entrez votre numéro"
+            className="flex w-full items-center gap-2 phone-input-container"
+          />
+        </div>
+
+        {/* Message d'erreur plus doux */}
         {error && (
-          <p className="text-red-500 text-sm mt-1">{error}</p>
+          <p className="text-[11px] font-medium text-red-500/70 ml-1 mt-0.5 italic">
+            {error}
+          </p>
         )}
+
+        {/* Styles globaux pour injecter le design Shadcn dans la librairie */}
+        <style jsx global>{`
+          /* Conteneur du drapeau */
+          .phone-input-container .PhoneInputCountry {
+            margin-right: 2px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+          }
+
+          /* La ligne de séparation verticale subtile */
+          .phone-input-container .PhoneInputCountry::after {
+            content: "";
+            height: 18px;
+            width: 1px;
+            background-color: #e2e8f0; /* slate-200 */
+            margin-left: 8px;
+            margin-right: 4px;
+          }
+
+          /* Le champ de saisie lui-même */
+          .phone-input-container .PhoneInputInput {
+            outline: none;
+            background: transparent;
+            border: none;
+            width: 100%;
+            font-size: 14px;
+            color: inherit;
+          }
+
+          /* Ajustement de la flèche du sélecteur */
+          .phone-input-container .PhoneInputCountrySelectArrow {
+            opacity: 0.3;
+            width: 6px;
+            height: 6px;
+          }
+
+          /* Placeholder */
+          .phone-input-container .PhoneInputInput::placeholder {
+            color: #94a3b8; /* slate-400 */
+          }
+        `}</style>
       </div>
     );
   }
