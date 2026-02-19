@@ -108,7 +108,7 @@ export default {
   },
   howitworks: {
       title: "How it works ?",
-      description: "Find your ideal property in 4 simple steps. Our platform supports you throughout your search.",
+      descrip: "Find your ideal property in 4 simple steps. Our platform supports you throughout your search.",
     step1: {
         title1: "Search",
         description1: "Browse our catalog of verified real estate properties. Filter by city, type, price and more."
@@ -156,5 +156,29 @@ export default {
     cta2: "Contact us for personalized assistance",
     exploreAll: "Explore all",
     seeAll: "See all"
+  },
+  searchPage: {
+    title1: "Search for a property",
+    paragraph1: "properties found",
+    title2: "No property found",
+    paragraph2: "Try adjusting your search criteria",
+    filterButton: "Filters",
+    loading: "Loading..."
+  },
+  searchFilter:{
+    city: "City",
+    neighborhood: "Neighborhood",
+    propertyType: "Property Type",
+    offerType: "Offer Type",
+    minPrice: "Min Price",
+    maxPrice: "Max Price",
+    rooms: "Rooms",
+     allCities: "All cities",
+     allNeighborhoods: "All neighborhoods",
+     allPropertyTypes: "All types",
+     allOfferTypes: "All offer types",
+     reset: "Reset",
+     apply: "Apply",
+     room: "room",
   }
 } as const

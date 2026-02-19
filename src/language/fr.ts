@@ -41,7 +41,7 @@ export default {
   },
   howitworks: {
     title: "Comment ça marche ?",
-    description: "Trouvez votre bien idéal en 4 étapes simples. Notre plateforme vous accompagne tout au long de votre recherche.",
+    descrip: "Trouvez votre bien idéal en 4 étapes simples. Notre plateforme vous accompagne tout au long de votre recherche.",
     step1: {
       title1: "Recherchez",
       description1: "Parcourez notre catalogue de biens immobiliers vérifiés. Filtrez par ville, type, prix et plus encore."
@@ -89,5 +89,29 @@ export default {
     cta2: "Contactez-nous pour une assistance personnalisée",
     exploreAll: "Explorer tous les biens",
     seeAll: "Voir tous"
+  },
+  searchPage: {
+    title1: "Rechercher un bien",
+    paragraph1: " biens trouvés",
+    filterButton: "Filtres",
+    title2: "Aucun bien trouvé",
+    paragraph2: "Essayez de modifier vos critères de recherche",
+    loading: "Chargement..."
+  },
+  searchFilter:{
+    city: "Ville",
+    type: "Type de bien",
+    offerType: "Type d'offre",
+    minPrice: "Prix minimum",
+    maxPrice: "Prix maximum",
+    rooms: "Nombre de pièces",
+    allCities: "Toutes les villes",
+    allNeighborhoods: "Tous les quartiers",
+    allPropertyTypes: "Tous les types",
+    allOfferTypes: "Toutes les offres",
+    reset: "Réinitialiser",
+    apply: "Appliquer",
+    room: "pièce",
+    
   }
 } as const

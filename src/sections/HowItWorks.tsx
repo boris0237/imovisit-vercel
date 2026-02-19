@@ -4,32 +4,6 @@ import { Search, Calendar, Home, Shield } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useDictionary } from '@/hooks/useDictionary'
 
-const steps = [
-  {
-    icon: Search,
-    title: 'Recherchez',
-    description: 'Parcourez notre catalogue de biens immobiliers vérifiés. Filtrez par ville, type, prix et plus encore.',
-    color: 'bg-blue-500',
-  },
-  {
-    icon: Calendar,
-    title: 'Réservez une visite',
-    description: 'Choisissez un créneau horaire qui vous convient. Visite en présentiel ou à distance par vidéo.',
-    color: 'bg-green-500',
-  },
-  {
-    icon: Home,
-    title: 'Visitez',
-    description: 'Rencontrez le propriétaire et visitez le bien. Posez toutes vos questions en direct.',
-    color: 'bg-orange-500',
-  },
-  {
-    icon: Shield,
-    title: 'Sécurisez',
-    description: 'Tous nos bailleurs sont vérifiés. Signalez tout problème pour une communauté de confiance.',
-    color: 'bg-purple-500',
-  },
-];
 
 const languages = [
     { code: 'fr', name: 'Français', flag: "FR" },
@@ -39,6 +13,32 @@ const languages = [
 export function HowItWorks() {
   const { dictionary } = useDictionary()
 
+const steps = [
+  {
+    icon: Search,
+    title: dictionary.howitworks?.step1?.title1 || "Recherchez",
+    description: dictionary.howitworks?.step1?.description1 || "Parcourez notre catalogue de biens immobiliers vérifiés. Filtrez par ville, type, prix et plus encore.",
+    color: 'bg-blue-500',
+  },
+  {
+    icon: Calendar,
+    title: dictionary.howitworks?.step2?.title2 || "Réservez une visite",
+    description: dictionary.howitworks?.step2?.description2 || "Choisissez un créneau horaire qui vous convient. Visite en présentiel ou à distance par vidéo.",
+    color: 'bg-green-500',
+  },
+  {
+    icon: Home,
+    title: dictionary.howitworks?.step3?.title3 || "Visitez",
+    description: dictionary.howitworks?.step3?.description3 || 'Rencontrez le propriétaire et visitez le bien. Posez toutes vos questions en direct.',
+    color: 'bg-orange-500',
+  },
+  {
+    icon: Shield,
+    title: dictionary.howitworks?.step4?.title4 || "Sécurisez",
+    description: dictionary.howitworks?.step4?.description4 || 'Tous nos bailleurs sont vérifiés. Signalez tout problème pour une communauté de confiance.',
+    color: 'bg-purple-500',
+  },
+];
   return (
     <section className="py-16 md:py-24 bg-white">
       <div className="container mx-auto px-4">
@@ -48,27 +48,12 @@ export function HowItWorks() {
             {dictionary.howitworks?.title || "Comment ça marche ?"}
           </h2>
           <p className="text-gray-600"> 
-            {dictionary.howitworks?.description || "Trouvez votre bien idéal en 4 étapes simples. Notre plateforme vous accompagne tout au long de votre recherche."}
+            {dictionary.howitworks?.descrip || "Trouvez votre bien idéal en 4 étapes simples. Notre plateforme vous accompagne tout au long de votre recherche."}
           </p>
         </div>
 
         {/* Steps */}
-        {dictionary.howitworks?.step1 && (
-          steps[0].title = dictionary.howitworks.step1.title1,
-          steps[0].description = dictionary.howitworks.step1.description1)}
-
-        {dictionary.howitworks?.step2 && (
-          steps[1].title = dictionary.howitworks.step2.title2,
-          steps[1].description = dictionary.howitworks.step2.description2)}
-
-        {dictionary.howitworks?.step3 && (
-          steps[2].title = dictionary.howitworks.step3.title3,
-          steps[2].description = dictionary.howitworks.step3.description3)}
           
-        {dictionary.howitworks?.step4 && (
-          steps[3].title = dictionary.howitworks.step4.title4,
-          steps[3].description = dictionary.howitworks.step4.description4)}
-
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {steps.map((step, index) => (
             <div key={index} className="relative">
