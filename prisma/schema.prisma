@@ -1,0 +1,46 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL") //error est du au update de version de prima
+}
+
+model User {
+  id           String       @id @default(auto()) @map("_id") @db.ObjectId
+  name         String
+  age          Int?
+  typeCompte   typeCompte   @default(classique)
+  email        String       @unique
+  password     String?
+  phone        String?
+  avatar       String?
+  role         UserRole     @default(visitor)
+  verified     Boolean      @default(false)
+  city         String?
+  country      String?
+  docJust      String?
+  profession   String?
+  services     String?
+  authProvider AuthProvider @default(local)
+  createdAt    DateTime     @default(now())
+}
+
+enum UserRole {
+  visitor
+  owner
+  agency
+  agent
+  admin
+}
+
+enum AuthProvider {
+  local
+  google
+}
+
+enum typeCompte {
+  classique
+  premium
+}

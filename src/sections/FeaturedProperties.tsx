@@ -12,13 +12,19 @@ import { Button } from "@/components/ui/button";
 import { PropertyCard } from "@/components/PropertyCard";
 import { mockProperties } from "@/data/mock";
 import { EventsSection } from "@/components/events/EventsSection" 
-import { EventCard } from "@/components/events/EventCard"
-
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useDictionary } from '@/hooks/useDictionary'
 
 
 export function FeaturedProperties() {
   const featuredProperties = mockProperties.slice(0, 6);
   const events = [];
+  const { dictionary } = useDictionary()
+  
+  const languages = [
+    { code: 'fr', name: 'Français', flag: "FR" },
+    { code: 'en', name: 'English', flag: "EN" },
+  ];
 
   return (
     <section className="py-16 md:py-24 bg-gray-50">
@@ -29,11 +35,12 @@ export function FeaturedProperties() {
             <br />
             <br />
             <h2 className="text-3xl md:text-4xl font-bold text-imo-primary mb-3">
-              Bien en Location
+              {dictionary.featuredpropertties?.property1 || "Bien en Location"}
             </h2>
             <p className="text-gray-600 max-w-xl">
-              Parcourez la liste des biens immobiliers disponibles pour une{" "}
-              <br /> location longue durée
+                {dictionary.featuredpropertties?.description1 || "Parcourez la liste des biens immobiliers disponibles pour une"}
+             
+              <br /> {dictionary.featuredpropertties?.description2 || "location longue durée"}
             </p>
           </div>
           <Link href="/search">
@@ -42,7 +49,8 @@ export function FeaturedProperties() {
               className="gap-2 border-imo-primary text-imo-primary hover:bg-imo-primary hover:text-white"
               style={{ marginLeft: 30 }}
             >
-              Voir tous
+              {dictionary.featuredpropertties?.seeAll || "Voir tous"}
+
               <ArrowRight className="w-4 h-4" />
             </Button>
           </Link>
@@ -88,11 +96,12 @@ export function FeaturedProperties() {
             <br />
             <br />
             <h2 className="text-3xl md:text-4xl font-bold text-imo-primary mb-3">
-              Bien en vente
+              {dictionary.featuredpropertties?.property2 || "Bien en Vente"}
+              
             </h2>
             <p className="text-gray-600 max-w-xl">
-              Parcourez la liste des biens immobiliers disponibles à la <br />{" "}
-              vente
+              {dictionary.featuredpropertties?.description3 || "Parcourez la liste des biens immobiliers disponibles pour une"}
+               <br /> {dictionary.featuredpropertties?.description4 || "vente"}
             </p>
           </div>
           <Link href="/search">
@@ -101,7 +110,7 @@ export function FeaturedProperties() {
               className="gap-2 border-imo-primary text-imo-primary hover:bg-imo-primary hover:text-white"
               style={{ marginLeft: 30 }}
             >
-              Voir tous
+             {dictionary.featuredpropertties?.seeAll || "Voir tous"}
               <ArrowRight className="w-4 h-4" />
             </Button>
           </Link>
@@ -147,11 +156,13 @@ export function FeaturedProperties() {
             <br />
             <br />
             <h2 className="text-3xl md:text-4xl font-bold text-imo-primary mb-3">
-              Bien meublés
+              {dictionary.featuredpropertties?.property3 || "Bien meublé"}
+
             </h2>
             <p className="text-gray-600 max-w-xl">
-              Parcourez la liste des biens immobiliers disponibles pour une{" "}
-              <br /> location courte durée
+              {dictionary.featuredpropertties?.description5 || "Parcourez la liste des biens immobiliers disponibles pour une"}
+              
+              <br /> {dictionary.featuredpropertties?.description6 || "location courte durée"}
             </p>
           </div>
           <Link href="/search">
@@ -160,7 +171,7 @@ export function FeaturedProperties() {
               className="gap-2 border-imo-primary text-imo-primary hover:bg-imo-primary hover:text-white"
               style={{ marginLeft: 30 }}
             >
-              Voir tous
+              {dictionary.featuredpropertties?.seeAll || "Voir tous"}
               <ArrowRight className="w-4 h-4" />
             </Button>
           </Link>
@@ -206,11 +217,12 @@ export function FeaturedProperties() {
             <br />
             <br />
             <h2 className="text-3xl md:text-4xl font-bold text-imo-primary mb-3">
-              Évènements
+              {dictionary.featuredpropertties?.property4 || "Évènements"}
+              
             </h2>
             <p className="text-gray-600 max-w-xl">
-              Assister à nos évènements afin d'intégrer notre communauté <br />{" "}
-              et de recevoir un accompagnement
+              {dictionary.featuredpropertties?.description7 || "Assister à nos évènements afin d'intégrer notre communauté "}
+              <br />{dictionary.featuredpropertties?.description8 || "et de recevoir un accompagnement"}
             </p>
           </div>
           <Link href="/search">
@@ -219,7 +231,7 @@ export function FeaturedProperties() {
               className="gap-2 border-imo-primary text-imo-primary hover:bg-imo-primary hover:text-white"
               style={{ marginLeft: 30 }}
             >
-              Voir tous
+              {dictionary.featuredpropertties?.seeAll || "Voir tous"}
               <ArrowRight className="w-4 h-4" />
             </Button>
           </Link>
@@ -248,11 +260,12 @@ export function FeaturedProperties() {
         {/* CTA */}
         <div className="mt-12 text-center">
           <p className="text-gray-600 mb-4">
-            Vous ne trouvez pas ce que vous cherchez ?
+            {dictionary.featuredpropertties?.cta || "Vous ne trouvez pas ce que vous cherchez ?"}
+              <br /> {dictionary.featuredpropertties?.cta2 || "Contactez-nous pour une assistance personnalisée"}
           </p>
           <Link href="/search">
             <Button className="bg-imo-primary hover:bg-imo-secondary gap-2">
-              Explorer tous les biens
+              {dictionary.featuredpropertties?.exploreAll || "Explorer tous"}
               <ArrowRight className="w-4 h-4" />
             </Button>
           </Link>

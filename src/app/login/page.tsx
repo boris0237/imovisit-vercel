@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link'
 import { Eye, EyeOff, Mail, Lock, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useRouter } from 'next/navigation'
+import {Header} from '@/components/Header';
+import {Footer} from '@/components/Footer';
+import { useDictionary } from '@/hooks/useDictionary';
+import { useGoogleAuth } from '@/hooks/useGoogleAuth';
+import GoogleLoginButton from '@/components/ui/GoogleButton';
 
 export default function Login() {
 const router = useRouter()
@@ -19,43 +24,158 @@ const router = useRouter()
     password: '',
     rememberMe: false,
   });
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  interface LoginResponse {
+  status: number;
+  message: string;
+  data: {
+    user: {
+      id: number;
+      name: string;
+      email: string;
+      role: string;
+      authProvider: string;
+      avatar: string | null;
+      typeCompte: string;
+      verified: boolean;
+    };
+    token: string;
+  } | null;
+  error: string | null;
+}
+   
+  const {dictionary} = useDictionary();
+  const currentYear = new Date().getFullYear();
+  const { withGoogle, googleLoading, error, } = useGoogleAuth();
+
+  useEffect(() => {
+    const loadGoogleScript = () => {
+      if (typeof window !== 'undefined' && !window.google) {
+        const script = document.createElement('script');
+        script.src = 'https://accounts.google.com/gsi/client';
+        script.async = true;
+        script.defer = true;
+        script.onload = () => {
+          console.log('Google Platform script loaded');
+        };
+        document.head.appendChild(script);
+      }
+    };
+
+    loadGoogleScript();
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    router.push("/dashboard/user")
-    // TODO: Implement login logic
-    console.log('Login:', formData);
+    setLoading(true);
+    setErrors(null);
+    setSuccessMessage(null);
+
+    try {
+      const validationErrors: Record<string, string> = {};
+      if (!formData.email.trim()){
+        validationErrors.email = dictionary.login?.errorEmailRequired || "L'email est requis";
+      } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+        validationErrors.email = dictionary.login?.errorEmailInvalid || "Format d'email invalide";
+      }
+      if (!formData.password.trim()){
+        validationErrors.password = dictionary.login?.errorPasswordRequired || "Le mot de passe est requis";
+      } else if (formData.password.length < 8) {
+        validationErrors.password = dictionary.login?.errorPasswordLength || "Le mot de passe doit contenir au moins 8 caractères";
+      }
+      const response = await fetch('/api/users/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const result: LoginResponse = await response.json();
+
+      if (response.ok && result.status === 200) {
+        // Connexion réussie
+        console.log('Login successful:', result.data);
+        setSuccessMessage(dictionary?.login?.success || "Connexion réussie, redirection...");
+        
+        // Stocker le token si nécessaire (déjà dans cookie HTTPOnly)
+        // Rediriger vers le dashboard
+        router.push("/dashboard/user");
+        router.refresh(); // Rafraîchir l'état de session
+        
+      } else {
+        // Gérer les erreurs selon le statut
+        switch (result.status) {
+          case 400:
+            setErrors(dictionary.login?.errorInvalidCredentials || "Veuillez remplir tous les champs requis");
+            break;
+          case 401:
+            setErrors(dictionary.login?.errorInvalidCredentials || "Email ou mot de passe incorrect");
+            break;
+          case 404:
+            setErrors(dictionary.login?.errorUserNotFound || "Utilisateur non trouvé");
+            break;
+          default:
+            setErrors(result.error || dictionary.login?.errorGeneric || "Une erreur est survenue. Veuillez réessayer.");
+        }
+      }
+    } catch (err) {
+      // Erreurs réseau ou autres
+      setErrors(dictionary.login?.errorNetwork || "Problème de connexion au serveur. Veuillez réessayer.");
+      console.error('Login error:', err);
+    } finally {
+      setLoading(loading);
+    }
   };
 
+
   return (
+    <div>
+    <Header />
     <div className="min-h-screen bg-gradient-to-br from-imo-primary via-imo-secondary to-imo-primary flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <Link href="/"  className="inline-flex items-center gap-2">
-            <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center">
-              <Building2 className="w-8 h-8 text-imo-primary" />
-            </div>
-            <span className="text-2xl font-bold text-white">Imovisit</span>
-          </Link>
-        </div>
-
         <Card>
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Connexion</CardTitle>
+            <CardTitle className="text-2xl">{dictionary.login?.connexion || "Connexion"}</CardTitle>
             <CardDescription>
-              Connectez-vous pour accéder à votre compte
+              {dictionary.login?.subtitle || "Connectez-vous pour accéder à votre compte"}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="email" className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value="email">Email</TabsTrigger>
-                <TabsTrigger value="google">Google</TabsTrigger>
+                <TabsTrigger value="email" className="flex items-center justify-center gap-2">
+                    <svg width="21" height="15" viewBox="0 0 21 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M19.5 0H1.5C1.10218 0 0.720644 0.158035 0.43934 0.43934C0.158035 0.720644 0 1.10218 0 1.5V13.5C0 13.8978 0.158035 14.2794 0.43934 14.5607C0.720644 14.842 1.10218 15 1.5 15H19.5C19.8978 15 20.2794 14.842 20.5607 14.5607C20.842 14.2794 21 13.8978 21 13.5V1.5C21 1.10218 20.842 0.720644 20.5607 0.43934C20.2794 0.158035 19.8978 0 19.5 0ZM19.5 4.5L10.5 9L1.5 4.5V1.5L10.5 6L19.5 1.5V4.5Z" fill="#42A5F5"/>
+                    </svg>
+                    Email
+                </TabsTrigger>
+                <TabsTrigger value="google" className="flex items-center justify-center gap-2">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className='-mb-1'>
+                    <path d="M21.8055 10.0415H21V10H12V14H17.6515C16.827 16.3285 14.6115 18 12 18C8.6865 18 6 15.3135 6 12C6 8.6865 8.6865 6 12 6C13.5295 6 14.921 6.577 15.9805 7.5195L18.809 4.691C17.023 3.0265 14.634 2 12 2C6.4775 2 2 6.4775 2 12C2 17.5225 6.4775 22 12 22C17.5225 22 22 17.5225 22 12C22 11.3295 21.931 10.675 21.8055 10.0415Z" fill="#FFC107"/>
+                    <path d="M3.15308 7.3455L6.43858 9.755C7.32758 7.554 9.48058 6 12.0001 6C13.5296 6 14.9211 6.577 15.9806 7.5195L18.8091 4.691C17.0231 3.0265 14.6341 2 12.0001 2C8.15908 2 4.82808 4.1685 3.15308 7.3455Z" fill="#FF3D00"/>
+                    <path d="M11.9999 22C14.5829 22 16.9299 21.0115 18.7044 19.404L15.6094 16.785C14.5719 17.5745 13.3037 18.0014 11.9999 18C9.39891 18 7.19041 16.3415 6.35841 14.027L3.09741 16.5395C4.75241 19.778 8.11341 22 11.9999 22Z" fill="#4CAF50"/>
+                    <path d="M21.8055 10.0415H21V10H12V14H17.6515C17.2571 15.1082 16.5467 16.0766 15.608 16.7855L15.6095 16.7845L18.7045 19.4035C18.4855 19.6025 22 17 22 12C22 11.3295 21.931 10.675 21.8055 10.0415Z" fill="#1976D2"/>
+                  </svg>
+                  Google
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="email">
                 <form onSubmit={handleSubmit} className="space-y-4">
+                  {errors && (
+                      <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-md mb-4">
+                        {errors}
+                      </div>
+                    )}                    
+                    {successMessage && (
+                      <div className="bg-green-50 border border-green-200 text-green-600 p-3 rounded-md mb-4">
+                        {successMessage}
+                      </div>
+                    )}
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
                     <div className="relative">
@@ -63,7 +183,7 @@ const router = useRouter()
                       <Input
                         id="email"
                         type="email"
-                        placeholder="votre@email.com"
+                        placeholder={dictionary.login?.placeholderEmail || "votre@email.com"}
                         className="pl-10"
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -72,7 +192,7 @@ const router = useRouter()
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="password">Mot de passe</Label>
+                    <Label htmlFor="password">{dictionary.login?.password || "Mot de passe"}</Label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                       <Input
@@ -103,60 +223,41 @@ const router = useRouter()
                         }
                       />
                       <Label htmlFor="remember" className="text-sm font-normal">
-                        Se souvenir de moi
+                        {dictionary.login?.rememberMe || "Se souvenir de moi"}
                       </Label>
                     </div>
                     <Link href="/forgot-password" className="text-sm text-imo-primary hover:underline">
-                      Mot de passe oublié ?
+                      {dictionary.login?.forgotPassword || "Mot de passe oublié?"}
                     </Link>
                   </div>
 
-                  <Button type="submit" className="w-full bg-imo-primary hover:bg-imo-secondary">
-                    Se connecter
+                  <Button type="submit" className="w-full bg-imo-primary hover:bg-imo-secondary" loading={loading} loadingTime={0.5} loadingFull={false}>
+                    {dictionary.login?.submit || "Se connecter"}
                   </Button>
                 </form>
               </TabsContent>
 
               <TabsContent value="google">
                 <div className="space-y-4">
-                  <Button variant="outline" className="w-full gap-2">
-                    <svg className="w-5 h-5" viewBox="0 0 24 24">
-                      <path
-                        fill="currentColor"
-                        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                      />
-                      <path
-                        fill="currentColor"
-                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                      />
-                      <path
-                        fill="currentColor"
-                        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                      />
-                      <path
-                        fill="currentColor"
-                        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                      />
-                    </svg>
-                    Continuer avec Google
-                  </Button>
+                  <GoogleLoginButton 
+                    onClick={withGoogle}
+                    loading={googleLoading}
+                  />
                 </div>
               </TabsContent>
             </Tabs>
 
             <div className="mt-6 text-center text-sm">
-              <span className="text-gray-600">Pas encore de compte ? </span>
+              <span className="text-gray-600">{dictionary.login?.neverHaveAccount || "Pas encore de compte ? "}</span>
               <Link href="/register" className="text-imo-primary hover:underline font-medium">
-                S'inscrire
+                {dictionary.login?.signup || "S'inscrire"}
               </Link>
             </div>
           </CardContent>
         </Card>
-
-        <p className="text-center text-white/70 text-sm mt-8">
-          © 2024 Imovisit. Tous droits réservés.
-        </p>
       </div>
     </div>
+      <Footer />
+  </div>
   );
 }

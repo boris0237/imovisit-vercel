@@ -18,7 +18,7 @@ export default {
     title2: "Support",
     title3: "Legal",
     rights: "Imovisit. All rights reserved.",
-    bio: "Cameroon's leading platform for real estate tours. Find your dream property confidently.",
+    bio: "Leading platform for real estate tours. Find your dream property confidently.",
     text: "Follow us :",
     translateLabel11: "About",
     translateLabel12: "How it works",
@@ -83,6 +83,78 @@ export default {
     signup: "Sign up",
     letGoogle: "Let's go with Google",
     rights : "Imovisit. All rights reserved."
+  },
+  hero:{
+    badge: "The #1 platform for real estate visits",
+    title1: "Find the",
+    title2: "property",
+    title3: "you",
+    title4: "want to visit",
+    description1: "Visit thousands of properties for rent, sale or furnished remotely or in person",
+    description2: "Sales or furnished rentals remotely or in person",
+    popular: "Popular: ",
+    search: "Search",
+    offerTypes:"Offer types: ",
+    propertyTypes: "Property types: ",
+    town: "City",
+    tag1: "Apartment Yaoundé",
+    tag2: "Villa Douala",
+    tag3: "Furnished Studio",
+    tag4: "Land",
+    lab1: "Properties available",
+    lab2: "Active users",
+    lab3: "Visits completed",
+    lab4: "Customer satisfaction"
+  },
+  howitworks: {
+      title: "How it works ?",
+      description: "Find your ideal property in 4 simple steps. Our platform supports you throughout your search.",
+    step1: {
+        title1: "Search",
+        description1: "Browse our catalog of verified real estate properties. Filter by city, type, price and more."
+    },
+    step2: {
+      title2: "Book a visit",
+      description2: "Choose a convenient time slot. Visit in person or remotely via video."
+    },
+    step3: {
+      title3: "Visit",
+      description3: "Meet the owner and visit the property. Ask all your questions in person."
+    },
+    step4: {
+      title4: "Secure",
+      description4: "All our landlords are verified. Report any issues for a trusted community."
+    }
+  },
+  ownercta:{
+    subtitle: "Landlord space",
+    title1: "Whether you are an owner, an agent, a real estate agency, a property manager",
+    para1: "The imovisit solution supports you on a daily basis by increasing your income and professionalizing your real estate activities.",
+    para2: "Add your properties for free and manage your visits with ease.",
+    para3: "Join thousands of landlords who trust us.",
+    para4: "Sign up for free by clicking here:",
+    buttonText: "I am a landlord",
+    lab1: "active landlords",
+    lab2: "properties published",
+    lab3: "visits completed",
+    lab4: "tenants"
+  },
+  featuredpropertties: {
+    property1: "Property for Rent",
+    description1: "Browse the list of available real estate properties for long-term rental",
+    description2: "with flexible terms",
+    property2: "Property for Sale",
+    description3: "Browse the list of available real estate properties for sale",
+    description4: "with competitive prices",
+    property3: "Furnished Property",
+    property4: "Event",
+    description5: "Browse the list of available real estate properties for short-term rental",
+    description6: "perfect for your temporary needs",
+    description7: "Attend our events to join our community ",
+    description8: "and receive support",
+    cta: "Can't find what you're looking for ?",
+    cta2: "Contact us for personalized assistance",
+    exploreAll: "Explore all",
+    seeAll: "See all"
   }
-
 } as const

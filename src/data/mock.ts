@@ -1,3 +1,4 @@
+"use client";
 import type { Property, User, Visit } from '@/types';
 
 export const mockProperties: Property[] = [

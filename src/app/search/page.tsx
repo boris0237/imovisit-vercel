@@ -64,7 +64,7 @@ function SearchContent() {
               </p>
             </div>
             <div className="flex items-center gap-3">
-              {/* View Mode Toggle */}
+              {/* View Mode Toggle 
               <div className="hidden md:flex items-center bg-white rounded-lg border p-1">
                 <Button
                   variant={viewMode === 'grid' ? 'default' : 'ghost'}
@@ -82,7 +82,7 @@ function SearchContent() {
                 >
                   <List className="w-4 h-4" />
                 </Button>
-              </div>
+              </div>*/}
 
               {/* Mobile Filters */}
               <Sheet>

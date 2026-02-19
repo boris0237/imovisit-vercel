@@ -1,30 +1,76 @@
+// contexts/LanguageContext.tsx
 "use client"
 
-import { createContext, useContext, useState } from "react"
-import { fr } from "@/dictionaries/fr"
-import { en } from "@/dictionaries/en"
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { useBrowserLanguage } from '@/hooks/useBrowserLanguage'
 
-type Language = "fr" | "en"
+type Language = 'fr' | 'en'
 
-type LanguageContextType = {
+interface LanguageContextType {
   language: Language
-  dictionary: typeof fr
-  changeLanguage: (lang: Language) => void
+  setLanguage: (lang: Language) => void
+  toggleLanguage: () => void
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined)
 
-export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguage] = useState<Language>("fr")
+interface LanguageProviderProps {
+  children: ReactNode
+  defaultLanguage?: Language
+}
 
-  const dictionary = language === "fr" ? fr : en
+export function LanguageProvider({ 
+  children, 
+  defaultLanguage = 'fr' 
+}: LanguageProviderProps) {
+  const [language, setLanguageState] = useState<Language>(defaultLanguage)
+  const detectedLang = useBrowserLanguage(['fr', 'en'])
 
-  function changeLanguage(lang: Language) {
-    setLanguage(lang)
+  useEffect(() => {
+    // Priorité : 1. localStorage, 2. détection navigateur, 3. default
+    const getInitialLanguage = (): Language => {
+      if (typeof window !== 'undefined') {
+        // Vérifier localStorage
+        const savedLang = localStorage.getItem('preferred-language')
+        if (savedLang === 'fr' || savedLang === 'en') {
+          return savedLang
+        }
+      }
+      
+      // Utiliser la détection du navigateur si disponible
+      if (detectedLang === 'fr' || detectedLang === 'en') {
+        return detectedLang
+      }
+      
+      // Fallback sur la langue par défaut
+      return defaultLanguage
+    }
+
+    setLanguageState(getInitialLanguage())
+  }, [detectedLang, defaultLanguage])
+
+  const setLanguage = (newLang: Language) => {
+    setLanguageState(newLang)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('preferred-language', newLang)
+      // Optionnel : mettre à jour l'attribut lang du html
+      document.documentElement.lang = newLang
+    }
+  }
+
+  const toggleLanguage = () => {
+    const newLang: Language = language === 'fr' ? 'en' : 'fr'
+    setLanguage(newLang)
+  }
+
+  const value = {
+    language,
+    setLanguage,
+    toggleLanguage
   }
 
   return (
-    <LanguageContext.Provider value={{ language, dictionary, changeLanguage }}>
+    <LanguageContext.Provider value={value}>
       {children}
     </LanguageContext.Provider>
   )
@@ -32,6 +78,8 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
 
 export function useLanguage() {
   const context = useContext(LanguageContext)
-  if (!context) throw Error("useLanguage must be used within a LanguageProvider")
+  if (context === undefined) {
+    throw new Error('useLanguage must be used within a LanguageProvider')
+  }
   return context
 }
