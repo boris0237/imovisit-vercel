@@ -16,6 +16,7 @@ import { useGoogleAuth } from '@/hooks/useGoogleAuth';
 import InternationalPhoneInput from '@/components/ui/InternationalPhoneInput';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { isValidPhoneNumber } from 'react-phone-number-input';
+import loginUserBackend from '@/app/login/page'
 
 
 
@@ -99,7 +100,7 @@ const handleBackendLogin = (email: string) => {
 
             // On attend un tout petit peu pour que l'utilisateur puisse lire le message
             setTimeout(() => {
-              registerUserBackend();
+              loginUserBackend();
             }, 1500);
             break;
             break;
@@ -164,23 +165,23 @@ const registerUserBackend = () => {
         setTimeout(() => {
           window.location.href = '/dashboard/user';
         }, 3000);
-      } else {
-        // --- CAS : L'EMAIL EXISTE DÉJÀ ---
-        if (data.message?.includes("email existe déjà") || data.message?.includes("déjà utilisé")) {
-          setErrors({ email: "Vous avez déjà un compte. Connexion automatique..." });
-          
-          // On appelle le login en passant l'email de userData
-          setTimeout(() => {
-            if (userData?.email && !isLoading && !successMessage) {
-             handleBackendLogin(userData.email);
-            }     
-          }, 1500);
-        } else {
-          setErrors({
-            general: data.message || "Une erreur est survenue lors de l'inscription."
-          });
+      }  // Gestion précise des erreurs via le statut HTTP
+        switch (data.status) {
+          case 400:
+            setErrors({ email: data.message || "Email requis" });
+            break;
+          case 401:
+            setErrors({ general: data.message || "Authentification invalide" });
+            break;
+          // ... à l'intérieur de handleBackendLogin, dans le switch(status)
+          case 404:
+            setErrors({ general: data.message || "Compte non trouvé." });
+            break;
+          default:
+            setErrors({
+              general: data.message || dictionary?.login?.errorGeneric || "Une erreur est survenue."
+            });
         }
-      }
     })
     .catch((error) => {
       console.error('Erreur réseau:', error);
@@ -270,7 +271,7 @@ const submitGoogle = () => {
       const data = await response.json();
 
       if (response.ok) {
-        setSuccessMessage(dictionary?.signup?.success || "Inscription réussie ! Vérifiez votre email pour confirmer votre compte.");
+        setSuccessMessage(dictionary?.signup?.success || "Inscription réussie ! veuillez vous connecter à votre compte.");
         setFormData({
           name: '',
           email: '',
@@ -287,25 +288,14 @@ const submitGoogle = () => {
         setTimeout(() => {
           window.location.href = '/login';
         }, 3000);
-      } else {
-        if (data.message?.includes(dictionary.signup?.errorEmail_PasswordRequired || "Email et Le mot de passe sont obligatoires")) {
-          setErrors({
-            email: dictionary?.signup?.errorEmailRequired || "L'email est requis",
-            password: dictionary?.signup?.errorPasswordRequired || "Le mot de passe est requis",
-          });
-        } else if (data.message?.includes(dictionary.signup?.errorEmailAlreadyExists || "email existe déjà")) {
-          setErrors({
-            email: dictionary?.signup?.errorEmailAlreadyExists || "Cet email est déjà utilisé",
-          });
-        } else if (data.message?.includes(dictionary.signup?.errorPasswordLength || "password doit contenir au moins")) {
-          setErrors({
-            password: dictionary?.signup?.errorPasswordLength || "Le mot de passe doit contenir au moins 8 caractères",
-          });
-        } else {
-          // Erreur générique
-          setErrors({
-            general: data.message || dictionary?.signup?.errorGeneric || "Une erreur est survenue. Veuillez réessayer.",
-          });
+      } else {switch (data.status) {
+          case 400:
+          setErrors({general : dictionary.signup?.errorMissing || "Veuillez remplir tous les champs requis ou changer d'adresse mail."});
+            break;
+          case 500:
+          setErrors({general : dictionary.singup.errorNetwork})    
+          default:
+            setErrors({general : data.error || dictionary.signup?.errorGeneric || "Une erreur est survenue. Veuillez réessayer."});
         }
       }
     } catch (error) {
