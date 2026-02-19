@@ -28,6 +28,7 @@ const router = useRouter()
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [accountType, setAccountType] = useState<'visitor' | 'owner'>('visitor');
 
   interface LoginResponse {
   status: number;
@@ -68,6 +69,88 @@ const router = useRouter()
 
     loadGoogleScript();
   }, []);
+
+  const registerUserBackend = () => {
+  setLoading(true);
+  setErrors({});
+
+   const [formData, setFormData] = useState({
+      name: '',
+      email: '',
+      phone: '',
+      password: '',
+      confirmPassword: '',
+      avatar: '',
+      country:'',
+      authProvider: '',
+      role: '',
+      acceptTerms: false,
+    });
+
+  const userDataToSend = {
+    name: userData?.name,
+    email: userData?.email,
+    phone: formData?.phone || "",
+    country: formData?.country || "",
+    avatar: userData?.picture || "",
+    authProvider: "google",
+    role: accountType,
+  };
+
+  fetch('/api/users/register', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(userDataToSend),
+  })
+    .then((response) => {
+      return response.json().then((data) => ({
+        ok: response.ok,
+        data: data
+      }));
+    })
+    .then(({ ok, data }) => {
+      if (ok) {
+        setSuccessMessage(dictionary?.signup?.success || "Inscription réussie !");
+        
+        // Réinitialisation du formulaire
+        setFormData({
+          name: '', email: '', password: '', confirmPassword: '',
+          phone: '', avatar: '', country: '', authProvider: '',
+          role: accountType, acceptTerms: false,
+        });
+
+        // Redirection
+        setTimeout(() => {
+          window.location.href = '/dashboard/user';
+        }, 3000);
+      }  // Gestion précise des erreurs via le statut HTTP
+        switch (data.status) {
+          case 400:
+            setErrors({ email: data.message || "Email requis" });
+            break;
+          case 401:
+            setErrors({ general: data.message || "Authentification invalide" });
+            break;
+          // ... à l'intérieur de handleBackendLogin, dans le switch(status)
+          case 404:
+            setErrors({ general: data.message || "Compte non trouvé." });
+            break;
+          default:
+            setErrors({
+              general: data.message || dictionary?.login?.errorGeneric || "Une erreur est survenue."
+            });
+        }
+    })
+    .catch((error) => {
+      console.error('Erreur réseau:', error);
+      setErrors({ general: "Impossible de joindre le serveur. Vérifiez votre connexion." });
+    })
+    .finally(() => {
+      setLoading(false);
+    });
+};
 
 // 1. L'effet "Moteur" : Déclenche la connexion backend dès que Google renvoie l'email
 useEffect(() => {
@@ -202,16 +285,16 @@ const loginWithGoogleData = () => {
         // Gérer les erreurs selon le statut
         switch (result.status) {
           case 400:
-            setErrors(dictionary.login?.errorInvalidCredentials || "Veuillez remplir tous les champs requis");
+          setErrors({general : dictionary.login?.errorInvalidCredentials || "Veuillez remplir tous les champs requis"});
             break;
           case 401:
-            setErrors(dictionary.login?.errorInvalidCredentials || "Email ou mot de passe incorrect");
+            setErrors({general : dictionary.login?.errorInvalidCredentials});
             break;
           case 404:
-            setErrors(dictionary.login?.errorUserNotFound || "Utilisateur non trouvé");
+            setErrors({general :dictionary.login?.errorUserNotFound || "Utilisateur non trouvé"});
             break;
           default:
-            setErrors(result.error || dictionary.login?.errorGeneric || "Une erreur est survenue. Veuillez réessayer.");
+            setErrors({general : result.error || dictionary.login?.errorGeneric || "Une erreur est survenue. Veuillez réessayer."});
         }
       }
     } catch (err) {
@@ -258,6 +341,17 @@ const loginWithGoogleData = () => {
 
               <TabsContent value="email">
                 <form onSubmit={handleSubmit} className="space-y-4">
+                 {/* Section des Messages d'Erreur (Login) */}
+                  {errors && !successMessage && (
+                      <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-md mb-4">
+                        {errors.general}
+                      </div>
+                    )}
+                    {successMessage && !errors && (
+                      <div className="bg-green-50 border border-green-200 text-green-600 p-3 rounded-md mb-4">
+                        {successMessage}
+                      </div>
+                    )}
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
                     <div className="relative">

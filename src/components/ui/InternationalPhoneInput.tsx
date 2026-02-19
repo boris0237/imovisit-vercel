@@ -56,7 +56,7 @@ const InternationalPhoneInput = forwardRef<HTMLDivElement, InternationalPhoneInp
           <PhoneInput
             international
             countryCallingCodeEditable={false}
-            defaultCountry="FR"
+            defaultCountry="CM"
             value={value}
             onChange={handleChange}
             // Mise à jour du pays quand on change le drapeau manuellement

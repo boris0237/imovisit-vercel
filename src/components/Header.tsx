@@ -48,7 +48,7 @@ export function Header() {
                   <span className='bg-primary text-white text-2xl'>.com</span>
                  </div>
                  <div className='-mt-3.5'>
-                  <span className='text-[7px]'>{dictionary.header?.subtitle || 'La visite des biens imobiliers devient plus facile'}</span>
+                  <span className='text-[7px]'>{dictionary.header?.subtitle}</span>
                  </div>
             </div>
           </div>
