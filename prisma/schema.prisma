@@ -7,16 +7,20 @@ datasource db {
   url      = env("DATABASE_URL") //error est du au update de version de prima
 }
 
+// USER
 model User {
-  id         String     @id @default(auto()) @map("_id") @db.ObjectId
-  name       String
-  age        Int?
-  typeCompte TypeCompte @default(classique)
-  email      String     @unique
-  password   String?
-  phone      String?
-  avatar     String?
-  role       UserRole   @default(visitor)
+  id          String     @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  age         Int?
+  typeCompte  TypeCompte @default(classique)
+  email       String     @unique
+  password    String?
+  phone       String?
+  avatar      String?
+  companyName String?
+  companyLogo String?
+
+  role UserRole @default(visitor)
 
   accountStatus AccountStatus @default(unverified)
 
@@ -30,7 +34,6 @@ model User {
   docDiplome      String?
   docContribuable String?
   docRCCM         String?
-  docTitreFoncier String?
 
   authProvider AuthProvider @default(local)
   isActive     Boolean      @default(true)
@@ -40,6 +43,8 @@ model User {
 enum UserRole {
   visitor
   owner
+  property_manager
+  prospector
   agency
   agent
   admin
@@ -60,4 +65,7 @@ enum AccountStatus {
   pending
   verified
   suspended
+  verifiedPremium
 }
+
+// PROPERTY

@@ -102,7 +102,7 @@ import { AuthProvider, UserRole } from "@prisma/client"
 import { authMiddleware } from "@/middlewares/auth-middleware"
 import { roleMiddleware } from "@/middlewares/role-middleware"
 import { stringify } from "querystring";
-import { validatePassword } from "@/utils/validatePassword";
+import { validatePassword } from "@/utils/validate-password";
 
 
 
