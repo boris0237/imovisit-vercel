@@ -2,6 +2,7 @@
 export const UPLOAD_FOLDERS = {
   AVATAR: "avatars",
   DOCUMENT: "documents",
+  IMAGE: "images",
 } as const;
 
 // Définir les champs autorisés par rôle pour les modification 
@@ -14,7 +15,8 @@ export const ROLE_ALLOWED_FIELDS = {
     "country",
     "profession",
     "avatar",
-    "companyLogo"
+    "companyLogo",
+    "country"
   ],
 
   owner: [

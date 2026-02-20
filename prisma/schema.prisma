@@ -39,7 +39,6 @@ model User {
   isActive     Boolean      @default(true)
   createdAt    DateTime     @default(now())
 }
-
 enum UserRole {
   visitor
   owner
@@ -68,4 +67,78 @@ enum AccountStatus {
   verifiedPremium
 }
 
+
 // PROPERTY
+model Property {
+  id                String        @id @default(auto()) @map("_id") @db.ObjectId 
+  title             String        
+  description       String        
+  price             Float         
+  priceType         PriceType     // Enum: vente mensuelle, quotidienne
+  type              PropertyType  // Enum: apartment, house, studio, villa, etc.
+  offerType         OfferType     // Enum: location, vente , meublé
+  city              String        
+  neighborhood      String        // Quartier spécifique
+  address           String        // Adresse exacte
+  surface           Float?       
+  rooms             Int           // Nombre total de pièces
+  bedrooms          Int?          // Nombre de chambres 
+  bathrooms         Int?          // Nombre de salles de bain 
+  images            String[]      
+  amenities         Amenity[]     // Enum ou type: piscine, ascenseur, parking...
+  visitType         VisitType     // Enum: in-person, remote, both
+  visitFee          Float?        // Frais éventuels pour la visite 
+  isAvailable       Boolean       @default(true) 
+  docTitreFoncier   String?      
+
+  userId            String        
+  userName          String        
+  userCompanyName   String?       
+  userCompanyLogo   String?       
+  userVerified      AccountStatus       
+  userAvatar        String?       
+
+  views             Int           @default(0)
+  visitsCount       Int           @default(0) 
+  createdAt         DateTime      @default(now()) 
+}
+
+enum PriceType {
+  monthly
+  daily
+  sale
+}
+
+enum PropertyType {
+  apartment
+  house
+  studio
+  villa
+  duplex
+  land
+  office
+  shop
+  building
+}
+
+enum OfferType {
+  rent
+  sale
+  furnished
+}
+
+enum VisitType {
+  in_person
+  remote
+  both
+}
+
+enum Amenity {
+  pool
+  elevator
+  parking
+  gym
+  garden
+  security
+}
+
