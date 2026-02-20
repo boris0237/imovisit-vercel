@@ -30,7 +30,7 @@ import {
   Trash,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
@@ -42,6 +42,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { mockProperties } from '@/data/mock';
+import UpdateProfileForm from '@/forms/updateRegister';
+import { useEffect, useState } from "react";
+import { useAuth } from '@/contexts/AuthContext';
+import Modal from '@/components/ui/modal';
 
 const primaryNav = [
   { icon: LayoutGrid, label: "Vue d'ensemble", href: '/dashboard' },
@@ -90,6 +94,25 @@ const offerLabels: Record<string, { label: string; className: string }> = {
 };
 
 export default function Dashboard() {
+
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+  // Supposons que 'user' vient de votre contexte d'authentification ou d'un fetch
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (user) {
+      const createdAt = new Date(user.createdAt).getTime();
+      const updatedAt = new Date(user.updatedAt).getTime();
+      console.log(user)
+
+      // Si updatedAt est égal à createdAt, le profil n'a jamais été mis à jour
+      // On ajoute une marge de 1000ms car parfois la DB enregistre avec un micro-décalage
+      if (Math.abs(updatedAt - createdAt) < 1000) {
+        setShowUpdateModal(true);
+      }
+    }
+  }, [user]);
+  
   return (
     <div className="min-h-screen bg-slate-50 flex">
       {/* Sidebar */}
@@ -374,6 +397,17 @@ export default function Dashboard() {
           </div>
         </div>
       </main>
+      <Modal 
+        isOpen={showUpdateModal} 
+        onClose={() => setShowUpdateModal(false)}
+        title="Finalisez votre profil professionnel"
+        size="xl"       // On choisit une taille large pour le formulaire
+        showBlur={true} // Activation du flou
+        closeOnClickOutside={false} // On force l'utilisateur à cliquer sur le bouton ou la croix
+      >
+        {/* On passe votre composant existant à l'intérieur */}
+        <UpdateProfileForm /> 
+      </Modal>
     </div>
   );
 }

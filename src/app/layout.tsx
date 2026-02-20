@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { LanguageProvider } from '@/contexts/LanguageContext'
 import "./globals.css";
 import "./App.css";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 
 export const metadata: Metadata = {
@@ -21,9 +22,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="fr">
+      <AuthProvider>
       <LanguageProvider>
           <body className="antialiased">{children}</body>
       </LanguageProvider>
+      </AuthProvider>
     </html>
   );
 }

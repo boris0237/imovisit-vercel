@@ -176,6 +176,9 @@ const registerUserBackend = () => {
           // ... à l'intérieur de handleBackendLogin, dans le switch(status)
           case 404:
             setErrors({ general: data.message || "Compte non trouvé." });
+            setTimeout(() => {
+            handleBackendLogin(userData?.email || "");
+        }, 3000);
             break;
           default:
             setErrors({
@@ -259,6 +262,7 @@ const submitGoogle = () => {
           authProvider: "local",
           role: accountType,
         };
+      console.log("userdatatosend", userDataToSend)
       const response = await fetch('/api/users/register', {
         method: 'POST',
         headers: {

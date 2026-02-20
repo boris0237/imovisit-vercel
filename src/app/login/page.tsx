@@ -15,7 +15,6 @@ import {Footer} from '@/components/Footer';
 import { useDictionary } from '@/hooks/useDictionary';
 import { useGoogleAuth } from '@/hooks/useGoogleAuth';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import registerUserBackend from '@/app/register/page'
 
 export default function Login() {
 const router = useRouter()

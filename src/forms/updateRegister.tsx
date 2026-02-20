@@ -1,11 +1,10 @@
-"use client"
-
 import React, { useRef, useState, ChangeEvent } from 'react';
 import { uploadToCloudinary } from "@/lib/cloudinary";
 import { UploadCloud, X, FileText, FileImage, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { UserRole } from '@prisma/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 const HomeIcone = () => (
   <svg width="54" height="54" viewBox="0 0 54 54" fill="none" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink">
@@ -444,7 +443,7 @@ export default function UpdateRegister() {
       </p>
     </div>
         {/* Bouton de validation */}
-        <button onClick={handleUpdateProfile} className="w-full bg-[#1a2b4b] hover:bg-[#121d33] text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg active:scale-[0.98]">
+        <button onClick={onSubmit} className="w-full bg-[#1a2b4b] hover:bg-[#121d33] text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg active:scale-[0.98]">
           Finaliser l'inscription
           <CheckCircle2 size={18} />
         </button>
