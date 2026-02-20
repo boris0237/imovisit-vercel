@@ -102,7 +102,7 @@ import { AuthProvider, UserRole } from "@prisma/client"
 import { authMiddleware } from "@/middlewares/auth-middleware"
 import { roleMiddleware } from "@/middlewares/role-middleware"
 import { stringify } from "querystring";
-import { validatePassword } from "@/utils/validatePassword";
+import { validatePassword } from "@/utils/validate-password";
 
 
 
@@ -157,17 +157,20 @@ export async function POST(req: Request) {
         message: stringify(body),
       })
     }
+    
+    if (authProvider === AuthProvider.local) {
+      if (authProvider === AuthProvider.local && !password) {
+        return apiResponse({
+          status: 400,
+          message: "Le mot de passe est obligatoire pour un compte local",
+        })
+      }
 
-    if (authProvider === AuthProvider.local && !password) {
-      return apiResponse({
-        status: 400,
-        message: "Le mot de passe est obligatoire pour un compte local",
-      })
+      // verified structure pwd
+      const isValid = validatePassword(password);
+      if (isValid !== true) return isValid;
+
     }
-
-    // verified structure pwd
-    const isValid = validatePassword(password);
-    if (isValid !== true) return isValid;
 
     const existingUser = await prisma.user.findUnique({ where: { email } })
     if (existingUser) {
