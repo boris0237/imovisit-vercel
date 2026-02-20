@@ -1,3 +1,161 @@
+/**
+ * @swagger
+ * /api/biens:
+ *   post:
+ *     tags:
+ *       - Biens
+ *     summary: Création d'un nouveau bien immobilier
+ *     description: Permet à un utilisateur authentifié (admin, agent, owner...) de créer un bien immobilier.
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - title
+ *               - description
+ *               - price
+ *               - priceType
+ *               - type
+ *               - offerType
+ *               - city
+ *               - neighborhood
+ *               - images
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 example: "Villa moderne à Bastos"
+ *               description:
+ *                 type: string
+ *                 example: "Très belle villa avec piscine"
+ *               price:
+ *                 type: number
+ *                 example: 250000000
+ *               priceType:
+ *                 type: string
+ *                 enum: [VENTE, LOCATION_MENSUELLE, LOCATION_JOURNALIERE]
+ *                 example: VENTE
+ *               type:
+ *                 type: string
+ *                 enum: [APARTMENT, HOUSE, STUDIO, VILLA]
+ *                 example: VILLA
+ *               offerType:
+ *                 type: string
+ *                 enum: [VENTE, LOCATION, FURNISHED]
+ *                 example: VENTE
+ *               city:
+ *                 type: string
+ *                 example: "Yaounde"
+ *               neighborhood:
+ *                 type: string
+ *                 example: "Bastos"
+ *               rooms:
+ *                 type: integer
+ *                 example: 4
+ *               bedrooms:
+ *                 type: integer
+ *                 example: 3
+ *               bathrooms:
+ *                 type: integer
+ *                 example: 2
+ *               surface:
+ *                 type: number
+ *                 example: 250
+ *               images:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *     responses:
+ *       201:
+ *         description: Bien créé avec succès
+ *       400:
+ *         description: Champ obligatoire manquant
+ *       401:
+ *         description: Non autorisé
+ *       500:
+ *         description: Erreur serveur
+ */
+
+
+/**
+ * @swagger
+ * /api/biens:
+ *   get:
+ *     tags:
+ *       - Biens
+ *     summary: Recherche et filtrage des biens
+ *     description: Permet de filtrer les biens par ville, quartier, type, offre, prix, nombre de pièces et recherche texte.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         example: villa
+ *       - in: query
+ *         name: city
+ *         schema:
+ *           type: string
+ *         example: Yaounde
+ *       - in: query
+ *         name: neighborhood
+ *         schema:
+ *           type: string
+ *         example: Bastos
+ *       - in: query
+ *         name: type
+ *         schema:
+ *           type: string
+ *           enum: [APARTMENT, HOUSE, STUDIO, VILLA]
+ *         example: VILLA
+ *       - in: query
+ *         name: offerType
+ *         schema:
+ *           type: string
+ *           enum: [VENTE, LOCATION, FURNISHED]
+ *         example: VENTE
+ *       - in: query
+ *         name: rooms
+ *         schema:
+ *           type: integer
+ *         example: 4
+ *       - in: query
+ *         name: minPrice
+ *         schema:
+ *           type: number
+ *         example: 1000000
+ *       - in: query
+ *         name: maxPrice
+ *         schema:
+ *           type: number
+ *         example: 5000000
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         example: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         example: 10
+ *     responses:
+ *       200:
+ *         description: Résultats de recherche
+ *       400:
+ *         description: Paramètres invalides
+ *       401:
+ *         description: Non autorisé
+ *       500:
+ *         description: Erreur serveur
+ */
+
+
 import { prisma } from "@/service/db";
 import { NextRequest } from "next/server";
 import { apiResponse } from "@/lib/api-response";
@@ -88,19 +246,52 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// -- Voir Bien --
+
+// -- Voir Bien && Filtre Biens --
 export async function GET(req: NextRequest) {
   try {
-    const url = new URL(req.url);
-    const page = parseInt(url.searchParams.get("page") || "1");
-    const limit = parseInt(url.searchParams.get("limit") || "10");
+    const authError = authMiddleware(req);
+    if (authError) return authError;
+
+    const { searchParams } = new URL(req.url);
+
+    // Pagination
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "10");
     const skip = (page - 1) * limit;
 
     // Filtres dynamiques
     const filters: any = {};
-    if (url.searchParams.get("type")) filters.type = url.searchParams.get("type");
-    if (url.searchParams.get("city")) filters.city = url.searchParams.get("city");
-    if (url.searchParams.get("offerType")) filters.offerType = url.searchParams.get("offerType");
+
+    const search = searchParams.get("search");
+    const city = searchParams.get("city");
+    const neighborhood = searchParams.get("neighborhood");
+    const type = searchParams.get("type");
+    const offerType = searchParams.get("offerType");
+    const rooms = searchParams.get("rooms");
+    const minPrice = searchParams.get("minPrice");
+    const maxPrice = searchParams.get("maxPrice");
+
+    if (city) filters.city = city;
+    if (neighborhood) filters.neighborhood = neighborhood;
+    if (type) filters.type = type;
+    if (offerType) filters.offerType = offerType;
+    if (rooms) filters.rooms = parseInt(rooms);
+
+    // Filtre prix
+    if (minPrice || maxPrice) {
+      filters.price = {};
+      if (minPrice) filters.price.gte = parseFloat(minPrice);
+      if (maxPrice) filters.price.lte = parseFloat(maxPrice);
+    }
+
+    // Recherche texte (titre + description)
+    if (search) {
+      filters.OR = [
+        { title: { contains: search, mode: "insensitive" } },
+        { description: { contains: search, mode: "insensitive" } },
+      ];
+    }
 
     const [properties, total] = await Promise.all([
       prisma.property.findMany({
@@ -114,10 +305,14 @@ export async function GET(req: NextRequest) {
 
     return apiResponse({
       status: 200,
-      message: "Liste des biens",
-      data: { properties, page, limit, total },
+      message: "Résultats de recherche",
+      data: { properties, total, page, limit },
     });
+
   } catch (err: any) {
-    return apiResponse({ status: 500, message: err.message || "Erreur lors de la récupération des biens" });
+    return apiResponse({
+      status: 500,
+      message: err.message || "Erreur lors de la recherche",
+    });
   }
 }

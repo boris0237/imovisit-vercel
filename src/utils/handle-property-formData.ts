@@ -9,7 +9,6 @@ type FolderType =
 // Type spécifique à Property
 export type PropertyFormDataResult = {
   images: string[];
-  documents: string[];
 } & Record<string, any>;
 
 export async function handlePropertyFormData(
@@ -17,7 +16,6 @@ export async function handlePropertyFormData(
 ): Promise<PropertyFormDataResult> {
   const data: Record<string, any> = {};
   const images: string[] = [];
-  const documents: string[] = [];
 
   for (const key of Array.from(formData.keys())) {
     const value = formData.get(key);
@@ -29,25 +27,46 @@ export async function handlePropertyFormData(
 
       let folder: FolderType = UPLOAD_FOLDERS.DOCUMENT;
       if (key.toLowerCase() === "images") folder = UPLOAD_FOLDERS.IMAGE;
-      if (key.toLowerCase() === "avatar" || key.toLowerCase() === "companylogo") folder = UPLOAD_FOLDERS.AVATAR;
 
       const bytes = await value.arrayBuffer();
       const buffer = Buffer.from(bytes);
 
       const uploadResult: any = await uploadToCloudinary(buffer, folder);
 
-      if (key.toLowerCase() === "images") images.push(uploadResult.secure_url);
-      else if (key.toLowerCase() === "documents") documents.push(uploadResult.secure_url);
-      else data[key] = uploadResult.secure_url;
-    } 
+      // Images multiples
+      if (key.toLowerCase() === "images") {
+        images.push(uploadResult.secure_url);
+      }
+
+      // Document
+      else if (key.toLowerCase() === "doctitrefoncier") {
+        data.docTitreFoncier = uploadResult.secure_url;
+      }
+    }
     else if (typeof value === "string" && value.trim() !== "") {
-      data[key] = isNaN(Number(value)) ? value : Number(value);
+
+      // Conversion Boolean
+      if (value === "true") {
+        data[key] = true;
+      }
+      else if (value === "false") {
+        data[key] = false;
+      }
+
+      // Conversion Number
+      else if (!isNaN(Number(value))) {
+        data[key] = Number(value);
+      }
+
+      // Sinon string normale
+      else {
+        data[key] = value;
+      }
     }
   }
 
   return {
     ...data,
     images,
-    documents,
   };
 }

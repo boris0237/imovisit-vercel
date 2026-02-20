@@ -15,7 +15,8 @@ export const ROLE_ALLOWED_FIELDS = {
     "country",
     "profession",
     "avatar",
-    "companyLogo"
+    "companyLogo",
+    "country"
   ],
 
   owner: [

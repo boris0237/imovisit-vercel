@@ -3,7 +3,7 @@
  * /api/users/update-profile:
  *   patch:
  *     tags:
- *       - Users
+ *       - Upload
  *     summary: Mise à jour du profil utilisateur
  *     description: >
  *       Permet à un utilisateur connecté de mettre à jour ses informations
