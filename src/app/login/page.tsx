@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link'
 import { Eye, EyeOff, Mail, Lock, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,8 @@ import {Header} from '@/components/Header';
 import {Footer} from '@/components/Footer';
 import { useDictionary } from '@/hooks/useDictionary';
 import { useGoogleAuth } from '@/hooks/useGoogleAuth';
-import GoogleLoginButton from '@/components/ui/GoogleButton';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import registerUserBackend from '@/app/register/page'
 
 export default function Login() {
 const router = useRouter()
@@ -25,7 +26,7 @@ const router = useRouter()
     rememberMe: false,
   });
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   interface LoginResponse {
@@ -49,7 +50,7 @@ const router = useRouter()
    
   const {dictionary} = useDictionary();
   const currentYear = new Date().getFullYear();
-  const { withGoogle, googleLoading, error, } = useGoogleAuth();
+  const { withGoogle, googleLoading, error, userData, resetError } = useGoogleAuth();
 
   useEffect(() => {
     const loadGoogleScript = () => {
@@ -68,10 +69,101 @@ const router = useRouter()
     loadGoogleScript();
   }, []);
 
+// 1. L'effet "Moteur" : Déclenche la connexion backend dès que Google renvoie l'email
+useEffect(() => {
+  if (userData?.email && !loading && !successMessage) {
+    handleBackendLogin(userData.email);
+  }
+}, [userData]); // Surveille le changement de userData
+
+// 2. La fonction de connexion Backend (Syntaxe sans async/await)
+const handleBackendLogin = (email: string) => {
+  setLoading(true);
+  setErrors({});
+  resetError();
+
+  const loginData = { email: email };
+
+  fetch('/api/users/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(loginData),
+  })
+    .then((response) => {
+      // On capture le statut HTTP pour le switch case plus bas
+      return response.json().then((data) => ({
+        ok: response.ok,
+        status: response.status,
+        data: data
+      }));
+    })
+    .then(({ ok, status, data }) => {
+      if (ok) {
+        setSuccessMessage(dictionary?.login?.success || "Connexion réussie !");
+        
+        // Redirection après un court délai
+        setTimeout(() => {
+          window.location.href = '/dashboard/user';
+        }, 2000);
+      } else {
+        // Gestion précise des erreurs via le statut HTTP
+        switch (status) {
+          case 400:
+            setErrors({ email: data.message || "Email requis" });
+            break;
+          case 401:
+            setErrors({ general: data.message || "Authentification invalide" });
+            break;
+          // ... à l'intérieur de handleBackendLogin, dans le switch(status)
+          case 404:
+            // Au lieu de mettre une erreur, on informe l'utilisateur et on crée le compte
+            setSuccessMessage("Compte non trouvé. Création de votre compte en cours...");
+
+            // On attend un tout petit peu pour que l'utilisateur puisse lire le message
+            setTimeout(() => {
+              registerUserBackend();
+            }, 1500);
+            break;
+            break;
+          default:
+            setErrors({
+              general: data.message || dictionary?.login?.errorGeneric || "Une erreur est survenue."
+            });
+        }
+      }
+    })
+    .catch((error) => {
+      console.error('Erreur réseau:', error);
+      setErrors({
+        general: dictionary?.login?.canConnect || "Impossible de se connecter au serveur."
+      });
+    })
+    .finally(() => {
+      setLoading(false);
+    });
+};
+
+// 3. La fonction déclenchée par le bouton "Google"
+const loginWithGoogleData = () => {
+  setErrors({});
+  resetError();
+
+  if (!userData?.email) {
+    // Si on n'a pas encore les infos, on ouvre la popup Google
+    withGoogle();
+  } else {
+    // Si l'utilisateur est déjà reconnu par le state, on force l'appel au backend
+    handleBackendLogin(userData.email);
+  }
+};
+
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setErrors(null);
+    setErrors({});
     setSuccessMessage(null);
 
     try {
@@ -166,16 +258,6 @@ const router = useRouter()
 
               <TabsContent value="email">
                 <form onSubmit={handleSubmit} className="space-y-4">
-                  {errors && (
-                      <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-md mb-4">
-                        {errors}
-                      </div>
-                    )}                    
-                    {successMessage && (
-                      <div className="bg-green-50 border border-green-200 text-green-600 p-3 rounded-md mb-4">
-                        {successMessage}
-                      </div>
-                    )}
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
                     <div className="relative">
@@ -239,10 +321,55 @@ const router = useRouter()
 
               <TabsContent value="google">
                 <div className="space-y-4">
-                  <GoogleLoginButton 
-                    onClick={withGoogle}
-                    loading={googleLoading}
-                  />
+                  <Button
+                    onClick={loginWithGoogleData}
+                    disabled={googleLoading || loading}
+                    variant="outline"
+                    className="w-full flex items-center justify-center gap-2"
+                  >
+                    {googleLoading || loading ? (
+                      <>
+                        <LoadingSpinner loading={true} fullScreen={false} />
+                        {dictionary.signup?.loading || "Chargement..."}
+                      </>
+                    ) : (
+                      <>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className='-mb-1'>
+                          <path d="M21.8055 10.0415H21V10H12V14H17.6515C16.827 16.3285 14.6115 18 12 18C8.6865 18 6 15.3135 6 12C6 8.6865 8.6865 6 12 6C13.5295 6 14.921 6.577 15.9805 7.5195L18.809 4.691C17.023 3.0265 14.634 2 12 2C6.4775 2 2 6.4775 2 12C2 17.5225 6.4775 22 12 22C17.5225 22 22 17.5225 22 12C22 11.3295 21.931 10.675 21.8055 10.0415Z" fill="#FFC107" />
+                          <path d="M3.15308 7.3455L6.43858 9.755C7.32758 7.554 9.48058 6 12.0001 6C13.5296 6 14.9211 6.577 15.9806 7.5195L18.8091 4.691C17.0231 3.0265 14.6341 2 12.0001 2C8.15908 2 4.82808 4.1685 3.15308 7.3455Z" fill="#FF3D00" />
+                          <path d="M11.9999 22C14.5829 22 16.9299 21.0115 18.7044 19.404L15.6094 16.785C14.5719 17.5745 13.3037 18.0014 11.9999 18C9.39891 18 7.19041 16.3415 6.35841 14.027L3.09741 16.5395C4.75241 19.778 8.11341 22 11.9999 22Z" fill="#4CAF50" />
+                          <path d="M21.8055 10.0415H21V10H12V14H17.6515C17.2571 15.1082 16.5467 16.0766 15.608 16.7855L15.6095 16.7845L18.7045 19.4035C18.4855 19.6025 22 17 22 12C22 11.3295 21.931 10.675 21.8055 10.0415Z" fill="#1976D2" />
+                        </svg>
+                        {dictionary.login?.letGoogle || "Se connecter avec Google"}
+                      </>
+                    )}
+                  </Button>
+                  
+                  {/* Section des Messages d'Erreur (Login) */}
+                  {(error || errors?.general || errors?.email) && (
+                    <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-md text-sm relative animate-in fade-in slide-in-from-top-1">
+                      <button 
+                        onClick={() => { setErrors({}); resetError(); }}
+                        className="absolute top-2 right-2 text-red-400 hover:text-red-600 transition-colors"
+                        title="Fermer"
+                      >
+                        ×
+                      </button>
+                      <div className="pr-6 space-y-1">
+                        {errors?.general && <p className="font-medium">{errors.general}</p>}
+                        {errors?.email && <p>{errors.email}</p>}
+                        {error && !errors?.general && <p>{error.toString()}</p>}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Section du Message de Succès */}
+                  {successMessage && (
+                    <div className="bg-green-50 border border-green-200 text-green-600 p-3 rounded-md text-sm flex items-center gap-2 animate-in fade-in zoom-in-95">
+                      <span className="h-2 w-2 bg-green-500 rounded-full animate-pulse" />
+                      {successMessage}
+                    </div>
+                  )}
                 </div>
               </TabsContent>
             </Tabs>

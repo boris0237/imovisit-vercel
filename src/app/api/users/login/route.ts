@@ -141,7 +141,7 @@ import { prisma } from "@/service/db";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { NextResponse } from "next/server";
-import { AuthProvider } from "@prisma/client";
+import { AuthProvider, User } from "@prisma/client";
 import { apiResponse } from "@/lib/api-response";
 
 
@@ -183,10 +183,18 @@ export async function POST(req: Request) {
         role: user.role,
         authProvider: user.authProvider,
         name: user.name,
+        phone: user.phone,
+        country: user.country,
+        city: user.city,
+        profession: user.profession,
+        age: user.age,
         avatar: user.avatar,
+        services: user.services,
         typeCompte: user.typeCompte,
-        verified: user.verified,
-      },
+        accountStatus: user.accountStatus,
+
+
+      } as User,
       JWT_SECRET,
       { expiresIn: "1h" }
     );
@@ -208,7 +216,7 @@ export async function POST(req: Request) {
     const res = NextResponse.json(responseData);
     res.cookies.set("jwt", token, {
       httpOnly: true,
-      maxAge: 60 * 60, 
+      maxAge: 60 * 60,
       path: "/",
       sameSite: "strict",
       secure: process.env.NODE_ENV === "production",

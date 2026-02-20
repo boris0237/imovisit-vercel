@@ -53,6 +53,7 @@ export default {
     conditions:"conditions",
     letGoogle: "Let's go with Google",
     submit: "Create my account",
+    loading:"Loading...",
     haveAccount: "Already have an account? ",
     login: "Login",
     rights: "Imovisit. All rights reserved.",

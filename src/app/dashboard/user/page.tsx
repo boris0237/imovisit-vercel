@@ -62,7 +62,7 @@ const managementNav = [
 const accountNav = [
   { icon: Crown, label: 'Mon abonnement', href: '/dashboard/subscription', badge: 'Premium' },
   { icon: Settings, label: 'Paramètres', href: '/dashboard/settings' },
-  { icon: LogOut, label: 'Déconnexion', href: '/logout' },
+  { icon: LogOut, label: 'Déconnexion', href: 'api/users/logout' },
 ];
 
 const stats = [
