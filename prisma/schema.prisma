@@ -144,3 +144,76 @@ enum Amenity {
   security
 }
 
+
+//AGENDA
+model AvailabilityRule {//dispo tel date
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  ownerId        String   
+  propertyId     String
+
+  recurrenceType RecurrenceType
+  dayOfWeek      WeekDay?
+  dayOfMonth     Int?
+
+  startTime      String   
+  endTime        String   
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model AvailabilityException { //pas dispo tel date
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  ownerId     String
+  propertyId  String
+
+  date        DateTime?   // jour précis
+  dayOfWeek   WeekDay?
+  dayOfMonth  Int?
+
+  startTime   String?
+  endTime     String?
+
+  reason      String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Reservation { //réservation tel date
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+
+  propertyId  String
+  ownerId     String
+  clientId    String   
+
+  date        DateTime
+  startTime   String
+  endTime     String
+
+  status      ReservationStatus @default(pending)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum ReservationStatus {
+  pending
+  confirmed
+  cancelled
+}
+
+enum RecurrenceType {
+  weekly
+  monthly
+}
+
+enum WeekDay {
+  monday
+  tuesday
+  wednesday
+  thursday
+  friday
+  saturday
+  sunday
+}
