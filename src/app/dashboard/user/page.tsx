@@ -267,10 +267,9 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
-    </>
-      </main>
+      
       <Modal 
-        isOpen={false} 
+        isOpen={showUpdateModal} 
         onClose={() => setShowUpdateModal(false)}
         title="Finalisez votre profil professionnel"
         size="xl"       // On choisit une taille large pour le formulaire
@@ -279,6 +278,6 @@ export default function Dashboard() {
       >
         <UpdateProfileForm /> 
       </Modal>
-    </div>
+    </>
   );
 }

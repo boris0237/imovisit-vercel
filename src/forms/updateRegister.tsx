@@ -1,5 +1,4 @@
 import React, { useRef, useState, ChangeEvent } from 'react';
-import { uploadToCloudinary } from "@/lib/cloudinary";
 import { UploadCloud, X, FileText, FileImage, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
@@ -215,7 +214,7 @@ export default function UpdateRegister() {
   const handleUpdateProfile = async (updatedFields: Record<string, any>) => {
     try {
       const formData = new FormData();
-
+      console.log('data sended :', updatedFields )
       // Construction du FormData à partir de l'objet de données
       Object.entries(updatedFields).forEach(([key, value]) => {
         if (value !== null && value !== undefined) {
@@ -234,7 +233,7 @@ export default function UpdateRegister() {
         setShowRegistrationSucces(true);
       }
       else {
-        throw new Error('erreur :=> ', result.message || "Erreur lors de la mise à jour");
+        throw new Error('l/erreur est :=> ', result.message || "Erreur lors de la mise à jour");
       }
 
       return result;
