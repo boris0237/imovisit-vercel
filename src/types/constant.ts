@@ -44,6 +44,15 @@ export const ROLE_ALLOWED_FIELDS = {
     "country",
     "services",
     "docJust",
+        "phone",
+    "city",
+    "avatar",
+    "country",
+    "services",
+    "docRCCM",
+    "docContribuable",
+    "companyName",
+    "companyLogo"
   ],
 
   prospector: [

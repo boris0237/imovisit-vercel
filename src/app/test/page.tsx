@@ -1,7 +1,6 @@
 "use client"
 
 import React, { useRef, useState, ChangeEvent } from 'react';
-import { uploadToCloudinary } from "@/lib/cloudinary";
 import { UploadCloud, X, FileText, FileImage, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
@@ -129,13 +128,13 @@ const LANDLORD_TYPES = [
   { id: 'gestionnaire', label: 'Gestionnaire', icon: Building },
   { id: 'demarcheur', label: 'Démarcheur', icon: Handshake },
   { id: 'residence', label: 'Résidence meublée', icon: Sofa },
-  { id: 'agence', label: 'Agence', icon: Business },
+  { id: 'agency', label: 'Agence', icon: Business },
   { id: 'agent', label: 'Agent', icon: Agent },
   { id: 'promoteur', label: 'Promoteur', icon: Construction },
 ];
 
 export default function UpdateRegister() {
-  const [selectedType, setSelectedType] = useState('agence');
+  const [selectedType, setSelectedType] = useState('admin');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const fileIdentityInputRef = useRef<HTMLInputElement>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -224,12 +223,8 @@ export default function UpdateRegister() {
 
     const response = await fetch("/api/users/update-profile", {
       method: "PATCH",
-      headers: {
-        // Note: Ne pas définir 'Content-Type', le navigateur le fait 
-        // automatiquement pour le FormData avec le "boundary".
-        "Authorization": `Bearer ${localStorage.getItem("token")}`, 
-      },
       body: formData,
+      credentials: 'include'
     });
 
     const result = await response.json();
@@ -251,7 +246,7 @@ export default function UpdateRegister() {
       // On prépare les données (ajoutez ici vos autres champs de formulaire)
       const dataToUpdate = {
         companyName: name,
-        type: selectedType as UserRole,
+        role: selectedType as UserRole,
         companyLogo: logoFile,
       };
 

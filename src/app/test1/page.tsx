@@ -1,10 +1,11 @@
+"use client"
+
 import React, { useRef, useState, ChangeEvent } from 'react';
+import { uploadToCloudinary } from "@/lib/cloudinary";
 import { UploadCloud, X, FileText, FileImage, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { UserRole } from '@prisma/client';
-import Toast from '@/components/ui/toast';
-import SuccessRegistrationAlert from '@/components/SuccessRegistrationAlert';
 
 const HomeIcone = () => (
   <svg width="54" height="54" viewBox="0 0 54 54" fill="none" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink">
@@ -124,34 +125,33 @@ const Construction = () => (
 
 // Définition des types de bailleurs
 const LANDLORD_TYPES = [
-  { id: 'owner', label: 'Propriétaire', icon: HomeIcone },
-  { id: 'property_manager', label: 'Gestionnaire', icon: Building },
-  { id: 'agent_free', label: 'Démarcheur', icon: Handshake },
+  { id: 'proprietaire', label: 'Propriétaire', icon: HomeIcone },
+  { id: 'gestionnaire', label: 'Gestionnaire', icon: Building },
+  { id: 'demarcheur', label: 'Démarcheur', icon: Handshake },
   { id: 'residence', label: 'Résidence meublée', icon: Sofa },
-  { id: 'agency', label: 'Agence', icon: Business },
+  { id: 'agence', label: 'Agence', icon: Business },
   { id: 'agent', label: 'Agent', icon: Agent },
-  { id: 'prospector', label: 'Promoteur', icon: Construction },
+  { id: 'promoteur', label: 'Promoteur', icon: Construction },
 ];
 
+
+
 export default function UpdateRegister() {
-  const [selectedType, setSelectedType] = useState('agency');
+  const [selectedType, setSelectedType] = useState("classique");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const fileIdentityInputRef = useRef<HTMLInputElement>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [name, setName] = useState('')
-  const [file, setFile] = useState<File[]>([]);
+  const [name, setName] = useState("");
   const [filesIdentity, setFilesIdentity] = useState<File[]>([]);
-  const [showRegistrationSucces, setShowRegistrationSucces] = useState(false);
 
   const MAX_FILES = 3;
-  const MAX_SIZE_MB = 10;
+  const MAX_SIZE_MB = 5;
 
+  // Clic sur le conteneur pour ajouter logo
+  const handleContainerClick = () => fileInputRef.current?.click();
 
-
-
-  // Déclencher le clic sur l'input caché
   const handleZoneClick = () => {
     if (filesIdentity.length < MAX_FILES) {
       fileIdentityInputRef.current?.click();
@@ -160,26 +160,18 @@ export default function UpdateRegister() {
     }
   };
 
-  const handleContainerClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  // Gère la sélection du fichier de logo ou avatar
-  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleLogoChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setLogoFile(file);
-      // Création d'une URL temporaire pour la prévisualisation
       setPreviewUrl(URL.createObjectURL(file));
     }
   };
 
-  // Gère la sélection du fichier d'identification
   const handleFilesChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const selectedFilesIdentity = Array.from(e.target.files || []);
+    const selectedFiles = Array.from(e.target.files || []);
 
-    // 1. Vérification du nombre total
-    if (filesIdentity.length + selectedFilesIdentity.length > MAX_FILES) {
+    if (filesIdentity.length + selectedFiles.length > MAX_FILES) {
       toast.error(`Vous ne pouvez pas importer plus de ${MAX_FILES} fichiers.`);
       return;
     }
@@ -187,8 +179,7 @@ export default function UpdateRegister() {
     const validFiles: File[] = [];
     const errors: string[] = [];
 
-    selectedFilesIdentity.forEach((file) => {
-      // 2. Vérification de la taille (30Mo = 30 * 1024 * 1024 octets)
+    selectedFiles.forEach((file) => {
       if (file.size > MAX_SIZE_MB * 1024 * 1024) {
         errors.push(`${file.name} est trop lourd (> ${MAX_SIZE_MB}Mo).`);
       } else {
@@ -196,69 +187,65 @@ export default function UpdateRegister() {
       }
     });
 
-    if (errors.length > 0) {
-      errors.forEach(err => toast.error(err));
-    }
-
+    if (errors.length > 0) errors.forEach(err => toast.error(err));
     setFilesIdentity(prev => [...prev, ...validFiles]);
 
-    // Reset l'input pour permettre de re-sélectionner le même fichier si supprimé
     if (fileIdentityInputRef.current) fileIdentityInputRef.current.value = "";
   };
 
   const removeFile = (index: number, e: React.MouseEvent) => {
-    e.stopPropagation(); // Empêche l'ouverture du sélecteur de fichiers
+    e.stopPropagation();
     setFilesIdentity(prev => prev.filter((_, i) => i !== index));
   };
 
+  // --- Fonction qui prépare et envoie le FormData ---
   const handleUpdateProfile = async (updatedFields: Record<string, any>) => {
     try {
       const formData = new FormData();
-      console.log('data sended :', updatedFields )
-      // Construction du FormData à partir de l'objet de données
+
+      // Ajout des fichiers si présents
+      if (logoFile) formData.append("companyLogo", logoFile);
+      filesIdentity.forEach((file, idx) => formData.append("documents", file));
+
+      // Ajout des champs texte
       Object.entries(updatedFields).forEach(([key, value]) => {
         if (value !== null && value !== undefined) {
-          formData.append(key, value);
+          formData.append(key, String(value)); // toujours string pour FormData
         }
       });
 
-      console.log('data sended: ',updatedFields);
+      const token = localStorage.getItem("token"); // récupère le JWT si utilisé
+
       const response = await fetch("/api/users/update-profile", {
         method: "PATCH",
         body: formData,
-        credentials : 'include'
+        credentials: "include",
       });
 
       const result = await response.json();
-      if (response.ok){
-        setShowRegistrationSucces(true);
-      }
-      else {
-        throw new Error('l/erreur est :=> ', result.message || "Erreur lors de la mise à jour");
-      }
+
+      if (!response.ok) throw new Error(result.message || "Erreur lors de la mise à jour");
 
       return result;
     } catch (error: any) {
       console.error("Erreur Update Profile:", error.message);
       throw error;
     }
-  }
+  };
 
   const onSubmit = async () => {
     setLoading(true);
     try {
-      // On prépare les données (ajoutez ici vos autres champs de formulaire)
       const dataToUpdate = {
         companyName: name,
-        role: selectedType as UserRole,
-        companyLogo: logoFile,
+        typeCompte: selectedType,
+        avatar: null, // ajouter un File si besoin
       };
 
-      console.log(dataToUpdate);
-
       await handleUpdateProfile(dataToUpdate);
-    } catch (error) {
-      toast.error("Erreur lors de la mise à jour");
+      toast.success("Profil mis à jour !");
+    } catch (error: any) {
+      toast.error(error.message || "Erreur lors de la mise à jour");
     } finally {
       setLoading(false);
     }
@@ -266,13 +253,12 @@ export default function UpdateRegister() {
 
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white font-sans text-[#1a2b4b]">
-      {/* Header */}
       <header className="text-center mb-10">
         <h1 className="text-3xl font-extrabold mb-2">Type de bailleur</h1>
         <p className="text-gray-500 text-sm">Précisez votre compte professionnel</p>
       </header>
 
-      {/* Grid de sélection */}
+      {/* Sélection type */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         {LANDLORD_TYPES.map((type) => {
           const Icon = type.icon;
@@ -284,14 +270,14 @@ export default function UpdateRegister() {
               onClick={() => setSelectedType(type.id)}
               className={`flex flex-col items-center justify-center p-6 rounded-xl border-2 transition-all duration-200 group
                 ${isSelected
-                  ? 'border-[#2b3a67] bg-[#eef2f8] shadow-sm'
-                  : 'border-gray-100 hover:border-gray-300 bg-white'
+                  ? "border-[#2b3a67] bg-[#eef2f8] shadow-sm"
+                  : "border-gray-100 hover:border-gray-300 bg-white"
                 }`}
             >
-              <div className={`mb-3 p-3 rounded-lg transition-transform group-hover:scale-110`}>
-                <Icon size={32} className={isSelected ? 'text-[#2b3a67]' : 'text-gray-400'} />
+              <div className="mb-3 p-3 rounded-lg transition-transform group-hover:scale-110">
+                <Icon size={32} className={isSelected ? "text-[#2b3a67]" : "text-gray-400"} />
               </div>
-              <span className={`text-sm font-bold ${isSelected ? 'text-[#1a2b4b]' : 'text-gray-600'}`}>
+              <span className={`text-sm font-bold ${isSelected ? "text-[#1a2b4b]" : "text-gray-600"}`}>
                 {type.label}
               </span>
             </button>
@@ -299,12 +285,11 @@ export default function UpdateRegister() {
         })}
       </div>
 
-      {/* Formulaire dynamique (exemple pour Agence) */}
+      {/* Nom société */}
       <div className="space-y-8">
-        {/* Nom de la société */}
         <div className="flex flex-col gap-2">
           <label className="text-sm font-bold text-gray-700">Nom de la société</label>
-          <Input
+          <input
             type="text"
             placeholder="Imovisit.com"
             className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2b3a67] focus:border-transparent transition-all"
@@ -316,152 +301,55 @@ export default function UpdateRegister() {
 
       {/* Upload Logo */}
       <div className="space-y-6">
-        <div className="flex flex-col gap-2">
-          <label className="text-sm font-bold text-gray-700">Logo de l'agence</label>
-
-          {/* 1. L'input de fichier réel, mais CACHÉ */}
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleLogoChange}
-            accept="image/*"
-            className="hidden"
-          />
-
-          {/* 2. Le conteneur visuel qui sert de bouton */}
-          <div
-            onClick={handleContainerClick}
-            className="border-2 border-dashed border-gray-200 rounded-2xl p-10 flex flex-col items-center justify-center bg-gray-50/50 hover:bg-gray-50 transition-colors cursor-pointer group"
-          >
-            <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center mb-4 group-hover:bg-gray-300 transition-colors overflow-hidden">
-              {previewUrl ? (
-                <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
-              ) : (
-                <svg width="54" height="54" viewBox="0 0 54 54" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <rect width="54" height="54" fill="url(#pattern0_1332_11183)" />
-                  <defs>
-                    <pattern id="pattern0_1332_11183" patternContentUnits="objectBoundingBox" width="1" height="1">
-                      <use href="#image0_1332_11183" transform="scale(0.00195312)" />
-                    </pattern>
-                    <image id="image0_1332_11183" width="512" height="512" href="data:image/png;base64,..." />
-                  </defs>
-                </svg>
-              )}
-            </div>
-            <p className="text-sm font-bold mb-1">
-              {logoFile ? logoFile.name : "Cliquer pour ajouter votre logo"}
-            </p>
-            <p className="text-xs text-gray-400">Format recommandé : PNG, JPG (max 2MB)</p>
-            <p className="text-[10px] text-gray-300 mt-1 italic">Ce logo sera visible sur votre profil et vos annonces</p>
-          </div>
+        <label className="text-sm font-bold text-gray-700">Logo de l'agence</label>
+        <input type="file" ref={fileInputRef} onChange={handleLogoChange} accept="image/*" className="hidden" />
+        <div onClick={handleContainerClick} className="border-2 border-dashed rounded-2xl p-10 flex flex-col items-center justify-center cursor-pointer bg-gray-50/50 hover:bg-gray-50">
+          {previewUrl ? (
+            <img src={previewUrl} alt="Preview" className="w-24 h-24 object-cover rounded-full mb-4" />
+          ) : (
+            <UploadCloud size={48} className="text-gray-300 mb-4" />
+          )}
+          <p className="text-sm font-bold">{logoFile ? logoFile.name : "Cliquer pour ajouter votre logo"}</p>
         </div>
 
-        {/* Documents justificatifs */}
+        {/* Upload documents */}
         <div className="flex flex-col gap-2">
           <label className="text-sm font-bold text-gray-700 flex justify-between">
             Documents justificatifs (optionnel)
-            <span className="text-xs font-normal text-gray-400">
-              {filesIdentity.length} / {MAX_FILES} (Max {MAX_SIZE_MB}Mo par fichier)
-            </span>
+            <span className="text-xs font-normal text-gray-400">{filesIdentity.length} / {MAX_FILES}</span>
           </label>
-
-          {/* Input caché */}
-          <input
-            type="file"
-            ref={fileIdentityInputRef}
-            onChange={handleFilesChange}
-            multiple
-            accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-            className="hidden"
-          />
-
-          {/* Zone d'affichage et d'interaction */}
-          <div
-            onClick={handleZoneClick}
-            className={`relative border-2 border-dashed rounded-2xl p-6 transition-all duration-200 cursor-pointer min-h-[160px] flex flex-col items-center justify-center
-          ${filesIdentity.length > 0 ? 'bg-white border-blue-200' : 'bg-gray-50/50 border-gray-200 hover:bg-gray-50 hover:border-gray-300'}
-          ${filesIdentity.length >= MAX_FILES ? 'cursor-default opacity-90' : 'cursor-pointer'}
-        `}
-          >
+          <input type="file" ref={fileIdentityInputRef} onChange={handleFilesChange} multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" className="hidden" />
+          <div onClick={handleZoneClick} className="relative border-2 border-dashed rounded-2xl p-6 cursor-pointer min-h-[160px] flex flex-col items-center justify-center">
             {filesIdentity.length === 0 ? (
-              // État Vide : Placeholder original
-              <div className="flex flex-col items-center group">
-                <UploadCloud size={48} className="text-gray-300 mb-4 group-hover:text-blue-400 transition-colors" />
-                <p className="text-xs text-gray-400 text-center max-w-[250px] leading-relaxed">
-                  Cliquer pour ajouter des documents CNI, {selectedType === "agence" ? "RCCM, etc." : "justificatif de domicile"}
-                </p>
+              <div className="flex flex-col items-center">
+                <UploadCloud size={48} className="text-gray-300 mb-4" />
+                <p className="text-xs text-gray-400 text-center max-w-[250px]">Cliquer pour ajouter des documents</p>
               </div>
             ) : (
-              // État avec Fichiers : Grille de prévisualisation
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 w-full h-full">
-                {filesIdentity.map((file, index) => (
-                  <div
-                    key={index}
-                    className="relative flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl hover:bg-slate-100 transition-colors group/item"
-                  >
-                    {/* Icône selon type */}
+                {filesIdentity.map((file, idx) => (
+                  <div key={idx} className="relative flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl">
                     <div className="p-2 bg-white rounded-lg shadow-sm">
-                      {file.type.startsWith('image/') ? (
-                        <FileImage size={20} className="text-blue-500" />
-                      ) : (
-                        <FileText size={20} className="text-orange-500" />
-                      )}
+                      {file.type.startsWith("image/") ? <FileImage size={20} className="text-blue-500" /> : <FileText size={20} className="text-orange-500" />}
                     </div>
-
-                    {/* Infos fichier */}
                     <div className="flex-1 min-w-0">
-                      <p className="text-[11px] font-bold text-gray-700 truncate" title={file.name}>
-                        {file.name}
-                      </p>
-                      <p className="text-[10px] text-gray-400">
-                        {(file.size / (1024 * 1024)).toFixed(2)} Mo
-                      </p>
+                      <p className="text-[11px] font-bold text-gray-700 truncate">{file.name}</p>
+                      <p className="text-[10px] text-gray-400">{(file.size / (1024 * 1024)).toFixed(2)} Mo</p>
                     </div>
-
-                    {/* Bouton supprimer */}
-                    <button
-                      onClick={(e) => removeFile(index, e)}
-                      className="p-1 hover:bg-red-100 hover:text-red-600 rounded-md text-gray-400 transition-colors"
-                    >
+                    <button onClick={(e) => removeFile(idx, e)} className="p-1 hover:bg-red-100 hover:text-red-600 rounded-md text-gray-400">
                       <X size={16} />
                     </button>
                   </div>
                 ))}
-
-                {/* Bouton "Ajouter plus" si limite non atteinte */}
-                {filesIdentity.length < MAX_FILES && (
-                  <div className="flex items-center justify-center border-2 border-dashed border-gray-100 rounded-xl p-3 hover:bg-gray-50 transition-colors text-gray-300">
-                    <UploadCloud size={20} />
-                  </div>
-                )}
               </div>
             )}
           </div>
-
-          <p className="text-[10px] text-gray-400 flex items-center gap-1">
-            <AlertCircle size={12} />
-            Formats acceptés : PDF, PNG, JPG (Max 3 documents)
-          </p>
         </div>
-        {/* Bouton de validation */}
-        <button onClick={onSubmit} className="w-full bg-[#1a2b4b] hover:bg-[#121d33] text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg active:scale-[0.98]">
-          Finaliser l'inscription
-          <CheckCircle2 size={18} />
+
+        <button onClick={onSubmit} disabled={loading} className="w-full bg-[#1a2b4b] hover:bg-[#121d33] text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg active:scale-[0.98]">
+          Finaliser l'inscription <CheckCircle2 size={18} />
         </button>
       </div>
-      <Toast 
-      isOpen
-      position='center'
-      type='success'
-      size='full'
-      >
-        <SuccessRegistrationAlert 
-          isOpen={showRegistrationSucces}
-          userName={user.username}
-          onContinue={() => window.location.href=('/dashboard/user')} // L'action du bouton
-        />
-      </Toast>
     </div>
-    
   );
 }
