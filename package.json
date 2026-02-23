@@ -54,14 +54,12 @@
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-react": "^5.31.0",
     "swiper": "^12.1.0",
-    "tailwind-merge": "^2.2.1",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwind-merge": "^3.4.1"
   },
   "devDependencies": {
     "@prisma/client": "^4.16.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/jsonwebtoken": "^9.0.10",
-    "@types/node": "^20",
     "@types/node-mailjet": "^3.3.12",
     "@types/react": "^18",
     "@types/react-dom": "^18",

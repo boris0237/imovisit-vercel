@@ -30,8 +30,10 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { mockProperties, amenitiesList } from '@/data/mock'
+import { useDictionary } from '@/hooks/useDictionary'
 
 export default function PropertyDetail() {
+  const {dictionary} = useDictionary()
   const params = useParams()
   const router = useRouter()
   const [selectedImage, setSelectedImage] = useState(0)
@@ -45,8 +47,12 @@ export default function PropertyDetail() {
         <Header />
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-700 mb-4">Bien non trouvé</h1>
-            <Button onClick={() => router.push('/search')}>Retour à la recherche</Button>
+            <h1 className="text-2xl font-bold text-gray-700 mb-4">
+              {dictionary.propertyPage?.title1 || "Bien non trouvé"}
+            </h1>
+            <Button onClick={() => router.push('/search')}>
+              {dictionary.propertyPage?.btn1 || "Retour à la recherche"}
+            </Button>
           </div>
         </main>
         <Footer />
@@ -95,7 +101,7 @@ export default function PropertyDetail() {
       <main className="flex-1 bg-slate-50">
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center gap-2 text-xs text-slate-500">
-            <span>Bien en {getOfferTypeLabel(property.offerType).toLowerCase()}</span>
+            <span>{dictionary.propertyPage?.sp1 || "Bien que location"} </span>
             <ChevronRight className="w-3 h-3" />
             <span className="text-slate-700">{property.title}</span>
           </div>
@@ -156,13 +162,13 @@ export default function PropertyDetail() {
                       </h1>
                       <div className="flex items-center gap-2 text-sm text-slate-500 mt-2">
                         <MapPin className="w-4 h-4" />
-                        <span>{property.neighborhood}, {property.city}, Cameroun</span>
+                        <span>{property.neighborhood}, {property.city}, {dictionary.propertyPage?.sp2 || "Cameroun"}</span>
                       </div>
                     </div>
                     {property.ownerVerified && (
                       <Badge className="bg-emerald-100 text-emerald-700 border-0">
                         <ShieldCheck className="w-3 h-3 mr-1" />
-                        Bien vérifié
+                        {dictionary.propertyPage?.badge || "Bien vérifié"}
                       </Badge>
                     )}
                   </div>
@@ -174,15 +180,15 @@ export default function PropertyDetail() {
                   <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500">
                     <div className="flex items-center gap-1">
                       <Eye className="w-4 h-4" />
-                      <span>{property.views} vues</span>
+                      <span>{property.views} {dictionary.propertyPage?.sp3 || "vues"}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <CalendarCheck className="w-4 h-4" />
-                      <span>{property.visitsCount} visites réservées</span>
+                      <span>{property.visitsCount} {dictionary.propertyPage?.sp4 || "visites réservées"}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Clock className="w-4 h-4" />
-                      <span>Publié il y a 2 jours</span>
+                      <span>{dictionary.propertyPage?.sp5 || "Publié il y a 2 jours"}</span>
                     </div>
                   </div>
 
@@ -190,7 +196,7 @@ export default function PropertyDetail() {
                     <div className="flex items-center gap-3 rounded-xl border border-slate-200 p-3">
                       <Maximize className="w-4 h-4 text-slate-700" />
                       <div className="text-xs">
-                        <p className="text-slate-500">Surface</p>
+                        <p className="text-slate-500">{dictionary.propertyPage?.p1 || "Surface"}</p>
                         <p className="font-semibold text-slate-900">{property.surface} m²</p>
                       </div>
                     </div>
@@ -198,7 +204,7 @@ export default function PropertyDetail() {
                       <div className="flex items-center gap-3 rounded-xl border border-slate-200 p-3">
                         <Bed className="w-4 h-4 text-slate-700" />
                         <div className="text-xs">
-                          <p className="text-slate-500">Chambres</p>
+                          <p className="text-slate-500">{dictionary.propertyPage?.p2 || "Chambres"}</p>
                           <p className="font-semibold text-slate-900">{property.bedrooms}</p>
                         </div>
                       </div>
@@ -207,7 +213,7 @@ export default function PropertyDetail() {
                       <div className="flex items-center gap-3 rounded-xl border border-slate-200 p-3">
                         <Bath className="w-4 h-4 text-slate-700" />
                         <div className="text-xs">
-                          <p className="text-slate-500">Salles de bain</p>
+                          <p className="text-slate-500">{dictionary.propertyPage?.p3 || "Salles de bain"}</p>
                           <p className="font-semibold text-slate-900">{property.bathrooms}</p>
                         </div>
                       </div>
@@ -215,7 +221,7 @@ export default function PropertyDetail() {
                     <div className="flex items-center gap-3 rounded-xl border border-slate-200 p-3">
                       <Car className="w-4 h-4 text-slate-700" />
                       <div className="text-xs">
-                        <p className="text-slate-500">Parking</p>
+                        <p className="text-slate-500">{dictionary.propertyPage?.p4 || "Parking"}</p>
                         <p className="font-semibold text-slate-900">
                           {property.amenities.includes('parking') ? '2 places' : 'Non inclus'}
                         </p>
@@ -224,10 +230,8 @@ export default function PropertyDetail() {
                   </div>
 
                   <div className="space-y-3 text-sm text-slate-600 leading-relaxed">
-                    <p>{property.description}</p>
                     <p>
-                      L&apos;appartement comprend un vaste salon lumineux avec balcon, une cuisine
-                      moderne entièrement équipée et des finitions premium dans toutes les pièces.
+                      {dictionary.propertyPage?.p5 || "Magnifique appartement rénové situé dans un quartier résidentiel calme. Proche de toutes commodités, transports en commun et écoles."}
                     </p>
                   </div>
                 </CardContent>
@@ -236,7 +240,7 @@ export default function PropertyDetail() {
               {/* Amenities */}
               <Card className="border-slate-200">
                 <CardContent className="p-6">
-                  <h2 className="text-sm font-semibold text-slate-800 mb-4">Commodités</h2>
+                  <h2 className="text-sm font-semibold text-slate-800 mb-4">{dictionary.propertyPage?.title2 || "Commodités"}</h2>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                     {property.amenities.map((amenityId) => {
                       const amenity = amenitiesList.find((a) => a.id === amenityId)
@@ -254,7 +258,7 @@ export default function PropertyDetail() {
               {/* Owner */}
               <Card className="border-slate-200">
                 <CardContent className="p-6 space-y-4">
-                  <h2 className="text-sm font-semibold text-slate-800">Propriétaire</h2>
+                  <h2 className="text-sm font-semibold text-slate-800">{dictionary.propertyPage?.title3 || "Propriétaire"}</h2>
                   <div className="flex items-center justify-between gap-4 flex-wrap">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center text-slate-700 font-semibold">
@@ -264,28 +268,30 @@ export default function PropertyDetail() {
                         <div className="flex items-center gap-2">
                           <p className="font-semibold text-slate-900">{property.ownerName}</p>
                           <Badge className="bg-emerald-100 text-emerald-700 border-0">
-                            Agence immobilière
+                            {dictionary.propertyPage?.badge2 || "Agence immobilière"}
                           </Badge>
                         </div>
-                        <p className="text-xs text-slate-500">Membre depuis juin 2021</p>
+                        <p className="text-xs text-slate-500">
+                          {dictionary.propertyPage?.p6 || "Membre depuis Juin 2021"} 
+                        </p>
                         <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
                           <Star className="w-3.5 h-3.5 text-amber-400 fill-current" />
                           <span>4.8</span>
-                          <span>(24 avis)</span>
+                          <span>({dictionary.propertyPage?.sp6 || "24 avis"})</span>
                         </div>
                       </div>
                     </div>
                     <Button className="bg-slate-900 hover:bg-slate-800 gap-2">
                       <Phone className="w-4 h-4" />
-                      Contacter
+                      {dictionary.propertyPage?.btn2 || "Contacter"}
                     </Button>
                   </div>
                   <div className="flex items-center justify-between text-xs text-slate-500">
-                    <span>Signaler ce bailleur</span>
+                    <span>{dictionary.propertyPage?.sp7 || "Signaler ce bailleur"}</span>
                     {property.ownerVerified && (
                       <span className="flex items-center gap-1 text-emerald-600">
                         <BadgeCheck className="w-4 h-4" />
-                        Bailleur vérifié
+                        {dictionary.propertyPage?.sp8 || "Bailleur vérifié"}
                       </span>
                     )}
                   </div>
@@ -297,7 +303,7 @@ export default function PropertyDetail() {
                 <CardContent className="p-6 space-y-6">
                   <div className="flex items-center gap-2 text-slate-900">
                     <Home className="w-5 h-5" />
-                    <h2 className="text-lg font-semibold">Biens similaires</h2>
+                    <h2 className="text-lg font-semibold">{dictionary.propertyPage?.title4 || "Biens similaires"}</h2>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -385,7 +391,7 @@ export default function PropertyDetail() {
 
                   <div>
                     <Button className="bg-slate-900 hover:bg-slate-800 gap-2">
-                      Voir plus de bien
+                      {dictionary.propertyPage?.btn3 || "Voir plus de bien"}
                       <ChevronRight className="w-4 h-4" />
                     </Button>
                   </div>
@@ -398,9 +404,9 @@ export default function PropertyDetail() {
               <Card className="border-slate-200">
                 <CardContent className="p-6 space-y-5">
                   <div>
-                    <h2 className="text-sm font-semibold text-slate-800 mb-2">Réserver une visite</h2>
+                    <h2 className="text-sm font-semibold text-slate-800 mb-2">{dictionary.propertyPage?.title5 || "Réserver une visite"}</h2>
                     <div className="flex items-center justify-between text-xs text-slate-500">
-                      <span>Frais de visite</span>
+                      <span>{dictionary.propertyPage?.sp9 || "Frais de visite"}</span>
                       <span className="font-semibold text-slate-900">
                         {property.visitFee > 0 ? `${property.visitFee.toLocaleString()} FCFA` : 'Gratuit'}
                       </span>
@@ -408,15 +414,15 @@ export default function PropertyDetail() {
                   </div>
 
                   <div>
-                    <p className="text-xs text-slate-500 mb-2">Type de visite</p>
+                    <p className="text-xs text-slate-500 mb-2">{dictionary.propertyPage?.p7 || "Type de visite"}</p>
                     <div className="grid grid-cols-2 gap-2">
                       <Button variant="outline" className="h-12 flex-col gap-1 text-xs">
                         <MapPin className="w-4 h-4" />
-                        En présentiel
+                        {dictionary.propertyPage?.btn4 || "En présentiel"}
                       </Button>
                       <Button variant="outline" className="h-12 flex-col gap-1 text-xs">
                         <Video className="w-4 h-4" />
-                        À distance
+                        {dictionary.propertyPage?.btn5 || "À distance"}
                       </Button>
                     </div>
                   </div>
@@ -424,17 +430,17 @@ export default function PropertyDetail() {
                   <div className="rounded-xl bg-slate-50 border border-slate-200 p-3 text-xs text-slate-600">
                     <div className="flex items-center gap-2">
                       <BadgeCheck className="w-4 h-4 text-emerald-500" />
-                      <span>Vous recevrez l&apos;adresse exacte quelques heures avant la visite.</span>
+                      <span>{dictionary.propertyPage?.sp10 || "Vous recevrez l'adresse exacte quelques heures avant la visite."}</span>
                     </div>
-                  </div>
+                  </div> 
 
                   <div>
-                    <p className="text-xs text-slate-500 mb-2">Date souhaitée</p>
+                    <p className="text-xs text-slate-500 mb-2">{dictionary.propertyPage?.p8 || "Date souhaitée"}</p>
                     <Input type="date" className="bg-white border-slate-200" />
                   </div>
 
                   <div>
-                    <p className="text-xs text-slate-500 mb-2">Créneau horaire</p>
+                    <p className="text-xs text-slate-500 mb-2">{dictionary.propertyPage?.p9 || "Créneau horaire"}</p>
                     <div className="grid grid-cols-2 gap-2">
                       {['9h00', '10h30', '14h00', '15h30', '16h30'].map((slot) => (
                         <Button key={slot} variant="outline" className="h-9 text-xs">
@@ -446,7 +452,7 @@ export default function PropertyDetail() {
 
                   <Button className="w-full bg-slate-900 hover:bg-slate-800 gap-2">
                     <Calendar className="w-4 h-4" />
-                    Réserver la visite
+                    {dictionary.propertyPage?.btn6 || "Réserver la visite"}
                   </Button>
                 </CardContent>
               </Card>
