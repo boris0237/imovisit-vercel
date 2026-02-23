@@ -8,6 +8,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { Slider } from '@/components/ui/slider';
 import { cities, neighborhoods, propertyTypes, offerTypes } from '@/data/mock';
 import type { FilterOptions } from '@/types';
+import { useDictionary } from '@/hooks/useDictionary';
 
 interface SearchFiltersProps {
   filters: FilterOptions;
@@ -36,12 +37,12 @@ export function SearchFilters({ filters, onFilterChange }: SearchFiltersProps) {
   };
 
   const availableNeighborhoods = localFilters.city ? neighborhoods[localFilters.city] || [] : [];
-
+  const {dictionary} = useDictionary()
   const FilterContent = () => (
     <div className="space-y-6">
       {/* City */}
       <div className="space-y-2">
-        <Label>Ville</Label>
+        <Label>{dictionary.searchFilter?.city || "City"}</Label>
         <Select
           value={localFilters.city}
           onValueChange={(value) =>
@@ -64,7 +65,7 @@ export function SearchFilters({ filters, onFilterChange }: SearchFiltersProps) {
       {/* Neighborhood */}
       {localFilters.city && (
         <div className="space-y-2">
-          <Label>Quartier</Label>
+          <Label>{dictionary.searchFilter?.neighborhood || "Neighborhood"}</Label>
           <Select
             value={localFilters.neighborhood}
             onValueChange={(value) =>
@@ -87,7 +88,7 @@ export function SearchFilters({ filters, onFilterChange }: SearchFiltersProps) {
 
       {/* Property Type */}
       <div className="space-y-2">
-        <Label>Type de bien</Label>
+        <Label>{dictionary.searchFilter?.propertyType || "Property Type"}</Label>
         <Select
           value={localFilters.type}
           onValueChange={(value) => setLocalFilters({ ...localFilters, type: value })}
@@ -107,7 +108,7 @@ export function SearchFilters({ filters, onFilterChange }: SearchFiltersProps) {
 
       {/* Offer Type */}
       <div className="space-y-2">
-        <Label>Type d'offre</Label>
+        <Label>{dictionary.searchFilter?.offerType || "Offer Type"}</Label>
         <Select
           value={localFilters.offerType}
           onValueChange={(value) => setLocalFilters({ ...localFilters, offerType: value })}
@@ -127,7 +128,7 @@ export function SearchFilters({ filters, onFilterChange }: SearchFiltersProps) {
 
       {/* Rooms */}
       <div className="space-y-2">
-        <Label>Nombre de pièces</Label>
+        <Label>{dictionary.searchFilter?.rooms || "Rooms"}</Label>
         <Select
           value={localFilters.rooms?.toString()}
           onValueChange={(value) =>
@@ -138,18 +139,18 @@ export function SearchFilters({ filters, onFilterChange }: SearchFiltersProps) {
             <SelectValue placeholder="Toutes" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="1">1 pièce</SelectItem>
-            <SelectItem value="2">2 pièces</SelectItem>
-            <SelectItem value="3">3 pièces</SelectItem>
-            <SelectItem value="4">4 pièces</SelectItem>
-            <SelectItem value="5">5+ pièces</SelectItem>
+            <SelectItem value="1">1 {dictionary.searchFilter?.room || "room"}</SelectItem>
+            <SelectItem value="2">2 {dictionary.searchFilter?.rooms || "rooms"}</SelectItem>
+            <SelectItem value="3">3 {dictionary.searchFilter?.rooms || "rooms"}</SelectItem>
+            <SelectItem value="4">4 {dictionary.searchFilter?.rooms || "rooms"}</SelectItem>
+            <SelectItem value="5">5+ {dictionary.searchFilter?.rooms || "rooms"}</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       {/* Price Range */}
       <div className="space-y-4">
-        <Label>Fourchette de prix</Label>
+        <Label>{dictionary.searchFilter?.minPrice || "Min Price"}</Label>
         <Slider
           value={priceRange}
           onValueChange={(value) => setPriceRange(value as [number, number])}
@@ -166,11 +167,11 @@ export function SearchFilters({ filters, onFilterChange }: SearchFiltersProps) {
       <div className="flex gap-3 pt-4">
         <Button variant="outline" className="flex-1" onClick={handleReset}>
           <X className="w-4 h-4 mr-2" />
-          Réinitialiser
+          {dictionary.searchFilter?.reset || "Reset"}
         </Button>
         <Button className="flex-1 bg-imo-primary hover:bg-imo-secondary" onClick={handleApplyFilters}>
           <Filter className="w-4 h-4 mr-2" />
-          Appliquer
+          {dictionary.searchFilter?.apply || "Apply"}
         </Button>
       </div>
     </div>

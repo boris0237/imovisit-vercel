@@ -9,7 +9,6 @@ import { useDictionary } from '@/hooks/useDictionary'
 export function Footer() {
   const currentYear = new Date().getFullYear();
   const { dictionary } = useDictionary()
-
   const footerLinks = {
     company: [
       { label: 'À propos', href: '/about',  translateLabel: dictionary.footer?.translateLabel11 },
@@ -36,6 +35,11 @@ export function Footer() {
     { icon: Twitter, href: '#', label: 'Twitter' },
     { icon: Instagram, href: '#', label: 'Instagram' },
     { icon: Linkedin, href: '#', label: 'LinkedIn' },
+  ];
+
+   const languages = [
+    { code: 'fr', name: 'Français', flag: "FR" },
+    { code: 'en', name: 'English', flag: "EN" },
   ];
   
 
