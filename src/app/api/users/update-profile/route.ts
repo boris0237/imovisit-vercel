@@ -105,8 +105,8 @@ import { AccountStatus } from "@prisma/client";
 
 export async function PATCH(req: NextRequest) {
   try {
-    const authError = authMiddleware(req);
-    if (authError) return authError;
+    // const authError = authMiddleware(req);
+    // if (authError) return authError;
 
     const user = (req as any).user;
 

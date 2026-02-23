@@ -221,20 +221,16 @@ export default function UpdateRegister() {
       }
     });
 
+    console.log(formData);
     const response = await fetch("/api/users/update-profile", {
       method: "PATCH",
-      headers: {
-        // Note: Ne pas définir 'Content-Type', le navigateur le fait 
-        // automatiquement pour le FormData avec le "boundary".
-        "Authorization": `Bearer ${localStorage.getItem("token")}`, 
-      },
       body: formData,
     });
 
     const result = await response.json();
 
     if (!response.ok) {
-      throw new Error(result.message || "Erreur lors de la mise à jour");
+      throw new Error('erreur :=> ',result.message || "Erreur lors de la mise à jour");
     }
 
     return result;

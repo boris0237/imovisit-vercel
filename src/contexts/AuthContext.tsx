@@ -20,13 +20,12 @@ interface User {
   verified?: boolean;
   companyName?: string;
   companyLogo?: string;
-  // ... ajoutez les autres champs si nécessaire
 }
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (token: string, userData: User) => void;
+  login: (userData: User) => void; // ❌ Le token a été retiré des paramètres
   logout: () => Promise<void>;
   refreshUser: (updatedData: Partial<User>) => void;
 }
@@ -38,34 +37,37 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
+  // 1. Hydratation au rechargement de la page
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
-    const token = localStorage.getItem('token');
-    if (savedUser && token) {
+    // ❌ Plus besoin de vérifier le token ici, on fait confiance au cookie géré par le navigateur
+    if (savedUser) {
       setUser(JSON.parse(savedUser));
     }
     setLoading(false);
   }, []);
 
-  const login = (token: string, userData: User) => {
-    localStorage.setItem('token', token);
-    localStorage.setItem('user', JSON.stringify(userData));
+  // 2. Fonction de connexion (appelée après le succès du fetch vers /api/users/login)
+  const login = (userData: User) => {
+    // ❌ On ne stocke plus le token dans le localStorage
+    localStorage.setItem('user', JSON.stringify(userData)); // On garde juste les infos pour l'UI
     setUser(userData);
-    router.push('/dashboard');
   };
 
+  // 3. Fonction de déconnexion
   const logout = async () => {
     try {
-      // Appel au backend pour supprimer le cookie HTTPOnly
+      // L'appel au backend écrase le cookie HttpOnly en le vidant (maxAge: 0)
       await fetch("/api/users/logout", { method: "POST" });
     } finally {
-      localStorage.removeItem('token');
+      // ❌ Plus de token à supprimer ici
       localStorage.removeItem('user');
       setUser(null);
       router.push('/login');
     }
   };
 
+  // 4. Mise à jour de l'état local (lorsque l'utilisateur modifie son profil)
   const refreshUser = (updatedData: Partial<User>) => {
     setUser((prev) => {
       if (!prev) return null;
@@ -87,3 +89,5 @@ export const useAuth = () => {
   if (context === undefined) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 };
+
+export default AuthContext;

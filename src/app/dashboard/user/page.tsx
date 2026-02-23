@@ -107,8 +107,9 @@ export default function Dashboard() {
 
       // Si updatedAt est égal à createdAt, le profil n'a jamais été mis à jour
       // On ajoute une marge de 1000ms car parfois la DB enregistre avec un micro-décalage
-      if (Math.abs(updatedAt - createdAt) < 1000) {
+      if (user.role = 'owner') {
         setShowUpdateModal(true);
+        console.log('role', user.role)
       }
     }
   }, [user]);

@@ -15,6 +15,8 @@ import {Footer} from '@/components/Footer';
 import { useDictionary } from '@/hooks/useDictionary';
 import { useGoogleAuth } from '@/hooks/useGoogleAuth';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { useAuth } from '@/contexts/AuthContext';
+import { User } from '@prisma/client';
 
 export default function Login() {
 const router = useRouter()
@@ -24,6 +26,8 @@ const router = useRouter()
     password: '',
     rememberMe: false,
   });
+           
+  const {user, login} = useAuth();
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -69,88 +73,6 @@ const router = useRouter()
     loadGoogleScript();
   }, []);
 
-  const registerUserBackend = () => {
-  setLoading(true);
-  setErrors({});
-
-   const [formData, setFormData] = useState({
-      name: '',
-      email: '',
-      phone: '',
-      password: '',
-      confirmPassword: '',
-      avatar: '',
-      country:'',
-      authProvider: '',
-      role: '',
-      acceptTerms: false,
-    });
-
-  const userDataToSend = {
-    name: userData?.name,
-    email: userData?.email,
-    phone: formData?.phone || "",
-    country: formData?.country || "",
-    avatar: userData?.picture || "",
-    authProvider: "google",
-    role: accountType,
-  };
-
-  fetch('/api/users/register', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(userDataToSend),
-  })
-    .then((response) => {
-      return response.json().then((data) => ({
-        ok: response.ok,
-        data: data
-      }));
-    })
-    .then(({ ok, data }) => {
-      if (ok) {
-        setSuccessMessage(dictionary?.signup?.success || "Inscription réussie !");
-        
-        // Réinitialisation du formulaire
-        setFormData({
-          name: '', email: '', password: '', confirmPassword: '',
-          phone: '', avatar: '', country: '', authProvider: '',
-          role: accountType, acceptTerms: false,
-        });
-
-        // Redirection
-        setTimeout(() => {
-          window.location.href = '/dashboard/user';
-        }, 3000);
-      }  // Gestion précise des erreurs via le statut HTTP
-        switch (data.status) {
-          case 400:
-            setErrors({ email: data.message || "Email requis" });
-            break;
-          case 401:
-            setErrors({ general: data.message || "Authentification invalide" });
-            break;
-          // ... à l'intérieur de handleBackendLogin, dans le switch(status)
-          case 404:
-            setErrors({ general: data.message || "Compte non trouvé." });
-            break;
-          default:
-            setErrors({
-              general: data.message || dictionary?.login?.errorGeneric || "Une erreur est survenue."
-            });
-        }
-    })
-    .catch((error) => {
-      console.error('Erreur réseau:', error);
-      setErrors({ general: "Impossible de joindre le serveur. Vérifiez votre connexion." });
-    })
-    .finally(() => {
-      setLoading(false);
-    });
-};
-
 // 1. L'effet "Moteur" : Déclenche la connexion backend dès que Google renvoie l'email
 useEffect(() => {
   if (userData?.email && !loading && !successMessage) {
@@ -184,11 +106,17 @@ const handleBackendLogin = (email: string) => {
     .then(({ ok, status, data }) => {
       if (ok) {
         setSuccessMessage(dictionary?.login?.success || "Connexion réussie !");
+        const loggedInUser = data.user;
+        login(loggedInUser);
         
         // Redirection après un court délai
-        setTimeout(() => {
-          window.location.href = '/dashboard/user';
-        }, 2000);
+        setTimeout(() => {         
+        if (loggedInUser.role === 'owner' || loggedInUser.role === 'OWNER') {
+          router.push('/dashboard/user'); // router.push est plus fluide que window.location.href
+        } else {
+          router.push('/');
+        }
+      }, 2000);
       } else {
         // Gestion précise des erreurs via le statut HTTP
         switch (status) {
@@ -200,14 +128,7 @@ const handleBackendLogin = (email: string) => {
             break;
           // ... à l'intérieur de handleBackendLogin, dans le switch(status)
           case 404:
-            // Au lieu de mettre une erreur, on informe l'utilisateur et on crée le compte
-            setSuccessMessage("Compte non trouvé. Création de votre compte en cours...");
-
-            // On attend un tout petit peu pour que l'utilisateur puisse lire le message
-            setTimeout(() => {
-              registerUserBackend();
-            }, 1500);
-            break;
+            setErrors({ general: data.message || "Compte non trouvé" });
             break;
           default:
             setErrors({
@@ -271,13 +192,22 @@ const loginWithGoogleData = () => {
       const result: LoginResponse = await response.json();
 
       if (response.ok && result.status === 200) {
+        const loggedInUser = result.data?.user;
+        login(loggedInUser as any);
         // Connexion réussie
-        console.log('Login successful:', result.data);
+        console.log('Login successful:', result.data, loggedInUser?.role);
         setSuccessMessage(dictionary?.login?.success || "Connexion réussie, redirection...");
-        
-        // Stocker le token si nécessaire (déjà dans cookie HTTPOnly)
-        // Rediriger vers le dashboard
-        router.push("/dashboard/user");
+
+        // Redirection après un court délai
+
+        setTimeout(() => {
+        console.log('utilisateur login',user);
+          if (loggedInUser?.role === 'owner') {
+            window.location.href = '/dashboard/user';
+          } else {
+            window.location.href = '/';
+          }
+        }, 2000);
         router.refresh(); // Rafraîchir l'état de session
         
       } else {
@@ -341,12 +271,12 @@ const loginWithGoogleData = () => {
               <TabsContent value="email">
                 <form onSubmit={handleSubmit} className="space-y-4">
                  {/* Section des Messages d'Erreur (Login) */}
-                  {errors && !successMessage && (
+                  {errors.general && (
                       <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-md mb-4">
                         {errors.general}
                       </div>
                     )}
-                    {successMessage && !errors && (
+                    {successMessage && (
                       <div className="bg-green-50 border border-green-200 text-green-600 p-3 rounded-md mb-4">
                         {successMessage}
                       </div>

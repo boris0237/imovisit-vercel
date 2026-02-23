@@ -66,7 +66,7 @@ export default {
     errorPasswordLength: "Password must be at least 8 characters long",
     errorGeneric: "An error occurred. Please try again.",
     errorEmailAlreadyExists: "This email is already in use",
-    succes: "Your account has been created successfully! Verify your email to confirm",
+    success: "Your account has been created successfully! Verify your email to confirm",
     errorAgreeTerms:"You must agree terms and conditions to create an account",
     errorConfirmPassword: "Passwords do not match",
     errorMissing : "Please fill all the fields or change your email address.",
@@ -88,6 +88,7 @@ export default {
     errorUserNotFound : "User not found",
     errorGeneric: "An error occurred. Please try again.",
     errorNetwork: "Network error, please check your internet connection.",
+    success : "Logged in successfully"
   }
 
 } as const

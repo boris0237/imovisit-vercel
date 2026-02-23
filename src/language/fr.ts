@@ -6,7 +6,7 @@ export default {
     connexion: "Connexion",
     inscrire: "S'inscrire",
     subtitle: "La visite des biens imobiliers devient plus facile",
-    myaccount: "Moncompte",
+    myaccount: "Mon compte",
     accueil: "Accueil",
     recherche: "Recherche",
     favoris: "favoris"
@@ -87,6 +87,7 @@ export default {
     errorUserNotFound : "Utilisateur non trouvé",
     errorGeneric: "Une erreur est survenue. Veuillez réessayer.",
     errorNetwork: "Erreur réseau, verifiez votre connexion internet.",
+    success : "Connexion réussie, redirection..."
   }
   
 } as const
