@@ -15,7 +15,8 @@ import {Footer} from '@/components/Footer';
 import { useDictionary } from '@/hooks/useDictionary';
 import { useGoogleAuth } from '@/hooks/useGoogleAuth';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import registerUserBackend from '@/app/register/page'
+import { useAuth } from '@/contexts/AuthContext';
+import { User } from '@prisma/client';
 
 export default function Login() {
 const router = useRouter()
@@ -25,9 +26,12 @@ const router = useRouter()
     password: '',
     rememberMe: false,
   });
+           
+  const {user, login} = useAuth();
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [accountType, setAccountType] = useState<'visitor' | 'owner'>('visitor');
 
   interface LoginResponse {
   status: number;
@@ -102,11 +106,17 @@ const handleBackendLogin = (email: string) => {
     .then(({ ok, status, data }) => {
       if (ok) {
         setSuccessMessage(dictionary?.login?.success || "Connexion réussie !");
+        const loggedInUser = data.user;
+        login(loggedInUser);
         
         // Redirection après un court délai
-        setTimeout(() => {
-          window.location.href = '/dashboard/user';
-        }, 2000);
+        setTimeout(() => {         
+        if (loggedInUser.role === 'owner' || loggedInUser.role === 'OWNER') {
+          router.push('/dashboard/user'); // router.push est plus fluide que window.location.href
+        } else {
+          router.push('/');
+        }
+      }, 2000);
       } else {
         // Gestion précise des erreurs via le statut HTTP
         switch (status) {
@@ -118,14 +128,7 @@ const handleBackendLogin = (email: string) => {
             break;
           // ... à l'intérieur de handleBackendLogin, dans le switch(status)
           case 404:
-            // Au lieu de mettre une erreur, on informe l'utilisateur et on crée le compte
-            setSuccessMessage("Compte non trouvé. Création de votre compte en cours...");
-
-            // On attend un tout petit peu pour que l'utilisateur puisse lire le message
-            setTimeout(() => {
-              registerUserBackend();
-            }, 1500);
-            break;
+            setErrors({ general: data.message || "Compte non trouvé" });
             break;
           default:
             setErrors({
@@ -189,29 +192,38 @@ const loginWithGoogleData = () => {
       const result: LoginResponse = await response.json();
 
       if (response.ok && result.status === 200) {
+        const loggedInUser = result.data?.user;
+        login(loggedInUser as any);
         // Connexion réussie
-        console.log('Login successful:', result.data);
+        console.log('Login successful:', result.data, loggedInUser?.role);
         setSuccessMessage(dictionary?.login?.success || "Connexion réussie, redirection...");
-        
-        // Stocker le token si nécessaire (déjà dans cookie HTTPOnly)
-        // Rediriger vers le dashboard
-        router.push("/dashboard/user");
+
+        // Redirection après un court délai
+
+        setTimeout(() => {
+        console.log('utilisateur login',user);
+          if (loggedInUser?.role === 'owner') {
+            window.location.href = '/dashboard/user';
+          } else {
+            window.location.href = '/';
+          }
+        }, 2000);
         router.refresh(); // Rafraîchir l'état de session
         
       } else {
         // Gérer les erreurs selon le statut
         switch (result.status) {
           case 400:
-            setErrors(dictionary.login?.errorInvalidCredentials || "Veuillez remplir tous les champs requis");
+          setErrors({general : dictionary.login?.errorInvalidCredentials || "Veuillez remplir tous les champs requis"});
             break;
           case 401:
-            setErrors(dictionary.login?.errorInvalidCredentials || "Email ou mot de passe incorrect");
+            setErrors({general : dictionary.login?.errorInvalidCredentials});
             break;
           case 404:
-            setErrors(dictionary.login?.errorUserNotFound || "Utilisateur non trouvé");
+            setErrors({general :dictionary.login?.errorUserNotFound || "Utilisateur non trouvé"});
             break;
           default:
-            setErrors(result.error || dictionary.login?.errorGeneric || "Une erreur est survenue. Veuillez réessayer.");
+            setErrors({general : result.error || dictionary.login?.errorGeneric || "Une erreur est survenue. Veuillez réessayer."});
         }
       }
     } catch (err) {
@@ -258,6 +270,17 @@ const loginWithGoogleData = () => {
 
               <TabsContent value="email">
                 <form onSubmit={handleSubmit} className="space-y-4">
+                 {/* Section des Messages d'Erreur (Login) */}
+                  {errors.general && (
+                      <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-md mb-4">
+                        {errors.general}
+                      </div>
+                    )}
+                    {successMessage && (
+                      <div className="bg-green-50 border border-green-200 text-green-600 p-3 rounded-md mb-4">
+                        {successMessage}
+                      </div>
+                    )}
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
                     <div className="relative">

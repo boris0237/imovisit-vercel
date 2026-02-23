@@ -1,7 +1,6 @@
 // src/hooks/useGoogleAuth.ts
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { AuthProvider } from '@prisma/client';
 
 declare global {
   interface Window {
@@ -10,9 +9,9 @@ declare global {
 }
 
 interface GoogleUserData {
-  name: string;      // username
-  email: string;     // adresse email
-  picture: string;   // photo de profil
+  name: string;
+  email: string;
+  picture: string;
 }
 
 interface UseGoogleAuthReturn {
@@ -26,38 +25,27 @@ interface UseGoogleAuthReturn {
 export const useGoogleAuth = (): UseGoogleAuthReturn => {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
   const [userData, setUserData] = useState<GoogleUserData | null>(null);
 
   useEffect(() => {
-    // Charger le script Google une seule fois
     const loadGoogleScript = () => {
       if (typeof window !== 'undefined' && !window.google) {
         const script = document.createElement('script');
         script.src = 'https://accounts.google.com/gsi/client';
         script.async = true;
         script.defer = true;
-        script.onload = () => {
-          console.log('Google Platform script loaded');
-        };
-        script.onerror = () => {
-          setError('Impossible de charger Google Sign-In');
-        };
+        script.onload = () => console.log('✅ Google GSI script loaded');
+        script.onerror = () => setError('Impossible de charger Google Sign-In');
         document.head.appendChild(script);
       }
     };
-
     loadGoogleScript();
   }, []);
 
-  // Fonction pour réinitialiser les erreurs
-  const resetError = () => {
-    setError(null);
-  };
+  const resetError = useCallback(() => setError(null), []);
 
   const decodeGoogleCredential = (credential: string): GoogleUserData | null => {
     try {
-      // Décoder le JWT token pour extraire les informations
       const base64Url = credential.split('.')[1];
       const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
       const jsonPayload = decodeURIComponent(
@@ -66,31 +54,24 @@ export const useGoogleAuth = (): UseGoogleAuthReturn => {
           .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
           .join('')
       );
-      
       const payload = JSON.parse(jsonPayload);
-      
       return {
         name: payload.name || '',
         email: payload.email || '',
         picture: payload.picture || ''
       };
-    } catch (error) {
-      console.error('Erreur décodage credential Google:', error);
+    } catch (err) {
+      console.error('Erreur décodage Google:', err);
       return null;
     }
   };
 
   const withGoogle = () => {
-    // Empêcher les appels multiples
-    if (googleLoading) {
-      console.warn('Google Sign-In already in progress');
-      return;
-    }
+    if (googleLoading) return;
 
     setGoogleLoading(true);
     setError(null);
 
-    // Vérifier que le client_id est défini
     const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
     if (!clientId) {
       setError('Configuration Google manquante');
@@ -102,82 +83,57 @@ export const useGoogleAuth = (): UseGoogleAuthReturn => {
       try {
         window.google.accounts.id.initialize({
           client_id: clientId,
-          callback: async (response: any) => {
-            try {
-              console.log('Google Sign-In response:', response);
-              console.log('🟢 Callback appelé:', response);
-              if (response.error) {
-                console.error('🔴 Erreur Google:', response.error);
-              }
-              
-              if (response.credential) {
-                // Extraire les données utilisateur nécessaires
-                const googleUserData = decodeGoogleCredential(response.credential);
-                console.log('Données utilisateur Google:', googleUserData);
-                setUserData(googleUserData);
-                
-                if (!googleUserData) {
-                  setError('Impossible de récupérer les données utilisateur');
-                  return;
-                }
-              } else if (response.error) {
-                // Gérer les erreurs spécifiques de Google
-                switch (response.error) {
-                  case 'popup_closed_by_user':
-                    setError('Connexion annulée par l\'utilisateur');
-                    break;
-                  case 'access_denied':
-                    setError('Accès refusé par l\'utilisateur');
-                    break;
-                  case 'idpiframe_initialization_failed':
-                    setError('Erreur d\'initialisation Google Sign-In');
-                    break;
-                  default:
-                    setError(`Erreur Google: ${response.error}`);
-                }
-              } else {
-                setError('Erreur d\'authentification Google');
-              }
-            } catch (err) {
-              console.error('Erreur dans callback Google:', err);
-              setError('Erreur réseau lors de l\'authentification');
-            } finally {
-              setGoogleLoading(false);
+          callback: (response: any) => {
+            if (response.credential) {
+              const data = decodeGoogleCredential(response.credential);
+              setUserData(data);
+            } else {
+              setError('Authentification échouée');
             }
+            setGoogleLoading(false);
           },
-          // Options simples et fonctionnelles
           auto_select: false,
           cancel_on_tap_outside: true,
-          // Désactiver FedCM temporairement pour debug
-          use_fedcm_for_prompt: false, // ← CHANGEMENT IMPORTANT
+          // ✅ Activé pour être conforme aux nouvelles normes (supprime le warning console)
+          use_fedcm_for_prompt: true, 
         });
 
-        // Méthode simple et directe - PAS de renderButton invisible
-        console.log('🟡 Prompt about to be called');
+        // 🟡 Un seul appel à prompt() avec une gestion complète des cas
         window.google.accounts.id.prompt((notification: any) => {
-          console.log('🔔 Prompt notification:', notification);
+          console.log('🔔 Moment Type:', notification.getMomentType());
+
           if (notification.isNotDisplayed()) {
-            console.log('Prompt not displayed:', notification.getReason());
+            const reason = notification.getNotDisplayedReason();
+            console.warn('❌ One Tap non affiché. Raison:', reason);
+            
+            // Si le One Tap est bloqué par Google (cool-down), on avertit l'utilisateur
+            if (reason === 'suppressed_by_user' || reason === 'skipped_moment') {
+              setError("Veuillez réessayer ou vous connecter manuellement (Google limite l'affichage automatique).");
+            }
+            setGoogleLoading(false);
+          }
+
+          if (notification.isSkippedMoment()) {
+            console.warn('⚠️ One Tap ignoré. Raison:', notification.getSkippedReason());
+            setGoogleLoading(false);
+          }
+
+          if (notification.isDismissedMoment()) {
+            console.log('✅ Modal fermé par l\'utilisateur.');
+            setGoogleLoading(false);
           }
         });
-        console.log('🟢 Prompt called successfully');
 
       } catch (err) {
-        console.error('Erreur initialisation Google Sign-In:', err);
+        console.error('Erreur initialisation Google:', err);
         setError('Service Google temporairement indisponible');
         setGoogleLoading(false);
       }
     } else {
-      setError('Google Sign-In n\'est pas disponible. Vérifiez vos paramètres navigateur.');
+      setError('Service Google non chargé. Réessayez.');
       setGoogleLoading(false);
     }
   };
 
-  return { 
-    withGoogle, 
-    googleLoading, 
-    error, 
-    userData,
-    resetError
-  };
+  return { withGoogle, googleLoading, error, userData, resetError };
 };

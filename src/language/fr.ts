@@ -1,18 +1,17 @@
 import { offerTypes } from "@/data/mock";
 import { Title } from "@radix-ui/react-dialog";
+import { error } from "console";
 
 // dictionaries/fr.ts
 export default {
-  navigation: {
-    about: "À propos",
-    contact: "Contact",
-    services: "Services"
-  },
-  header: {
-    Connexion: "Connexion",
-    welcome: "Bienvenue",
-    logout: "Se déconnecter",
-    login: "Se connecter"
+   header: {
+    connexion: "Connexion",
+    inscrire: "S'inscrire",
+    subtitle: "La visite des biens imobiliers devient plus facile",
+    myaccount: "Mon compte",
+    accueil: "Accueil",
+    recherche: "Recherche",
+    favoris: "favoris"
   },
   footer: {
     rights: "Tous droits réservés"
@@ -146,5 +145,82 @@ export default {
     p8: "Date souhaitée",
     p9: "Crénau horaire",
     btn6: "Réserver la visite"
+    title1: "Entreprise",
+    title2: "Support",
+    title3: "Légal",
+    rights: "Imovisit. Tout droits réservés.",
+    bio: "La plateforme de référence pour les visites immobilières. Trouvez votre bien idéal en toute confiance.",
+    text: "Nous suivre :",
+    translateLabel11: "À propos",
+    translateLabel12: "Comment ça marche",
+    translateLabel13: "Carrières",
+    translateLabel14: "Blog",
+    translateLabel21: "Centre d'aide",
+    translateLabel22: "Contact",
+    translateLabel23: "FAQ",
+    translateLabel24: "Signaler un problème",
+    translateLabel31: "Conditions d'utilisation",
+    translateLabel32: "Politique de confidentalité",
+    translateLabel33: "Politique des cookies",
+    translateLabel34: "Mentions légales",
+  },
+  signup: {
+    title: "Créer un compte",
+    subtitle: "Rejoignez la communauté Imovisit.",
+    visteur: "Visiteur",
+    visiteurBio: "Je recherche un bien immobilier",
+    proprietaireBio: "Je publie mes annonces",
+    proprietaire: "Propriétaire",
+    name: "Nom complet",
+    placeholderEmail: "Entrez votre adresse e-mail",
+    tel: "Numéro de téléphone",
+    ville: "Ville",
+    dropCity: "Sélectionnez votre ville",
+    password: "Mot de passe",
+    confirmPassword: "Confirmer le mot de passe",
+    agree: "J'accepte les ",
+    terms: "termes",
+    and: "et",
+    conditions: "conditions",
+    letGoogle: "S'inscrire avec Google",
+    submit: "Créer mon compte",
+    loading: "Chargement...",
+    haveAccount: "Vous avez déjà un compte ? ",
+    login: "Se connecter",
+    rights: "Imovisit. Tous droits réservés.",
+    canConnect: "Impossible de se connecter au serveur. Veuillez vérifier votre connexion internet.",
+    errorNameRequired: "Le nom est obligatoire",
+    errorPhoneRequired: "Le numéro de téléphone est obligatoire",
+    errorEmailRequired: "L'adresse e-mail est obligatoire",
+    errorPasswordRequired: "Le mot de passe est obligatoire",
+    errorEmailInvalid: "Format d'e-mail invalide",
+    errorPasswordLength: "Le mot de passe doit contenir au moins 8 caractères",
+    errorGeneric: "Une erreur est survenue. Veuillez réessayer.",
+    errorEmailAlreadyExists: "Cet e-mail est déjà utilisé",
+    errorEmail_PasswordRequired: "L'e-mail et le mot de passe sont obligatoires",
+    succes: "Votre compte a été créé avec succès ! Vérifiez votre e-mail pour confirmer.",
+    errorAgreeTerms: "Vous devez accepter les termes et conditions pour créer un compte",
+    errorConfirmPassword: "Les mots de passe ne correspondent pas",
+    errorMissing: "Veuillez remplir tous les champs requis ou changer d'adresse mail.",
+  },
+  login: {
+    connexion: "Connexion",
+    title: "Connectez-vous à votre compte",
+    subtitle: "Accédez à votre espace Imovisit",
+    placeholderEmail: "Entrez votre adresse e-mail",
+    password: "Mot de passe",
+    rememberMe: "Se souvenir de moi",
+    forgotPassword: "Mot de passe oublié ?",
+    submit: "Se connecter",
+    neverHaveAccount: "Vous n'avez pas de compte ? ",
+    signup: "S'inscrire",
+    letGoogle: "Se connecter avec Google",
+    rights : "Imovisit. Tous droits réservés.",
+    errorInvalidCredentials : "E-mail ou mot de passe invalide",
+    errorUserNotFound : "Utilisateur non trouvé",
+    errorGeneric: "Une erreur est survenue. Veuillez réessayer.",
+    errorNetwork: "Erreur réseau, verifiez votre connexion internet.",
+    success : "Connexion réussie, redirection..."
   }
+  
 } as const
