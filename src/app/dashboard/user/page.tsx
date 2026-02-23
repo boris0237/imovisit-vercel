@@ -46,6 +46,9 @@ import UpdateProfileForm from '@/forms/updateRegister';
 import { useEffect, useState } from "react";
 import { useAuth } from '@/contexts/AuthContext';
 import Modal from '@/components/ui/modal';
+import SuccessRegistrationAlert from '@/components/SuccessRegistrationAlert';
+import router from 'next/router';
+import Toast from '@/components/ui/toast';
 
 const primaryNav = [
   { icon: LayoutGrid, label: "Vue d'ensemble", href: '/dashboard' },
@@ -399,14 +402,13 @@ export default function Dashboard() {
         </div>
       </main>
       <Modal 
-        isOpen={showUpdateModal} 
+        isOpen={false} 
         onClose={() => setShowUpdateModal(false)}
         title="Finalisez votre profil professionnel"
         size="xl"       // On choisit une taille large pour le formulaire
         showBlur={true} // Activation du flou
         closeOnClickOutside={false} // On force l'utilisateur à cliquer sur le bouton ou la croix
       >
-        {/* On passe votre composant existant à l'intérieur */}
         <UpdateProfileForm /> 
       </Modal>
     </div>
