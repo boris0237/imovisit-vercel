@@ -1,4 +1,7 @@
+"use client"
+
 // hooks/useDictionary.ts
+
 import { useLanguage } from '@/contexts/LanguageContext'
 import { getDictionary } from '@/lib/dictionary'
 import { useEffect, useState } from 'react'

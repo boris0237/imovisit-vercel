@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link'
-import { Menu, Home, Search, Heart, User, LogIn, Building2 } from 'lucide-react';
+import { Menu, Home, Search, Heart, User, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { usePathname } from 'next/navigation';
 import logo from '@/static/logo.png';
-import Image from 'next/image';import { useLanguage } from '@/contexts/LanguageContext';
+import Image from 'next/image';
+import { useLanguage } from '@/contexts/LanguageContext';
 import LanguageDropdown from '@/components/LanguageDropdown';
 import { useDictionary } from '@/hooks/useDictionary';
 import { useAuth } from '@/contexts/AuthContext';
@@ -36,6 +37,11 @@ export function Header() {
   ];
 
   const isActive = (path: string) => pathname === path;
+
+  const languages = [
+    { code: 'fr', name: 'Français', flag: "FR" },
+    { code: 'en', name: 'English', flag: "EN" },
+  ];
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white border-b border-gray-100 shadow-sm">

@@ -1,7 +1,8 @@
-// tailwind.config.ts
 
-/** @type {import('tailwindcss').Config} */
-module.exports = {
+import type { Config } from "tailwindcss"
+
+
+const config: Config = {
   darkMode: ["class"],
   content: [
     "./pages/**/*.{ts,tsx}",
@@ -20,7 +21,6 @@ module.exports = {
     },
     extend: {
       colors: {
-        // Imovisit brand colors
         imo: {
           primary: "#1A2B4A",
           secondary: "#2D4A6F",
@@ -87,5 +87,6 @@ module.exports = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
 }
+
+export default config

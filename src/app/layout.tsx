@@ -17,9 +17,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: {
+  children: React.ReactNode
+}) {
   return (
     <html lang="fr">
       <AuthProvider>
@@ -28,5 +28,5 @@ export default function RootLayout({
       </LanguageProvider>
       </AuthProvider>
     </html>
-  );
+  )
 }
