@@ -310,6 +310,7 @@ export async function GET(req: NextRequest) {
     });
 
   } catch (err: any) {
+    console.log(err.message);
     return apiResponse({
       status: 500,
       message: err.message || "Erreur lors de la recherche",

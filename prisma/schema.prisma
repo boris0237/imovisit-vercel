@@ -146,7 +146,7 @@ enum Amenity {
 
 
 //AGENDA
-model AvailabilityRule {//dispo tel date
+model AvailabilityRule {//dispo tels jours
   id             String   @id @default(auto()) @map("_id") @db.ObjectId
   ownerId        String   
   propertyId     String
@@ -162,7 +162,7 @@ model AvailabilityRule {//dispo tel date
   updatedAt      DateTime @updatedAt
 }
 
-model AvailabilityException { //pas dispo tel date
+model AvailabilityException { //pas dispo tels jours
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   ownerId     String
   propertyId  String
@@ -180,7 +180,7 @@ model AvailabilityException { //pas dispo tel date
   updatedAt   DateTime @updatedAt
 }
 
-model Reservation { //réservation tel date
+model Reservation { //exception tels jours
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
 
   propertyId  String
