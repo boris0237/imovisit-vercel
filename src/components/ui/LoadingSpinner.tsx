@@ -8,7 +8,7 @@ interface LoadingSpinnerProps {
 }
 
 const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({ 
-    loading = true,
+    loading = false,
     fullScreen = false, 
     time = 1 
 }) => {

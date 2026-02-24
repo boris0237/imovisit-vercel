@@ -188,12 +188,13 @@ const loginWithGoogleData = () => {
         },
         body: JSON.stringify(formData),
       });
+      
+      login(formData as any);
 
       const result: LoginResponse = await response.json();
 
       if (response.ok && result.status === 200) {
         const loggedInUser = result.data?.user;
-        login(loggedInUser as any);
         // Connexion réussie
         console.log('Login successful:', result.data, loggedInUser?.role);
         setSuccessMessage(dictionary?.login?.success || "Connexion réussie, redirection...");
@@ -201,13 +202,13 @@ const loginWithGoogleData = () => {
         // Redirection après un court délai
 
         setTimeout(() => {
-        console.log('utilisateur login',user);
+        console.log('utilisateur login dans le context', loggedInUser);
           if (loggedInUser?.role === 'owner') {
             window.location.href = '/dashboard/user';
           } else {
             window.location.href = '/';
           }
-        }, 2000);
+        }, 20000);
         router.refresh(); // Rafraîchir l'état de session
         
       } else {

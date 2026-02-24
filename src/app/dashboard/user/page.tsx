@@ -34,6 +34,9 @@ import UpdateProfileForm from '@/forms/updateRegister';
 import { useEffect, useState } from "react";
 import { useAuth } from '@/contexts/AuthContext';
 import Modal from '@/components/ui/modal';
+import SuccessRegistrationAlert from '@/components/SuccessRegistrationAlert';
+import router from 'next/router';
+import Toast from '@/components/ui/toast';
 
 const stats = [
   { title: 'Biens total', value: '4', icon: Building2, color: 'bg-slate-100 text-slate-600' },
@@ -263,18 +266,20 @@ export default function Dashboard() {
             })}
           </div>
         </div>
-      </div>
-      
+        
       <Modal 
         isOpen={showUpdateModal} 
         onClose={() => setShowUpdateModal(false)}
         title="Finalisez votre profil professionnel"
-        size="xl"       // On choisit une taille large pour le formulaire
-        showBlur={true} // Activation du flou
-        closeOnClickOutside={false} // On force l'utilisateur à cliquer sur le bouton ou la croix
+        size="full"  
+        rounded={false}     
+        locked={true}
+        showBlur={true} 
+        closeOnClickOutside={false} 
       >
         <UpdateProfileForm /> 
       </Modal>
+      </div>
     </>
   );
 }
