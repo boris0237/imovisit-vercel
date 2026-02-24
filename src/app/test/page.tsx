@@ -237,7 +237,7 @@ export default function UpdateRegister() {
     setLoading(true);
     try {
       const dataToUpdate = {
-        companyName: name,
+        name: name,
         typeCompte: selectedType,
         avatar: null, // ajouter un File si besoin
       };
