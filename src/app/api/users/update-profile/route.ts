@@ -94,7 +94,7 @@
  *         description: Erreur serveur lors de la mise à jour
  */
 
-import { prisma } from "@/service/db";
+import { prisma } from "@/services/db";
 import { apiResponse } from "@/lib/api-response";
 import { authMiddleware } from "@/middlewares/auth-middleware";
 import { handleFormData } from "@/utils/handle-formData";

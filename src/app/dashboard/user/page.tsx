@@ -34,9 +34,6 @@ import UpdateProfileForm from '@/forms/updateRegister';
 import { useEffect, useState } from "react";
 import { useAuth } from '@/contexts/AuthContext';
 import Modal from '@/components/ui/modal';
-import SuccessRegistrationAlert from '@/components/SuccessRegistrationAlert';
-import router from 'next/router';
-import Toast from '@/components/ui/toast';
 
 const stats = [
   { title: 'Biens total', value: '4', icon: Building2, color: 'bg-slate-100 text-slate-600' },

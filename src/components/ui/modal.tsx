@@ -9,6 +9,8 @@ interface CustomModalProps {
   children: React.ReactNode;
   title?: string;
   size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
+  locked?: boolean;
+  rounded?: boolean;
   showBlur?: boolean;
   closeOnClickOutside?: boolean;
 }
@@ -29,6 +31,8 @@ export default function CustomModal({
   title,
   size = 'md',
   showBlur = true,
+  locked = true,
+  rounded = true,
   closeOnClickOutside = true
 }: CustomModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
@@ -62,17 +66,17 @@ export default function CustomModal({
       {/* Conteneur du Modal */}
       <div 
         ref={modalRef}
-        className={`relative bg-white w-full ${sizeClasses[size]} rounded-3xl shadow-2xl transform transition-all overflow-hidden max-h-[95vh] flex flex-col`}
+        className={`relative bg-white w-full ${sizeClasses[size]} ${rounded ? 'rounded-2xl' : 'rounded-none'} shadow-2xl transform transition-all overflow-hidden max-h-[95vh] flex flex-col`}
       >
         {/* Header (Optionnel) */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100">
           <h3 className="text-xl font-bold text-gray-800">{title || "Mise à jour"}</h3>
-          <button 
+          {locked &&(<button 
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600 transition-colors"
           >
             <X size={24} />
-          </button>
+          </button>)}
         </div>
 
         {/* Corps du Modal (Scrollable si trop grand) */}
