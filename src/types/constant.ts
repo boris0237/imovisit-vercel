@@ -15,6 +15,8 @@ export const ROLE_ALLOWED_FIELDS = {
     "country",
     "profession",
     "avatar",
+    "companyLogo",
+    "country",
   ],
 
   owner: [
@@ -108,5 +110,8 @@ export const ROLE_ALLOWED_FIELDS = {
     "docDiplome",
     "docContribuable",
     "docRCCM",
+    "companyName",
+    "companyLogo",
+    "typeCompte"
   ]
 } as const;
