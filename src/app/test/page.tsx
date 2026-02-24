@@ -130,14 +130,14 @@ const LANDLORD_TYPES = [
   { id: 'demarcheur', label: 'Démarcheur', icon: Handshake },
   { id: 'residence', label: 'Résidence meublée', icon: Sofa },
   { id: 'agence', label: 'Agence', icon: Business },
-  { id: 'agent', label: 'Agent', icon: Agent },
+  { id: 'agency', label: 'Agent', icon: Agent },
   { id: 'promoteur', label: 'Promoteur', icon: Construction },
 ];
 
 
 
 export default function UpdateRegister() {
-  const [selectedType, setSelectedType] = useState("classique");
+  const [selectedType, setSelectedType] = useState("agency");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const fileIdentityInputRef = useRef<HTMLInputElement>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -238,7 +238,7 @@ export default function UpdateRegister() {
     try {
       const dataToUpdate = {
         name: name,
-        typeCompte: selectedType,
+        companyName: selectedType,
         avatar: null, // ajouter un File si besoin
       };
 
