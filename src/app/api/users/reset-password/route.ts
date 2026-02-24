@@ -48,7 +48,7 @@
  */
 
 
-import { prisma } from "@/service/db";
+import { prisma } from "@/services/db";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { apiResponse } from "@/lib/api-response";

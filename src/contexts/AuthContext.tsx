@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { authService } from '@/services/authService';
 
 interface User {
   id: string;
@@ -22,10 +23,16 @@ interface User {
   companyLogo?: string;
 }
 
+interface LoginCredentials {
+  email: string;
+  password?: string;
+}
+
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (userData: User) => void; // ❌ Le token a été retiré des paramètres
+  // 2. La signature de login change : elle devient asynchrone et prend les crédentials
+  login: (credentials: LoginCredentials) => Promise<User | undefined>;
   logout: () => Promise<void>;
   refreshUser: (updatedData: Partial<User>) => void;
 }
@@ -37,37 +44,43 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  // 1. Hydratation au rechargement de la page
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
-    // ❌ Plus besoin de vérifier le token ici, on fait confiance au cookie géré par le navigateur
     if (savedUser) {
-      setUser(JSON.parse(savedUser));
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch (e) {
+        localStorage.removeItem('user');
+      }
     }
     setLoading(false);
   }, []);
 
-  // 2. Fonction de connexion (appelée après le succès du fetch vers /api/users/login)
-  const login = (userData: User) => {
-    // ❌ On ne stocke plus le token dans le localStorage
-    localStorage.setItem('user', JSON.stringify(userData)); // On garde juste les infos pour l'UI
-    setUser(userData);
+  const login = async (credentials: LoginCredentials) => {
+    try {
+      const userData = await authService.login(credentials);
+      
+      localStorage.setItem('user', JSON.stringify(userData));
+      setUser(userData);
+      
+      return userData; 
+    } catch (error) {
+      throw error;
+    }
   };
 
-  // 3. Fonction de déconnexion
   const logout = async () => {
     try {
-      // L'appel au backend écrase le cookie HttpOnly en le vidant (maxAge: 0)
-      await fetch("/api/users/logout", { method: "POST" });
+      await authService.logout();
+    } catch (error) {
+      console.error("Erreur lors de la déconnexion serveur", error);
     } finally {
-      // ❌ Plus de token à supprimer ici
       localStorage.removeItem('user');
       setUser(null);
       router.push('/login');
     }
   };
 
-  // 4. Mise à jour de l'état local (lorsque l'utilisateur modifie son profil)
   const refreshUser = (updatedData: Partial<User>) => {
     setUser((prev) => {
       if (!prev) return null;

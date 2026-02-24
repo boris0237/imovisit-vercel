@@ -15,8 +15,6 @@ export const ROLE_ALLOWED_FIELDS = {
     "country",
     "profession",
     "avatar",
-    "companyLogo",
-    "country"
   ],
 
   owner: [
@@ -33,6 +31,10 @@ export const ROLE_ALLOWED_FIELDS = {
     "docContribuable",
     "docRCCM",
     "docJust",
+    "companyName",
+    "role",
+    "companyLogo",
+    "country"
   ],
 
   property_manager: [
@@ -44,7 +46,7 @@ export const ROLE_ALLOWED_FIELDS = {
     "country",
     "services",
     "docJust",
-        "phone",
+    "phone",
     "city",
     "avatar",
     "country",

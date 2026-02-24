@@ -94,7 +94,7 @@
  *         description: Erreur serveur lors de la mise à jour
  */
 
-import { prisma } from "@/service/db";
+import { prisma } from "@/services/db";
 import { apiResponse } from "@/lib/api-response";
 import { authMiddleware } from "@/middlewares/auth-middleware";
 import { handleFormData } from "@/utils/handle-formData";
@@ -105,8 +105,8 @@ import { AccountStatus } from "@prisma/client";
 
 export async function PATCH(req: NextRequest) {
   try {
-    // const authError = authMiddleware(req);
-    // if (authError) return authError;
+     const authError = authMiddleware(req);
+     if (authError) return authError;
 
     const user = (req as any).user;
 
@@ -161,7 +161,7 @@ export async function PATCH(req: NextRequest) {
       data: userWithoutPassword,
     });
   } catch (err: any) {
-    console.error(err);
+    console.error(err.message);
     return apiResponse({
       status: 400,
       message: err.message || "Erreur lors de la mise à jour",

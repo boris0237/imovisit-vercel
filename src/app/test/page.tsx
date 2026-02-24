@@ -124,7 +124,7 @@ xlinkHref="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOEAAADhCAYAAAA+s9J6AAA
 
 // Définition des types de bailleurs
 const LANDLORD_TYPES = [
-  { id: 'proprietaire', label: 'Propriétaire', icon: HomeIcone },
+  { id: 'owner', label: 'Propriétaire', icon: HomeIcone },
   { id: 'gestionnaire', label: 'Gestionnaire', icon: Building },
   { id: 'demarcheur', label: 'Démarcheur', icon: Handshake },
   { id: 'residence', label: 'Résidence meublée', icon: Sofa },
@@ -134,7 +134,7 @@ const LANDLORD_TYPES = [
 ];
 
 export default function UpdateRegister() {
-  const [selectedType, setSelectedType] = useState('admin');
+  const [selectedType, setSelectedType] = useState('owner');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const fileIdentityInputRef = useRef<HTMLInputElement>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -143,9 +143,11 @@ export default function UpdateRegister() {
   const [name, setName] = useState('')
   const [file, setFile] = useState<File[]>([]);
   const [filesIdentity, setFilesIdentity] = useState<File[]>([]);
+  const [showRegistrationSucces, setShowRegistrationSucces] = useState(false);
+  
 
   const MAX_FILES = 3;
-  const MAX_SIZE_MB = 10;
+  const MAX_SIZE_MB = 5;
   
   
   
@@ -211,34 +213,42 @@ export default function UpdateRegister() {
   };
 
  const handleUpdateProfile = async (updatedFields: Record<string, any>) => {
-  try {
-    const formData = new FormData();
+    try {
+      const formData = new FormData();
 
-    // Construction du FormData à partir de l'objet de données
-    Object.entries(updatedFields).forEach(([key, value]) => {
-      if (value !== null && value !== undefined) {
-        formData.append(key, value);
+      // Ajout des fichiers si présents
+      if (logoFile) formData.append("companyLogo", logoFile);
+      filesIdentity.forEach((file, idx) => formData.append("documents", file));
+
+      // Ajout des champs texte
+      Object.entries(updatedFields).forEach(([key, value]) => {
+        if (value !== null && value !== undefined) {
+          formData.append(key, String(value)); // toujours string pour FormData
+        }
+      });
+
+      const token = localStorage.getItem("token"); // récupère le JWT si utilisé
+
+      const response = await fetch("/api/users/update-profile", {
+        method: "PATCH",
+        body: formData,
+        credentials: "include",
+      });
+
+      const result = await response.json();
+      if (response.ok){
+        setShowRegistrationSucces(true);
       }
-    });
+      else {
+        throw new Error('l/erreur est :=> ', result.message || "Erreur lors de la mise à jour");
+      }
 
-    const response = await fetch("/api/users/update-profile", {
-      method: "PATCH",
-      body: formData,
-      credentials: 'include'
-    });
-
-    const result = await response.json();
-
-    if (!response.ok) {
-      throw new Error(result.message || "Erreur lors de la mise à jour");
+      return result;
+    } catch (error: any) {
+      console.error("Erreur Update Profile:", error.message);
+      throw error;
     }
-
-    return result;
-  } catch (error: any) {
-    console.error("Erreur Update Profile:", error.message);
-    throw error;
-  }
-}
+  };
 
   const onSubmit = async () => {
     setLoading(true);
@@ -246,7 +256,7 @@ export default function UpdateRegister() {
       // On prépare les données (ajoutez ici vos autres champs de formulaire)
       const dataToUpdate = {
         companyName: name,
-        role: selectedType as UserRole,
+        role: selectedType,
         companyLogo: logoFile,
       };
 
@@ -439,11 +449,12 @@ export default function UpdateRegister() {
       </p>
     </div>
         {/* Bouton de validation */}
-        <button onClick={handleUpdateProfile} className="w-full bg-[#1a2b4b] hover:bg-[#121d33] text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg active:scale-[0.98]">
+        <button onClick={onSubmit} className="w-full bg-[#1a2b4b] hover:bg-[#121d33] text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg active:scale-[0.98]">
           Finaliser l'inscription
           <CheckCircle2 size={18} />
         </button>
       </div>
+      
     </div>
   );
 }
