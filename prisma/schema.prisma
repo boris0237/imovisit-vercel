@@ -38,12 +38,14 @@ model User {
   authProvider AuthProvider @default(local)
   isActive     Boolean      @default(true)
   createdAt    DateTime     @default(now())
+  updatedAt DateTime @updatedAt @default(now())
 }
 enum UserRole {
   visitor
   owner
   property_manager
   prospector
+  free_agent
   agency
   agent
   admin
@@ -100,7 +102,8 @@ model Property {
 
   views             Int           @default(0)
   visitsCount       Int           @default(0) 
-  createdAt         DateTime      @default(now()) 
+  createdAt         DateTime      @default(now())
+  updatedAt DateTime @updatedAt @default(now())
 }
 
 enum PriceType {
@@ -142,3 +145,76 @@ enum Amenity {
   security
 }
 
+
+//AGENDA
+model AvailabilityRule {//dispo tels jours
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  ownerId        String   
+  propertyId     String
+
+  recurrenceType RecurrenceType
+  dayOfWeek      WeekDay?
+  dayOfMonth     Int?
+
+  startTime      String   
+  endTime        String   
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model AvailabilityException { //pas dispo tels jours
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  ownerId     String
+  propertyId  String
+
+  date        DateTime?   // jour précis
+  dayOfWeek   WeekDay?
+  dayOfMonth  Int?
+
+  startTime   String?
+  endTime     String?
+
+  reason      String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Reservation { //exception tels jours
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+
+  propertyId  String
+  ownerId     String
+  clientId    String   
+
+  date        DateTime
+  startTime   String
+  endTime     String
+
+  status      ReservationStatus @default(pending)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum ReservationStatus {
+  pending
+  confirmed
+  cancelled
+}
+
+enum RecurrenceType {
+  weekly
+  monthly
+}
+
+enum WeekDay {
+  monday
+  tuesday
+  wednesday
+  thursday
+  friday
+  saturday
+  sunday
+}

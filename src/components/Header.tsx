@@ -1,5 +1,6 @@
 "use client"
-import { useState } from 'react';
+
+import { useEffect, useState } from 'react';
 import Link from 'next/link'
 import { Menu, Home, Search, Heart, User, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,14 +10,25 @@ import logo from '@/static/logo.png';
 import Image from 'next/image';
 import { useLanguage } from '@/contexts/LanguageContext';
 import LanguageDropdown from '@/components/LanguageDropdown';
-import { useDictionary } from '@/hooks/useDictionary'
+import { useDictionary } from '@/hooks/useDictionary';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
-  const isLoggedIn = false; // TODO: Replace with auth context
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false); // TODO: Replace with auth context
   const { language, setLanguage } = useLanguage()
   const { dictionary } = useDictionary()
+  const {user} = useAuth();
+
+ useEffect(() => {
+  if (user) {
+    console.log("Utilisateur connecté :", user);
+    setIsLoggedIn(true);
+  } else {
+    setIsLoggedIn(false);
+  }
+}, [user]);
 
   const navItems = [
     { href: '/', label: 'Accueil', icon: Home, translateLabel: dictionary.header?.accueil },
@@ -53,7 +65,7 @@ export function Header() {
                   <span className='bg-primary text-white text-2xl'>.com</span>
                  </div>
                  <div className='-mt-3.5'>
-                  <span className='text-[7px]'>{dictionary.header?.subtitle || 'La visite des biens imobiliers devient plus facile'}</span>
+                  <span className='text-[7px]'>{dictionary.header?.subtitle}</span>
                  </div>
             </div>
           </div>

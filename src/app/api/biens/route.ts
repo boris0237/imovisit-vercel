@@ -156,7 +156,7 @@
  */
 
 
-import { prisma } from "@/service/db";
+import { prisma } from "@/services/db";
 import { NextRequest } from "next/server";
 import { apiResponse } from "@/lib/api-response";
 import { authMiddleware } from "@/middlewares/auth-middleware";
@@ -310,6 +310,7 @@ export async function GET(req: NextRequest) {
     });
 
   } catch (err: any) {
+    console.log(err.message);
     return apiResponse({
       status: 500,
       message: err.message || "Erreur lors de la recherche",

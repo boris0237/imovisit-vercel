@@ -56,7 +56,7 @@
 
 
 
-import { prisma } from "@/service/db";
+import { prisma } from "@/services/db";
 import { apiResponse } from "@/lib/api-response";
 
 const JWT_SECRET = process.env.JWT_SECRET!;

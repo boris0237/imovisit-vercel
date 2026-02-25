@@ -2,7 +2,6 @@
 
 import React, { useEffect, useRef, useCallback } from 'react';
 import { X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
 interface CustomModalProps {
   isOpen: boolean;
@@ -14,13 +13,6 @@ interface CustomModalProps {
   rounded?: boolean;
   showBlur?: boolean;
   closeOnClickOutside?: boolean;
-}
-
-type StepProps = {
-  data: any
-  updateData: (values: any) => void
-  next: () => void
-  back: () => void
 }
 
 const sizeClasses = {
@@ -76,10 +68,19 @@ export default function CustomModal({
         ref={modalRef}
         className={`relative bg-white w-full ${sizeClasses[size]} ${rounded ? 'rounded-2xl' : 'rounded-none'} shadow-2xl transform transition-all overflow-hidden max-h-[95vh] flex flex-col`}
       >
-    
+        {/* Header (Optionnel) */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-100">
+          <h3 className="text-xl font-bold text-gray-800">{title || "Mise à jour"}</h3>
+          {locked &&(<button 
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 rounded-full text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            <X size={24} />
+          </button>)}
+        </div>
 
         {/* Corps du Modal (Scrollable si trop grand) */}
-        <div className="w-full h-[90vh] overflow-auto">
+        <div className="p-6 overflow-y-auto flex-1">
           {children}
         </div>
       </div>

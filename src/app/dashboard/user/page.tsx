@@ -29,11 +29,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { mockProperties } from '@/data/mock';
-import AddPropertyModal from '@/components/property/add-property/AddPropertyModal';
-import CustomModal from "@/components/modal/CustomModal"
-import { useState } from 'react';
-
-
+import UpdateProfileForm from '@/forms/updateRegister';
+import { useEffect, useState } from "react";
+import { useAuth } from '@/contexts/AuthContext';
+import Modal from '@/components/ui/modal';
+import SuccessRegistrationAlert from '@/components/SuccessRegistrationAlert';
+import router from 'next/router';
+import Toast from '@/components/ui/toast';
 
 const stats = [
   { title: 'Biens total', value: '4', icon: Building2, color: 'bg-slate-100 text-slate-600' },
@@ -59,7 +61,30 @@ const offerLabels: Record<string, { label: string; className: string }> = {
   furnished: { label: 'Meublé', className: 'bg-emerald-100 text-emerald-700' },
 };
 export default function Dashboard() {
-  const [showModal, setShowModal] = useState(false);
+
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+  // Supposons que 'user' vient de votre contexte d'authentification ou d'un fetch
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (user) {
+      const createdAt = new Date(user.createdAt).getTime();
+      const updatedAt = new Date(user.updatedAt).getTime();
+      console.log(user)
+
+      // Si updatedAt est égal à createdAt, le profil n'a jamais été mis à jour
+      // On ajoute une marge de 1000ms car parfois la DB enregistre avec un micro-décalage
+      if (user.role = 'owner') {
+        setShowUpdateModal(true);
+        console.log('role', user.role)
+      }
+    }
+  }, [user]);
+  
+  function setShowModal(arg0: boolean): void {
+    throw new Error('Function not implemented.');
+  }
+
   return (
     <>
       <header className="bg-slate-50 border-b border-slate-200">
@@ -243,9 +268,19 @@ export default function Dashboard() {
             })}
           </div>
         </div>
-        <CustomModal isOpen={showModal} size ="lg" rounded={false} showBlur={true} onClose={() => setShowModal(false)} >
-          <AddPropertyModal /> 
-        </CustomModal>
+        
+      <Modal 
+        isOpen={showUpdateModal} 
+        onClose={() => setShowUpdateModal(false)}
+        title="Finalisez votre profil professionnel"
+        size="full"  
+        rounded={false}     
+        locked={true}
+        showBlur={true} 
+        closeOnClickOutside={false} 
+      >
+        <UpdateProfileForm /> 
+      </Modal>
       </div>
     </>
   );
