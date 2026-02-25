@@ -266,19 +266,20 @@ export default function Dashboard() {
             })}
           </div>
         </div>
-      </div>
-    </>
-      </main>
+        
       <Modal 
-        isOpen={false} 
+        isOpen={showUpdateModal} 
         onClose={() => setShowUpdateModal(false)}
         title="Finalisez votre profil professionnel"
-        size="xl"       // On choisit une taille large pour le formulaire
-        showBlur={true} // Activation du flou
-        closeOnClickOutside={false} // On force l'utilisateur à cliquer sur le bouton ou la croix
+        size="full"  
+        rounded={false}     
+        locked={true}
+        showBlur={true} 
+        closeOnClickOutside={false} 
       >
         <UpdateProfileForm /> 
       </Modal>
-    </div>
+      </div>
+    </>
   );
 }

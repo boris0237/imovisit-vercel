@@ -38,7 +38,7 @@
  */
 
 
-import { prisma } from "@/service/db";
+import { prisma } from "@/services/db";
 import jwt from "jsonwebtoken";
 import { sendEmail } from "@/lib/send-email";
 import { apiResponse } from "@/lib/api-response";

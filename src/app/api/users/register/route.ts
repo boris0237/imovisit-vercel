@@ -95,7 +95,7 @@
  */
 
 
-import { prisma } from "@/service/db";
+import { prisma } from "@/services/db";
 import bcrypt from "bcryptjs"
 import { apiResponse } from "@/lib/api-response"
 import { AuthProvider, UserRole } from "@prisma/client"

@@ -144,10 +144,7 @@ export default {
     sp10: "Vous recevrez l'adresse exacte quelques heures avant la visite.",
     p8: "Date souhaitée",
     p9: "Crénau horaire",
-    btn6: "Réserver la visite"
-    title1: "Entreprise",
-    title2: "Support",
-    title3: "Légal",
+    btn6: "Réserver la visite",
     rights: "Imovisit. Tout droits réservés.",
     bio: "La plateforme de référence pour les visites immobilières. Trouvez votre bien idéal en toute confiance.",
     text: "Nous suivre :",

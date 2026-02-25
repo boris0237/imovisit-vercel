@@ -105,26 +105,26 @@ export default {
     lab1: "Properties available",
     lab2: "Active users",
     lab3: "Visits completed",
-    lab4: "Customer satisfaction"
+    lab4: "Customer satisfaction",
   },
   howitworks: {
       title: "How it works ?",
       descrip: "Find your ideal property in 4 simple steps. Our platform supports you throughout your search.",
     step1: {
         title1: "Search",
-        description1: "Browse our catalog of verified real estate properties. Filter by city, type, price and more."
+        description1: "Browse our catalog of verified real estate properties. Filter by city, type, price and more.",
     },
     step2: {
       title2: "Book a visit",
-      description2: "Choose a convenient time slot. Visit in person or remotely via video."
+      description2: "Choose a convenient time slot. Visit in person or remotely via video.",
     },
     step3: {
       title3: "Visit",
-      description3: "Meet the owner and visit the property. Ask all your questions in person."
+      description3: "Meet the owner and visit the property. Ask all your questions in person.",
     },
     step4: {
       title4: "Secure",
-      description4: "All our landlords are verified. Report any issues for a trusted community."
+      description4: "All our landlords are verified. Report any issues for a trusted community.",
     }
   },
   ownercta:{
@@ -138,7 +138,7 @@ export default {
     lab1: "active landlords",
     lab2: "properties published",
     lab3: "visits completed",
-    lab4: "tenants"
+    lab4: "tenants",
   },
   featuredpropertties: {
     property1: "Property for Rent",
@@ -156,7 +156,7 @@ export default {
     cta: "Can't find what you're looking for ?",
     cta2: "Contact us for personalized assistance",
     exploreAll: "Explore all",
-    seeAll: "See all"
+    seeAll: "See all",
   },
   searchPage: {
     title1: "Search for a property",
@@ -164,7 +164,7 @@ export default {
     title2: "No property found",
     paragraph2: "Try adjusting your search criteria",
     filterButton: "Filters",
-    loading: "Loading..."
+    loading: "Loading...",
   },
   searchFilter:{
     city: "City",
@@ -214,12 +214,12 @@ export default {
     sp10: "You will receive the exact address a few hours before the visit.",
     p8: "Preferred date",
     p9: "Time slot",
-    btn6: "Book the visit"
+    btn6: "Book the visit",
     rights : "Imovisit. All rights reserved.",
     errorInvalidCredentials : "Invalid email or password",
     errorUserNotFound : "User not found",
     errorGeneric: "An error occurred. Please try again.",
     errorNetwork: "Network error, please check your internet connection.",
-    success : "Logged in successfully"
+    success : "Logged in successfully",
   }
 } as const

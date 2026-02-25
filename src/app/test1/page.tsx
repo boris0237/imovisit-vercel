@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useRef, useState, ChangeEvent } from 'react';
+import { uploadToCloudinary } from "@/lib/cloudinary";
 import { UploadCloud, X, FileText, FileImage, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
@@ -124,11 +125,11 @@ const Construction = () => (
 
 // Définition des types de bailleurs
 const LANDLORD_TYPES = [
-  { id: 'owner', label: 'Propriétaire', icon: HomeIcone },
+  { id: 'proprietaire', label: 'Propriétaire', icon: HomeIcone },
   { id: 'gestionnaire', label: 'Gestionnaire', icon: Building },
   { id: 'demarcheur', label: 'Démarcheur', icon: Handshake },
   { id: 'residence', label: 'Résidence meublée', icon: Sofa },
-  { id: 'agency', label: 'Agence', icon: Business },
+  { id: 'agence', label: 'Agence', icon: Business },
   { id: 'agent', label: 'Agent', icon: Agent },
   { id: 'promoteur', label: 'Promoteur', icon: Construction },
 ];
@@ -136,7 +137,7 @@ const LANDLORD_TYPES = [
 
 
 export default function UpdateRegister() {
-  const [selectedType, setSelectedType] = useState("agency");
+  const [selectedType, setSelectedType] = useState("classique");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const fileIdentityInputRef = useRef<HTMLInputElement>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -144,17 +145,12 @@ export default function UpdateRegister() {
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState("");
   const [filesIdentity, setFilesIdentity] = useState<File[]>([]);
-  const [showRegistrationSucces, setShowRegistrationSucces] = useState(false);
-  
 
   const MAX_FILES = 3;
   const MAX_SIZE_MB = 5;
 
   // Clic sur le conteneur pour ajouter logo
   const handleContainerClick = () => fileInputRef.current?.click();
-  
-  
-  
 
   const handleZoneClick = () => {
     if (filesIdentity.length < MAX_FILES) {
@@ -203,7 +199,7 @@ export default function UpdateRegister() {
   };
 
   // --- Fonction qui prépare et envoie le FormData ---
- const handleUpdateProfile = async (updatedFields: Record<string, any>) => {
+  const handleUpdateProfile = async (updatedFields: Record<string, any>) => {
     try {
       const formData = new FormData();
 
@@ -227,12 +223,8 @@ export default function UpdateRegister() {
       });
 
       const result = await response.json();
-      if (response.ok){
-        setShowRegistrationSucces(true);
-      }
-      else {
-        throw new Error('l/erreur est :=> ', result.message || "Erreur lors de la mise à jour");
-      }
+
+      if (!response.ok) throw new Error(result.message || "Erreur lors de la mise à jour");
 
       return result;
     } catch (error: any) {
@@ -246,8 +238,8 @@ export default function UpdateRegister() {
     try {
       const dataToUpdate = {
         companyName: name,
-        role: selectedType,
-        companyLogo: logoFile,
+        typeCompte: selectedType,
+        avatar: null, // ajouter un File si besoin
       };
 
       await handleUpdateProfile(dataToUpdate);
@@ -352,21 +344,12 @@ export default function UpdateRegister() {
               </div>
             )}
           </div>
-        )}
-      </div>
-      
-      <p className="text-[10px] text-gray-400 flex items-center gap-1">
-        <AlertCircle size={12} />
-        Formats acceptés : PDF, PNG, JPG (Max 3 documents)
-      </p>
-    </div>
-        {/* Bouton de validation */}
-        <button onClick={onSubmit} className="w-full bg-[#1a2b4b] hover:bg-[#121d33] text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg active:scale-[0.98]">
-          Finaliser l'inscription
-          <CheckCircle2 size={18} />
+        </div>
+
+        <button onClick={onSubmit} disabled={loading} className="w-full bg-[#1a2b4b] hover:bg-[#121d33] text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg active:scale-[0.98]">
+          Finaliser l'inscription <CheckCircle2 size={18} />
         </button>
       </div>
-      
     </div>
   );
 }
