@@ -100,15 +100,15 @@ export default function CalendarPage() {
       <div className="max-w-6xl mx-auto px-6 py-6">
         <div className="flex items-center justify-between border-b border-slate-200 pb-4">
           <div className="flex items-center gap-4 text-slate-700">
-            <button className="h-10 w-10 rounded-full border border-slate-200 flex items-center justify-center">
+            <Button className="h-10 w-10 rounded-full border border-slate-200 flex items-center justify-center">
               <ChevronLeft className="w-4 h-4" />
-            </button>
+            </Button>
             <h2 className="text-lg font-semibold text-slate-900">{headerTitle}</h2>
-            <button className="h-10 w-10 rounded-full border border-slate-200 flex items-center justify-center">
+            <Button className="h-10 w-10 rounded-full border border-slate-200 flex items-center justify-center">
               <ChevronRight className="w-4 h-4" />
-            </button>
+            </Button>
           </div>
-          <button className="text-sm text-slate-500 hover:text-slate-800">Aujourd&apos;hui</button>
+          <Button className="text-sm text-slate-500 hover:text-slate-800">Aujourd&apos;hui</Button>
         </div>
 
         {view === 'day' && (
@@ -117,7 +117,7 @@ export default function CalendarPage() {
               <Calendar className="w-10 h-10" />
             </div>
             <p className="text-lg font-semibold text-slate-400">Aucune visite prévue ce jour</p>
-            <button className="mt-2 text-slate-900 font-semibold">Définir les disponibilités</button>
+            <Button className="mt-2 text-slate-900 font-semibold">Définir les disponibilités</Button>
           </div>
         )}
 
@@ -190,9 +190,9 @@ export default function CalendarPage() {
                           }
                           return (
                             <div key={`${day.label}-${hour}`} className="px-2">
-                              <button className="h-12 w-full rounded-lg border border-dashed border-emerald-300 bg-emerald-50/40 text-emerald-500 flex items-center justify-center">
+                              <Button className="h-12 w-full rounded-lg border border-dashed border-emerald-300 bg-emerald-50/40 text-emerald-500 flex items-center justify-center">
                                 <Plus className="w-4 h-4" />
-                              </button>
+                              </Button>
                             </div>
                           )
                         })}
@@ -270,9 +270,9 @@ export default function CalendarPage() {
           <aside className="absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-xl flex flex-col">
             <div className="bg-slate-900 text-white p-6 flex items-center justify-between">
               <h3 className="text-lg font-semibold">Détails du jour</h3>
-              <button onClick={() => setIsPanelOpen(false)} className="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center">
+              <Button onClick={() => setIsPanelOpen(false)} className="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center">
                 <X className="w-4 h-4" />
-              </button>
+              </Button>
             </div>
             <div className="p-6 overflow-auto flex-1 space-y-6">
               <div className="text-center">

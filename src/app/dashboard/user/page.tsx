@@ -1,6 +1,5 @@
 "use client"
 
-import Link from 'next/link'
 import {
   Building2,
   Calendar,
@@ -30,6 +29,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { mockProperties } from '@/data/mock';
+import AddPropertyModal from '@/components/property/add-property/AddPropertyModal';
+import CustomModal from "@/components/modal/CustomModal"
+import { useState } from 'react';
+
+
 
 const stats = [
   { title: 'Biens total', value: '4', icon: Building2, color: 'bg-slate-100 text-slate-600' },
@@ -54,8 +58,8 @@ const offerLabels: Record<string, { label: string; className: string }> = {
   sale: { label: 'A vendre', className: 'bg-amber-100 text-amber-700' },
   furnished: { label: 'Meublé', className: 'bg-emerald-100 text-emerald-700' },
 };
-
 export default function Dashboard() {
+  const [showModal, setShowModal] = useState(false);
   return (
     <>
       <header className="bg-slate-50 border-b border-slate-200">
@@ -66,12 +70,12 @@ export default function Dashboard() {
               Gérez vos annonces, suivez les performances et planifiez vos visites
             </p>
           </div>
-          <Link href="/dashboard/properties/new">
-            <Button className="bg-slate-900 hover:bg-slate-800 gap-2">
+      
+            <Button onClick={() => setShowModal(true)} className="bg-slate-900 hover:bg-slate-800 gap-2">
               <Plus className="w-4 h-4" />
-              Ajouter un bien
+              Ajouter un bien 
             </Button>
-          </Link>
+          
         </div>
       </header>
 
@@ -224,7 +228,7 @@ export default function Dashboard() {
                           {property.isAvailable ? 'Actif' : 'Inactif'}
                         </span>
                         <label className="relative inline-flex items-center cursor-pointer">
-                          <input
+                          <Input
                             type="checkbox"
                             defaultChecked={property.isAvailable}
                             className="sr-only peer"
@@ -239,6 +243,9 @@ export default function Dashboard() {
             })}
           </div>
         </div>
+        <CustomModal isOpen={showModal} size ="lg" rounded={false} showBlur={true} onClose={() => setShowModal(false)} >
+          <AddPropertyModal /> 
+        </CustomModal>
       </div>
     </>
   );
