@@ -88,7 +88,7 @@ model Property {
   bathrooms         Int?          // Nombre de salles de bain 
   images            String[]      
   amenities         Amenity[]     // Enum ou type: piscine, ascenseur, parking...
-  visitType         VisitType     // Enum: in-person, remote, both
+  visitType         PropertyVisitType     // Enum: in-person, remote, both
   visitFee          Float?        // Frais éventuels pour la visite 
   isAvailable       Boolean       @default(true) 
   docTitreFoncier   String?      
@@ -130,7 +130,7 @@ enum OfferType {
   furnished
 }
 
-enum VisitType {
+enum PropertyVisitType {
   in_person
   remote
   both
@@ -191,11 +191,15 @@ model Reservation { //exception tels jours
   date        DateTime
   startTime   String
   endTime     String
+  visitType ReservationVisitType @default(in_person)
+  visitContext String?
+
 
   status      ReservationStatus @default(pending)
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
 }
 
 enum ReservationStatus {
@@ -217,4 +221,9 @@ enum WeekDay {
   friday
   saturday
   sunday
+}
+
+enum ReservationVisitType {
+  in_person
+  remote
 }

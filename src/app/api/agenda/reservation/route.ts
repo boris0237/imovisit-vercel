@@ -5,7 +5,7 @@
  *     tags:
  *       - Agenda
  *     summary: Créer une réservation
- *     description: Crée une réservation pour un bien en vérifiant les chevauchements avec d'autres réservations et les exceptions.
+ *     description: Crée une réservation pour un bien en vérifiant les chevauchements avec d'autres réservations et les exceptions. Génère le contexte de visite (adresse ou lien WhatsApp).
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -19,13 +19,14 @@
  *               - date
  *               - startTime
  *               - endTime
+ *               - visitType
  *             properties:
  *               propertyId:
  *                 type: string
  *                 description: ID du bien
  *               date:
  *                 type: string
- *                 format: date-time
+ *                 format: date
  *                 description: Date de réservation (YYYY-MM-DD)
  *               startTime:
  *                 type: string
@@ -35,15 +36,50 @@
  *                 type: string
  *                 example: "14:30"
  *                 description: Heure de fin
+ *               visitType:
+ *                 type: string
+ *                 enum: [in_person, remote]
+ *                 description: Type de visite
  *     responses:
  *       201:
  *         description: Réservation créée avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                 propertyId:
+ *                   type: string
+ *                 ownerId:
+ *                   type: string
+ *                 clientId:
+ *                   type: string
+ *                 date:
+ *                   type: string
+ *                   format: date
+ *                 startTime:
+ *                   type: string
+ *                 endTime:
+ *                   type: string
+ *                 visitType:
+ *                   type: string
+ *                   enum: [in_person, remote]
+ *                 visitContext:
+ *                   type: string
+ *                   description: Adresse ou lien WhatsApp pour la visite
+ *                 status:
+ *                   type: string
+ *                   enum: [pending, confirmed, cancelled]
  *       400:
  *         description: Créneau déjà réservé ou champs manquants
+ *       403:
+ *         description: Visite à distance réservée aux comptes premium
  *       401:
  *         description: Non autorisé
  *       404:
- *         description: Bien introuvable
+ *         description: Bien ou propriétaire introuvable
  *       500:
  *         description: Erreur serveur
  *
@@ -80,7 +116,7 @@
  *         name: date
  *         schema:
  *           type: string
- *           format: date-time
+ *           format: date
  *         description: Filtrer par date exacte
  *       - in: query
  *         name: startTime
@@ -105,14 +141,48 @@
  *     responses:
  *       200:
  *         description: Liste des réservations récupérée
- *       401:
- *         description: Non autorisé
- *       500:
- *         description: Erreur serveur
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 reservations:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       propertyId:
+ *                         type: string
+ *                       ownerId:
+ *                         type: string
+ *                       clientId:
+ *                         type: string
+ *                       date:
+ *                         type: string
+ *                         format: date
+ *                       startTime:
+ *                         type: string
+ *                       endTime:
+ *                         type: string
+ *                       visitType:
+ *                         type: string
+ *                         enum: [in_person, remote]
+ *                       visitContext:
+ *                         type: string
+ *                       status:
+ *                         type: string
+ *                         enum: [pending, confirmed, cancelled]
+ *                 total:
+ *                   type: integer
+ *                 page:
+ *                   type: integer
+ *                 limit:
+ *                   type: integer
  */
 
-
-import { prisma } from "@/service/db";
+import { prisma } from "@/services/db";
 import { NextRequest } from "next/server";
 import { apiResponse } from "@/lib/api-response";
 import { authMiddleware } from "@/middlewares/auth-middleware";
@@ -124,9 +194,9 @@ export async function POST(req: NextRequest) {
     if (authError) return authError;
 
     const body = await req.json();
-    const { propertyId, date, startTime, endTime } = body;
+    const { propertyId, date, startTime, endTime, visitType } = body;
 
-    if (!propertyId || !date || !startTime || !endTime) {
+    if (!propertyId || !date || !startTime || !endTime || !visitType) {
       return apiResponse({ status: 400, message: "Champs obligatoires manquants" });
     }
 
@@ -135,7 +205,40 @@ export async function POST(req: NextRequest) {
     const dayOfWeek = reservationDate.toLocaleDateString("en-US", { weekday: "long" }).toLowerCase();
     const dayOfMonth = reservationDate.getDate();
 
-    // Vérifier chevauchement avec autres réservations
+    // Vérifier bien
+    const property = await prisma.property.findUnique({
+      where: { id: propertyId }
+    });
+
+    if (!property) {
+      return apiResponse({ status: 404, message: "Bien introuvable" });
+    }
+
+    // Vérifier propriétaire
+    const owner = await prisma.user.findUnique({
+      where: { id: property.userId }
+    });
+
+    if (!owner) {
+      return apiResponse({ status: 404, message: "Propriétaire introuvable" });
+    }
+
+    if (property.userId === decodedUser.id) {
+      return apiResponse({
+        status: 400,
+        message: "Vous ne pouvez pas réserver votre propre bien"
+      });
+    }
+
+    // Vérification Premium
+    if (visitType === "remote" && owner.typeCompte !== "premium") {
+      return apiResponse({
+        status: 403,
+        message: "Visite à distance réservée aux comptes premium"
+      });
+    }
+
+    // Vérifier conflit réservation
     const overlappingReservation = await prisma.reservation.findFirst({
       where: {
         propertyId,
@@ -151,16 +254,13 @@ export async function POST(req: NextRequest) {
       return apiResponse({ status: 400, message: "Créneau déjà réservé" });
     }
 
-    // Vérifier chevauchement avec exceptions 
+    // Vérifier exceptions
     const overlappingException = await prisma.availabilityException.findFirst({
       where: {
         propertyId,
         OR: [
-          // date 
           { date: reservationDate, startTime: { lt: endTime }, endTime: { gt: startTime } },
-          // jour de semaine
           { dayOfWeek: dayOfWeek as any, startTime: { lt: endTime }, endTime: { gt: startTime } },
-          // jour du mois
           { dayOfMonth: dayOfMonth, startTime: { lt: endTime }, endTime: { gt: startTime } }
         ]
       }
@@ -170,16 +270,16 @@ export async function POST(req: NextRequest) {
       return apiResponse({ status: 400, message: "Créneau indisponible (exception)" });
     }
 
-    // Vérifier que le bien existe
-    const property = await prisma.property.findUnique({
-      where: { id: propertyId }
-    });
+    // Génération contexte visite
+    let visitContext = "";
 
-    if (!property) {
-      return apiResponse({ status: 404, message: "Bien introuvable" });
+    if (visitType === "remote") {
+      visitContext = `https://wa.me/${owner.phone}`;
+    } else {
+      visitContext = property.address;
     }
 
-    // Créer la réservation 
+    // Créer réservation
     const reservation = await prisma.reservation.create({
       data: {
         propertyId,
@@ -188,7 +288,10 @@ export async function POST(req: NextRequest) {
         date: reservationDate,
         startTime,
         endTime,
-        status: "pending"
+        visitType: "in_person",
+        visitContext: property.address,
+
+        status: "pending",
       }
     });
 
