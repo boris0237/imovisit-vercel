@@ -93,7 +93,7 @@
  *         description: Erreur serveur
  */
 
-import { prisma } from "@/service/db";
+import { prisma } from "@/services/db";
 import { NextRequest } from "next/server";
 import { apiResponse } from "@/lib/api-response";
 import { authMiddleware } from "@/middlewares/auth-middleware";
