@@ -33,9 +33,13 @@ import UpdateProfileForm from '@/forms/updateRegister';
 import { useEffect, useState } from "react";
 import { useAuth } from '@/contexts/AuthContext';
 import Modal from '@/components/ui/modal';
-import SuccessRegistrationAlert from '@/components/SuccessRegistrationAlert';
-import router from 'next/router';
-import Toast from '@/components/ui/toast';
+import Step1GeneralInfo from "@/components/modal/steps/Step1GeneralInfo";
+import Step2Location from "@/components/modal/steps/Step2Location";
+import Step3Features from "@/components/modal/steps/Step3Features";
+import Step4Media from "@/components/modal/steps/Step4Media";
+import Step5Success from '@/components/modal/steps/Step5Success';
+import { useRouter } from 'next/navigation';
+import { PropertyFormData } from '@/types/index';
 
 const stats = [
   { title: 'Biens total', value: '4', icon: Building2, color: 'bg-slate-100 text-slate-600' },
@@ -60,11 +64,32 @@ const offerLabels: Record<string, { label: string; className: string }> = {
   sale: { label: 'A vendre', className: 'bg-amber-100 text-amber-700' },
   furnished: { label: 'Meublé', className: 'bg-emerald-100 text-emerald-700' },
 };
-export default function Dashboard() {
 
+
+export default function Dashboard() {
+  const updateFormData = (values: Partial<PropertyFormData>) => {
+    setFormData((prev: any) => ({ ...prev, ...values }));
+  };
+  
+  const [formData, setFormData] = useState<PropertyFormData>({
+  type: "",
+  offerType: '',
+  title: "",
+  description: "",
+});
+  const router = useRouter();
+  const [step, setStep] = useState(1);
+  const nextStep = () => setStep((s) => Math.min(s + 1, 5));
+  const prevStep = () => setStep((s) => Math.max(s - 1, 1));
   const [showUpdateModal, setShowUpdateModal] = useState(false);
-  // Supposons que 'user' vient de votre contexte d'authentification ou d'un fetch
+  const [showAddPropertyModal, setShowAddPropertyModal] = useState(false);
   const { user } = useAuth();
+  
+   const resetForm = () => {
+  setFormData(initialFormData);
+  setStep(1);
+  };
+
 
   useEffect(() => {
     if (user) {
@@ -72,18 +97,35 @@ export default function Dashboard() {
       const updatedAt = new Date(user.updatedAt).getTime();
       console.log(user)
 
-      // Si updatedAt est égal à createdAt, le profil n'a jamais été mis à jour
-      // On ajoute une marge de 1000ms car parfois la DB enregistre avec un micro-décalage
-      if (user.role = 'owner') {
+      
+      if (user?.role === 'owner') {
         setShowUpdateModal(true);
         console.log('role', user.role)
       }
     }
   }, [user]);
   
-  function setShowModal(arg0: boolean): void {
-    throw new Error('Function not implemented.');
-  }
+function onFinish() {
+  console.log("DATA FINAL", formData);
+  setShowAddPropertyModal(false);
+  setStep(1);
+}
+ 
+const initialFormData = {
+  type: "",
+  offerType: "",
+  title: "",
+  description: "",
+  surface: undefined,
+  rooms: undefined,
+  bathrooms: undefined,
+  amenities: [],
+  price: undefined,
+  visitFee: undefined,
+  images: [],
+};
+
+
 
   return (
     <>
@@ -96,9 +138,11 @@ export default function Dashboard() {
             </p>
           </div>
       
-            <Button onClick={() => setShowModal(true)} className="bg-slate-900 hover:bg-slate-800 gap-2">
-              <Plus className="w-4 h-4" />
-              Ajouter un bien 
+            <Button 
+                onClick={() => setShowAddPropertyModal(true)} 
+                className="bg-slate-900 hover:bg-slate-800 gap-2">
+                <Plus className="w-4 h-4" />
+                Ajouter un bien
             </Button>
           
         </div>
@@ -281,6 +325,61 @@ export default function Dashboard() {
       >
         <UpdateProfileForm /> 
       </Modal>
+
+      <Modal
+  isOpen={showAddPropertyModal}
+  onClose={() => setShowAddPropertyModal(false)}
+  title="Ajouter un bien"
+  size="lg"
+  rounded={false}
+>
+
+  {step === 1 && (
+    <Step1GeneralInfo
+      data={formData}
+      updateData={updateFormData}
+      next={nextStep}
+      prev={prevStep}
+    />
+  )}
+
+  {step === 2 && (
+    <Step2Location
+      data={formData}
+      updateData={updateFormData}
+      next={nextStep}
+      prev={prevStep}
+    />
+  )}
+
+  {step === 3 && (
+    <Step3Features
+      data={formData}
+      updateData={updateFormData}
+      next={nextStep}
+      prev={prevStep}
+    />
+  )}
+
+  {step === 4 && (
+    <Step4Media
+      data={formData}
+      updateData={updateFormData}
+      next={nextStep}
+      prev={prevStep}
+    />
+  )}
+
+  {step === 5 && (
+    <Step5Success
+  data={formData}
+  onFinish={() => {
+    resetForm();
+    setShowAddPropertyModal(false);
+  }}/>
+  )}
+
+</Modal>
       </div>
     </>
   );

@@ -28,6 +28,17 @@ export interface Property {
   visitsCount: number;
 }
 
+export interface PropertyFormData{
+  data: string;
+  updateData: string;
+  next: boolean;
+  prev: boolean;
+  title: string;
+  category: 'location ' | 'meuble' | 'vente';
+  description: string;
+  type: string;
+}
+
 export interface User {
   id: string;
   name: string;

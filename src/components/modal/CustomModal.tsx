@@ -33,7 +33,7 @@ export default function CustomModal({
   onClose,
   children,
   title,
-  size = "full",
+  size = "xl",
   showHeader = true,
   closeOnClickOutside = true,
   showBlur = true,
