@@ -332,7 +332,7 @@ const loginWithGoogleData = () => {
                         {dictionary.login?.rememberMe || "Se souvenir de moi"}
                       </Label>
                     </div>
-                    <Link href="/forgot-password" className="text-sm text-imo-primary hover:underline">
+                    <Link href="/forgotpassword" className="text-sm text-imo-primary hover:underline">
                       {dictionary.login?.forgotPassword || "Mot de passe oublié?"}
                     </Link>
                   </div>
@@ -353,7 +353,7 @@ const loginWithGoogleData = () => {
                   >
                     {googleLoading || loading ? (
                       <>
-                        <LoadingSpinner loading={true} fullScreen={false} />
+                        <LoadingSpinner loading={loading} fullScreen={false} />
                         {dictionary.signup?.loading || "Chargement..."}
                       </>
                     ) : (

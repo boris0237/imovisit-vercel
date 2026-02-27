@@ -18,7 +18,9 @@ import {
   Crown,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import {useAuth} from '@/contexts/AuthContext'
+import { Header } from '@/components/Header'
 
 const primaryNav = [
   { icon: LayoutGrid, label: "Vue d'ensemble", href: '/dashboard' },
@@ -43,6 +45,25 @@ const accountNav = [
 ]
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+
+  const {user} = useAuth();
+  const stringToColor = (string : string) => {
+    let hash = 0;
+    for (let i = 0; i < string.length; i++) {
+      hash = string.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    // Génération d'une couleur HSL pour garder une bonne luminosité
+    const h = Math.abs(hash) % 360;
+    return `hsl(${h}, 70%, 45%)`; // 70% saturation, 45% luminosité
+  };
+
+  const bgColor = user?.name ? stringToColor(user?.name) : "#ccc";
+  const initials = user?.name 
+    ? user.name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)
+    : "??";
+  const name = user?.name || 'utilisateur'
+  const role = user?.role || 'pas de role'
+
   const pathname = usePathname()
 
   const isActive = (href: string) => {
@@ -70,13 +91,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div className="flex items-center gap-3 rounded-2xl bg-slate-50 p-4 border border-slate-200">
               <div className="relative">
                 <Avatar className="w-12 h-12">
-                  <AvatarFallback className="bg-imo-primary text-white">JP</AvatarFallback>
+                  <AvatarImage src={user?.avatar || ""} alt={user?.name.split("")[0].toUpperCase()} />
+                  <AvatarFallback 
+                    className="text-white" 
+                    style={{ backgroundColor: bgColor }}
+                  >
+                    {initials}
+                  </AvatarFallback>
                 </Avatar>
                 <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white" />
               </div>
               <div className="min-w-0">
-                <p className="font-semibold text-sm text-slate-900 truncate">Jean-Pierre E.</p>
-                <p className="text-xs text-slate-500 truncate">Propriétaire</p>
+                <p className="font-semibold text-sm text-slate-900 truncate">{name}</p>
+                <p className="text-xs text-slate-500 truncate">{role}</p>
               </div>
             </div>
           </div>
