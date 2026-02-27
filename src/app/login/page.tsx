@@ -203,12 +203,12 @@ const loginWithGoogleData = () => {
 
         setTimeout(() => {
         console.log('utilisateur login dans le context', loggedInUser);
-          if (loggedInUser?.role === 'owner') {
-            window.location.href = '/dashboard/user';
+          if (loggedInUser?.role !== 'visitor' && loggedInUser?.role !== undefined) {
+            window.location.href = '/dashboard/user'; 
           } else {
             window.location.href = '/';
           }
-        }, 20000);
+        }, 2000);
         router.refresh(); // Rafraîchir l'état de session
         
       } else {

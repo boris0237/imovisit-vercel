@@ -53,10 +53,7 @@ export const ROLE_ALLOWED_FIELDS = {
     "avatar",
     "country",
     "services",
-    "docRCCM",
-    "docContribuable",
-    "companyName",
-    "companyLogo"
+    "docCNI",
   ],
 
   prospector: [
@@ -69,6 +66,7 @@ export const ROLE_ALLOWED_FIELDS = {
     "country",
     "services",
     "docJust",
+    "docCNI",
   ],
 
   agency: [
