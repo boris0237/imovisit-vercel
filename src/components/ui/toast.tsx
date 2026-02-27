@@ -6,13 +6,13 @@ import { X, CheckCircle2, AlertCircle, Info, AlertTriangle } from 'lucide-react'
 interface FlexibleToastProps {
   isOpen: boolean;
   onClose?: () => void;
-  type?: 'success' | 'error' | 'info' | 'warning' | 'custom';
+  type?: 'success' | 'error' | 'info' | 'warning';
   position?: 'top-right' | 'top-left' | 'bottom-right' | 'bottom-left' | 'center' | 'top-center';
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
   isBlocking?: boolean; // Si true, l'utilisateur DOIT cliquer sur une action, il ne peut pas cliquer à côté
   hasBackdrop?: boolean; // Affiche un fond flouté/sombre
   autoCloseMs?: number; // Temps en ms avant fermeture automatique (0 = désactivé)
-  customIcon?: React.ReactNode;
+  customIcon?: 'success' | 'error' | 'info' | 'warning' ;
   children: React.ReactNode;
 }
 
@@ -32,6 +32,20 @@ const sizeClasses = {
   xl: 'max-w-2xl w-full p-10',
   full: 'w-screen h-screen flex flex-col justify-center items-center p-4', // Pour les écrans de validation complets
 };
+
+const typeClasses = {
+  success: 'border-green-300 bg-blue-80',
+  info: 'border-blue-300 bg-blue-80',
+  error: 'border-red-300 bg-red-80',
+  warning: 'border-yellow-300 bg-yellow-80',
+}
+
+const customIconClasses ={
+  success: 'CheckCircle2',
+  info: 'Info',
+  error: 'AlertCircle',
+  warning: 'AlertTriangle',
+}
 
 export default function FlexibleToast({
   isOpen,
@@ -77,7 +91,7 @@ export default function FlexibleToast({
 
       {/* Le Toast / Alerte */}
       <div 
-        className={`absolute pointer-events-auto bg-white shadow-2xl rounded-3xl border border-gray-100 transform transition-all animate-in fade-in zoom-in-95 ${positionClasses[position]} ${sizeClasses[size]} ${size === 'full' ? 'border-none shadow-none rounded-none bg-transparent' : ''}`}
+        className={`absolute pointer-events-auto bg-white shadow-2xl rounded-3xl border border-gray-100 transform transition-all animate-in fade-in zoom-in-95 ${positionClasses[position]} ${sizeClasses[size]} ${typeClasses[type]}  ${size === 'full' ? 'border-none shadow-none rounded-none bg-transparent' : ''}`}
       >
         {/* Bouton Fermer (Croix) si non bloquant */}
         {!isBlocking && onClose && size !== 'full' && (

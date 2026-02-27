@@ -33,13 +33,13 @@ import UpdateProfileForm from '@/forms/updateRegister';
 import { useEffect, useState } from "react";
 import { useAuth } from '@/contexts/AuthContext';
 import Modal from '@/components/ui/modal';
-import Step1GeneralInfo from "@/components/modal/steps/Step1GeneralInfo";
-import Step2Location from "@/components/modal/steps/Step2Location";
-import Step3Features from "@/components/modal/steps/Step3Features";
-import Step4Media from "@/components/modal/steps/Step4Media";
-import Step5Success from '@/components/modal/steps/Step5Success';
-import { useRouter } from 'next/navigation';
 import { PropertyFormData } from '@/types/index';
+import { useRouter } from 'next/dist/client/router';
+import Step5Success from '@/components/modal/steps/Step5Success';
+import Step4Media from '@/components/modal/steps/Step4Media';
+import Step3Features from '@/components/modal/steps/Step3Features';
+import Step2Location from '@/components/modal/steps/Step2Location';
+import Step1GeneralInfo from '@/components/modal/steps/Step1GeneralInfo';
 
 const stats = [
   { title: 'Biens total', value: '4', icon: Building2, color: 'bg-slate-100 text-slate-600' },
@@ -67,16 +67,6 @@ const offerLabels: Record<string, { label: string; className: string }> = {
 
 
 export default function Dashboard() {
-  const updateFormData = (values: Partial<PropertyFormData>) => {
-    setFormData((prev: any) => ({ ...prev, ...values }));
-  };
-  
-  const [formData, setFormData] = useState<PropertyFormData>({
-  type: "",
-  offerType: '',
-  title: "",
-  description: "",
-});
   const router = useRouter();
   const [step, setStep] = useState(1);
   const nextStep = () => setStep((s) => Math.min(s + 1, 5));
@@ -84,11 +74,6 @@ export default function Dashboard() {
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [showAddPropertyModal, setShowAddPropertyModal] = useState(false);
   const { user } = useAuth();
-  
-   const resetForm = () => {
-  setFormData(initialFormData);
-  setStep(1);
-  };
 
 
   useEffect(() => {
@@ -111,7 +96,7 @@ function onFinish() {
   setStep(1);
 }
  
-const initialFormData = {
+const initialFormData: PropertyFormData = {
   type: "",
   offerType: "",
   title: "",
@@ -123,6 +108,17 @@ const initialFormData = {
   price: undefined,
   visitFee: undefined,
   images: [],
+};
+
+const [formData, setFormData] = useState<PropertyFormData>(initialFormData);
+
+const updateFormData = (values: Partial<PropertyFormData>) => {
+  setFormData(prev => ({ ...prev, ...values }));
+};
+
+const resetForm = () => {
+  setFormData(initialFormData);
+  setStep(1);
 };
 
 
