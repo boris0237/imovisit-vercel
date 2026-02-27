@@ -181,11 +181,6 @@
  *                 limit:
  *                   type: integer
  */
-
-<<<<<<< HEAD
-=======
-
->>>>>>> dev
 import { prisma } from "@/services/db";
 import { NextRequest } from "next/server";
 import { apiResponse } from "@/lib/api-response";
