@@ -4,10 +4,11 @@ import React, { useRef, useState, ChangeEvent } from 'react';
 import { UploadCloud, X, FileText, FileImage, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import Toast from '@/components/ui/toast';
 import SuccessRegistrationAlert from '@/components/SuccessRegistrationAlert';
 import {useAuth} from '@/contexts/AuthContext'
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import Modal from '@/components/ui/modal';
+import Toast from '@/components/ui/toast';
 
 const HomeIcone = () => (
   <svg width="54" height="54" viewBox="0 0 54 54" fill="none" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink">
@@ -129,6 +130,8 @@ export default function UpdateRegister() {
   const [name, setName] = useState('');
   const [filesIdentity, setFilesIdentity] = useState<File[]>([]);
   const [showRegistrationSucces, setShowRegistrationSucces] = useState(false);
+  const [showError, setShowError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string>('');
   const {user} = useAuth();
   
 
@@ -228,7 +231,9 @@ export default function UpdateRegister() {
         console.log("Profil mis à jour avec succès:", result);
       }
       else {
-        throw new Error('l/erreur est :=> ', result.message || "Erreur lors de la mise à jour");
+        setErrorMessage(result.message || "Erreur lors de la mise à jour");
+        setShowError(true);
+        throw new Error('erreur: ' + (result.message || "Erreur lors de la mise à jour"));
       }
 
       return result;
@@ -453,7 +458,14 @@ export default function UpdateRegister() {
            userName={user?.name || ""}
            onContinue={() => window.location.href=('/dashboard/user')} // L'action du bouton
          />
-        </Toast>
+      </Toast>
+      
+     <Modal isOpen={showError} onClose={() => setShowError(false)}>
+       <Toast isOpen type='error' onClose={() => setShowError(false)}>
+         {errorMessage || "Erreur lors de la mise à jour"}
+       </Toast>
+     </Modal>
+
     <LoadingSpinner loading={!isLoading} fullScreen={true}/>
     </div>
   );
