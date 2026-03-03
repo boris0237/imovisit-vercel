@@ -154,7 +154,7 @@ model Favorite {
 }
 
 
-//AGENDA
+// AGENDA
 model AvailabilityRule {//dispo tels jours
   id             String   @id @default(auto()) @map("_id") @db.ObjectId
   ownerId        String   
@@ -234,4 +234,49 @@ enum WeekDay {
 enum ReservationVisitType {
   in_person
   remote
+}
+
+
+// GEOLOCALISATION
+model Country { // pays
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  code      String
+  isActive  Boolean  @default(true)
+
+  cities    City[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([name])
+  @@unique([code])
+}
+
+model City { // ville
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  countryId String   @db.ObjectId
+  country   Country  @relation(fields: [countryId], references: [id])
+
+  districts District[]
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([name, countryId]) // unique par pays
+}
+
+model District { // quartier
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  cityId    String   @db.ObjectId
+  city      City     @relation(fields: [cityId], references: [id])
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([name, cityId]) // unique par ville
 }
