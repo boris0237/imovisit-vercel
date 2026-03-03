@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link'
-import { Mail, Lock, Users, Phone, MapPin, Building2, ArrowRight } from 'lucide-react';
+import { Mail, Lock, Users, Phone, MapPin, Building2, ArrowRight, Store } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -22,7 +22,7 @@ import loginUserBackend from '@/app/login/page'
 
 
 export default function Register() {
-  const [accountType, setAccountType] = useState<'visitor' | 'owner'>('visitor');
+  const [accountType, setAccountType] = useState<'visitor' | 'owner' | 'prospector'>('visitor');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -327,7 +327,7 @@ const submitGoogle = () => {
             </CardHeader>
             <CardContent>
               {/* Account Type Selection */}
-              <div className="grid grid-cols-2 gap-4 mb-6">
+              <div className="grid grid-cols-3 gap-4 mb-6">
                 <button
                   type="button"
                   onClick={() => setAccountType('visitor')}
@@ -355,6 +355,20 @@ const submitGoogle = () => {
                     {dictionary?.signup?.proprietaire || "Propriétaire"}
                   </div>
                   <div className="text-xs text-gray-500 mt-1">{dictionary?.signup?.proprietaireBio || "Je publie mes biens"}</div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setAccountType('prospector')}
+                  className={`p-4 rounded-xl border-2 text-center transition-all ${accountType === 'prospector'
+                      ? 'border-imo-primary bg-imo-primary/5'
+                      : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                >
+                  <Store className={`w-8 h-8 mx-auto mb-2 ${accountType === 'prospector' ? 'text-imo-primary' : 'text-gray-400'}`} />
+                  <div className={`font-medium ${accountType === 'prospector' ? 'text-imo-primary' : 'text-gray-600'}`}>
+                    {dictionary?.signup?.prestataire || "Prestataire"}
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">{dictionary?.signup?.prestataireBio || "Je recherche un bien pour mes clients"}</div>
                 </button>
               </div>
 

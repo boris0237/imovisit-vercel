@@ -5,22 +5,31 @@ import { useRouter } from 'next/navigation';
 import { authService } from '@/services/authService';
 
 interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-  createdAt: string;
-  updatedAt: string;
-  avatar?: string | null;
-  phone?: string;
-  city?: string;
-  country?: string;
-  profession?: string;
-  age?: number;
-  typeCompte?: string;
-  verified?: boolean;
-  companyName?: string;
-  companyLogo?: string;
+  accountStatus: string
+  age: number
+  authProvider: string
+  avatar: string
+  city: string
+  companyLogo: string
+  companyName: string
+  country: string
+  createdAt: string
+  docCNI: string
+  docContribuable: string
+  docDiplome: string
+  docJust: string
+  docRCCM: string
+  email: string
+  id: string
+  isActive: boolean
+  name: string
+  phone: string
+  profession: string
+  role: string
+  services: string
+  typeCompte: string
+  updatedAt: string
+  verified: boolean
 }
 
 interface LoginCredentials {
@@ -59,11 +68,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const login = async (credentials: LoginCredentials) => {
     try {
       const userData = await authService.login(credentials);
-      
+
       localStorage.setItem('user', JSON.stringify(userData));
       setUser(userData);
-      
-      return userData; 
+
+      return userData;
     } catch (error) {
       throw error;
     }
