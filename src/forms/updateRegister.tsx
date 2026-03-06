@@ -9,6 +9,7 @@ import {useAuth} from '@/contexts/AuthContext'
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import Modal from '@/components/ui/modal';
 import Toast from '@/components/ui/toast';
+import { userService } from '@/services/userService';
 
 const HomeIcone = () => (
   <svg width="54" height="54" viewBox="0 0 54 54" fill="none" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink">
@@ -132,7 +133,7 @@ export default function UpdateRegister() {
   const [showRegistrationSucces, setShowRegistrationSucces] = useState(false);
   const [showError, setShowError] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
-  const {user} = useAuth();
+  const { user, refreshUser } = useAuth();
   
 
   const MAX_FILES = 3;
@@ -216,15 +217,10 @@ export default function UpdateRegister() {
         }
       });
 
-      const token = localStorage.getItem("token"); // récupère le JWT si utilisé
+      const response = await userService.updateProfile(formData);
 
-      const response = await fetch("/api/users/update-profile", {
-        method: "PATCH",
-        body: formData,
-        credentials: "include",
-      });
-
-      const result = await response.json();
+      const result = await response;
+      refreshUser(result.data);
       if (response.ok){
         setIsLoading(false);
         setShowRegistrationSucces(true);
@@ -249,9 +245,11 @@ export default function UpdateRegister() {
       // On prépare les données (ajoutez ici vos autres champs de formulaire)
       const dataToUpdate = {
         companyName: name,
-        role: selectedType,
+        // role: selectedType,
         companyLogo: logoFile,
       };
+
+      console.log("Données à mettre à jour:", dataToUpdate);
 
       await handleUpdateProfile(dataToUpdate);
       toast.success("Profil mis à jour !");

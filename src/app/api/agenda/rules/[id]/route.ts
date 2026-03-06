@@ -1,6 +1,6 @@
 /**
  * @swagger
- * /api/agenda/rule/{id}:
+ * /api/agenda/rules/{id}:
  *   get:
  *     tags:
  *       - Agenda

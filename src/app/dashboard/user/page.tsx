@@ -33,20 +33,32 @@ import UpdateProfileForm from '@/forms/updateRegister';
 import { useEffect, useState } from "react";
 import { useAuth } from '@/contexts/AuthContext';
 import Modal from '@/components/ui/modal';
-import { PropertyFormData } from '@/types/index';
-import { useRouter } from "next/navigation" 
-import Step5Success from '@/components/modal/steps/Step5Success';
-import Step4Media from '@/components/modal/steps/Step4Media';
-import Step3Features from '@/components/modal/steps/Step3Features';
-import Step2Location from '@/components/modal/steps/Step2Location';
+import LanguageDropdown from '@/components/LanguageDropdown';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useDictionary } from '@/hooks/useDictionary';
 import Step1GeneralInfo from '@/components/modal/steps/Step1GeneralInfo';
-import React, { createContext, useContext } from 'react';
+import Step2Location from '@/components/modal/steps/Step2Location';
+import Step3Features from '@/components/modal/steps/Step3Features';
+import Step4Media from '@/components/modal/steps/Step4Media';
+import Step5Success from '@/components/modal/steps/Step5Success';
+import type { PropertyFormData } from '@/types/index';
+
+export default function Dashboard() {
+
+  const { language, setLanguage } = useLanguage()
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [showAddPropertyModal, setShowAddPropertyModal] = useState(false);
+  const [step, setStep] = useState(1);
+  const {dictionary} = useDictionary();
+
+  const nextStep = () => setStep(prev => prev + 1);
+  const prevStep = () => setStep(prev => prev - 1);
 
 const stats = [
-  { title: 'Biens total', value: '4', icon: Building2, color: 'bg-slate-100 text-slate-600' },
-  { title: 'Biens à louer', value: '02', icon: KeyRound, color: 'bg-emerald-100 text-emerald-600' },
-  { title: 'Biens à vendre', value: '01', icon: Tag, color: 'bg-amber-100 text-amber-600' },
-  { title: 'Biens meublés', value: '01', icon: Sofa, color: 'bg-indigo-100 text-indigo-600' },
+  { title: dictionary.dashboard?.stats1 || "Total Properties", value: '4', icon: Building2, color: 'bg-slate-100 text-slate-600' },
+  { title: dictionary.dashboard?.stats2 || "Properties for Rent", value: '02', icon: KeyRound, color: 'bg-emerald-100 text-emerald-600' },
+  { title: dictionary.dashboard?.stats3 || "Properties for Sale", value: '01', icon: Tag, color: 'bg-amber-100 text-amber-600' },
+  { title: dictionary.dashboard?.stats4 || "Furnished Properties", value: '01', icon: Sofa, color: 'bg-indigo-100 text-indigo-600' },
 ];
 
 const typeLabels: Record<string, string> = {
@@ -65,16 +77,7 @@ const offerLabels: Record<string, { label: string; className: string }> = {
   sale: { label: 'A vendre', className: 'bg-amber-100 text-amber-700' },
   furnished: { label: 'Meublé', className: 'bg-emerald-100 text-emerald-700' },
 };
-
-
-
-export default function Dashboard() {
-  const router = useRouter();
-  const [step, setStep] = useState(1);
-  const nextStep = () => setStep((s) => Math.min(s + 1, 5));
-  const prevStep = () => setStep((s) => Math.max(s - 1, 1));
-  const [showUpdateModal, setShowUpdateModal] = useState(false);
-  const [showAddPropertyModal, setShowAddPropertyModal] = useState(false);
+  // Supposons que 'user' vient de votre contexte d'authentification ou d'un fetch
   const { user } = useAuth();
 
   useEffect(() => {
@@ -131,20 +134,24 @@ const resetForm = () => {
       <header className="bg-slate-50 border-b border-slate-200">
         <div className="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-semibold text-slate-900">Mes biens immobiliers</h1>
+            <h1 className="text-2xl font-semibold text-slate-900">{dictionary.dashboard?.title1 || "Mes biens immobiliers"}</h1>
             <p className="text-sm text-slate-500">
-              Gérez vos annonces, suivez les performances et planifiez vos visites
+              {dictionary.dashboard?.subTitle1 || "Gérez vos annonces, suivez les performances et planifiez vos visites"}
             </p>
           </div>
-      
-            <Button 
+          <div className='flex flex-row items-center space-x-8'>
+            <Button
                 onClick={() => setShowAddPropertyModal(true)} 
                 className="bg-slate-900 hover:bg-slate-800 gap-2">
                 <Plus className="w-4 h-4" />
                 Ajouter un bien
             </Button>
-          
-        </div>
+            <LanguageDropdown
+             currentLanguage={language}
+             onLanguageChange={setLanguage}
+            />
+          </div>
+        </div>  
       </header>
 
       <div className="flex-1 overflow-auto">
@@ -166,7 +173,7 @@ const resetForm = () => {
           </div>
 
           <div>
-            <h2 className="text-sm font-semibold text-slate-800 mb-3">Vue d'ensemble</h2>
+            <h2 className="text-sm font-semibold text-slate-800 mb-3">{ dictionary.dashboard?.title2 || "Vue d'ensemble"}</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Card className="border-slate-200">
                 <CardContent className="p-5 flex items-center gap-4">
@@ -174,7 +181,7 @@ const resetForm = () => {
                     <Eye className="w-5 h-5" />
                   </div>
                   <div>
-                    <p className="text-xs text-slate-500">Vues totales</p>
+                    <p className="text-xs text-slate-500">{dictionary.dashboard?.stats5 ||"Vues totales"}</p>
                     <p className="text-lg font-semibold text-slate-900">469</p>
                   </div>
                 </CardContent>
@@ -185,7 +192,7 @@ const resetForm = () => {
                     <Heart className="w-5 h-5" />
                   </div>
                   <div>
-                    <p className="text-xs text-slate-500">Favoris reçus</p>
+                    <p className="text-xs text-slate-500">{dictionary.dashboard?.stats6 ||"Favoris reçus"}</p>
                     <p className="text-lg font-semibold text-slate-900">44</p>
                   </div>
                 </CardContent>
@@ -197,31 +204,31 @@ const resetForm = () => {
             <div className="flex-1 relative">
               <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <Input
-                placeholder="Rechercher un bien..."
+                placeholder={dictionary.dashboard?.search || "Rechercher un bien..."}
                 className="pl-9 bg-white border-slate-200"
               />
             </div>
             <div className="flex gap-3">
               <Select>
                 <SelectTrigger className="w-44 bg-white border-slate-200">
-                  <SelectValue placeholder="Tous les types" />
+                  <SelectValue placeholder={dictionary.dashboard?.type1 || "Tous les types"} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tous les types</SelectItem>
-                  <SelectItem value="apartment">Appartement</SelectItem>
-                  <SelectItem value="villa">Villa</SelectItem>
-                  <SelectItem value="studio">Studio</SelectItem>
-                  <SelectItem value="office">Bureau</SelectItem>
+                  <SelectItem value="all">{dictionary.dashboard?.type1 || "Tous les types"}</SelectItem>
+                  <SelectItem value="apartment">{dictionary.dashboard?.type2 || "Appartement"}</SelectItem>
+                  <SelectItem value="villa">{dictionary.dashboard?.type3 || "Villa"}</SelectItem>
+                  <SelectItem value="studio">{dictionary.dashboard?.type4 || "Studio"}</SelectItem>
+                  <SelectItem value="office">{dictionary.dashboard?.type5 || "Bureau"}</SelectItem>
                 </SelectContent>
               </Select>
               <Select>
                 <SelectTrigger className="w-44 bg-white border-slate-200">
-                  <SelectValue placeholder="Tous les statuts" />
+                  <SelectValue placeholder={dictionary.dashboard?.status1 || "Tous les statuts"} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Tous les statuts</SelectItem>
-                  <SelectItem value="available">Disponible</SelectItem>
-                  <SelectItem value="unavailable">Indisponible</SelectItem>
+                  <SelectItem value="all">{dictionary.dashboard?.status1 || "Tous les statuts"}</SelectItem>
+                  <SelectItem value="available">{dictionary.dashboard?.status2 || "Disponible"}</SelectItem>
+                  <SelectItem value="unavailable">{dictionary.dashboard?.status3 || "Indisponible"}</SelectItem>
                 </SelectContent>
               </Select>
             </div>

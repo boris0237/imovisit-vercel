@@ -183,6 +183,8 @@ export default {
     submit: "Créer mon compte",
     loading: "Chargement...",
     haveAccount: "Vous avez déjà un compte ? ",
+    prestataire: "Prestataire",
+    prestataireBio: "Je recherche un bien pour mes clients",
     login: "Se connecter",
     rights: "Imovisit. Tous droits réservés.",
     canConnect: "Impossible de se connecter au serveur. Veuillez vérifier votre connexion internet.",
@@ -218,6 +220,29 @@ export default {
     errorGeneric: "Une erreur est survenue. Veuillez réessayer.",
     errorNetwork: "Erreur réseau, verifiez votre connexion internet.",
     success : "Connexion réussie, redirection..."
+  },
+
+  dashboard : {
+    title1: "Mes biens immobiliers",
+    subTitle1 : "Gérez vos annonces, suivez les performances et planifiez vos visites",
+    buttonAdd: "Ajouter un bien",
+    stats1 : "Biens Totaux",
+    stats2 : "Biens à louer",
+    stats3 : "Biens à vendre",
+    stats4 : "Biens à meublés",
+    title2 : "Vue d'ensemble",
+    stats5 : "Vues totales",
+    stats6 : "Favoris reçus",
+    search : "Rechercher un bien...",
+    type1 : "Tous les types",
+    type2 : "Appartemnet",
+    type3 : "Villa",
+    type4 : "Studio",
+    type5 : "Bureau",
+    type6 : "Terrain",
+    status1 : "Tous les status",
+    status2 : "Disponible",
+    status3 : "Indisponible",
   }
   
 } as const

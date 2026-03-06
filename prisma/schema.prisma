@@ -88,7 +88,7 @@ model Property {
   bathrooms         Int?          // Nombre de salles de bain 
   images            String[]      
   amenities         Amenity[]     // Enum ou type: piscine, ascenseur, parking...
-  visitType         VisitType     // Enum: in-person, remote, both
+  visitType         PropertyVisitType     // Enum: in-person, remote, both
   visitFee          Float?        // Frais éventuels pour la visite 
   isAvailable       Boolean       @default(true) 
   docTitreFoncier   String?      
@@ -130,7 +130,7 @@ enum OfferType {
   furnished
 }
 
-enum VisitType {
+enum PropertyVisitType {
   in_person
   remote
   both
@@ -145,8 +145,16 @@ enum Amenity {
   security
 }
 
+// FAVORIS
+model Favorite {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  propertyId String
+  userId     String
+  createdAt  DateTime @default(now())
+}
 
-//AGENDA
+
+// AGENDA
 model AvailabilityRule {//dispo tels jours
   id             String   @id @default(auto()) @map("_id") @db.ObjectId
   ownerId        String   
@@ -191,11 +199,15 @@ model Reservation { //exception tels jours
   date        DateTime
   startTime   String
   endTime     String
+  visitType ReservationVisitType @default(in_person)
+  visitContext String?
+
 
   status      ReservationStatus @default(pending)
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
 }
 
 enum ReservationStatus {
@@ -217,4 +229,54 @@ enum WeekDay {
   friday
   saturday
   sunday
+}
+
+enum ReservationVisitType {
+  in_person
+  remote
+}
+
+
+// GEOLOCALISATION
+model Country { // pays
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  code      String
+  isActive  Boolean  @default(true)
+
+  cities    City[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([name])
+  @@unique([code])
+}
+
+model City { // ville
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  countryId String   @db.ObjectId
+  country   Country  @relation(fields: [countryId], references: [id])
+
+  districts District[]
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([name, countryId]) // unique par pays
+}
+
+model District { // quartier
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  cityId    String   @db.ObjectId
+  city      City     @relation(fields: [cityId], references: [id])
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([name, cityId]) // unique par ville
 }
