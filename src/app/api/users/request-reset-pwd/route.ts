@@ -61,7 +61,7 @@ export async function POST(req: Request) {
     const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: "15m" });
 
     // Lien à envoyer
-    const resetLink = `${process.env.NEXT_PUBLIC_APP_URL}/users/reset-password?token=${token}`;
+    const resetLink = `${process.env.NEXT_PUBLIC_APP_URL}/resetpassword?token=${token}`;
     const htmlTemplate = `
           <!DOCTYPE html>
           <html lang="fr">

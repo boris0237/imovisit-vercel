@@ -1,4 +1,5 @@
 // src/services/userService.ts
+import { createFormData } from '@/utils/formData';
 import { fetchApi } from './apiConfig';
 
 /**
@@ -11,32 +12,26 @@ export const userService = {
    * @param updateData - Les données à mettre à jour (peut être un objet ou un FormData)
    */
   updateProfile: async (updateData: Record<string, any> | FormData) => {
-    let body: FormData | any;
 
-    // Si on passe un objet classique, on le convertit en FormData pour supporter les fichiers
-    if (!(updateData instanceof FormData)) {
-      body = new FormData();
-      Object.entries(updateData).forEach(([key, value]) => {
-        if (value !== null && value !== undefined) {
-          if (Array.isArray(value)) {
-            value.forEach((item) => body.append(key, item));
-          } else {
-            body.append(key, value);
-          }
-        }
-      });
-    } else {
-      body = updateData;
-    }
+    // Si c'est déjà un FormData, on le garde. 
+    // Sinon, on le confie à notre utilitaire intelligent.
+    const body = updateData instanceof FormData
+      ? updateData
+      : createFormData(updateData);
+
+    console.log("userService.ts:20 data sended by user service :");
+    body.forEach((value, key) => {
+      console.log(`${key}:`, value);
+    });
 
     const response = await fetchApi('/api/users/update-profile', {
       method: 'PATCH',
       body: body,
+      credentials: "include",
     });
 
-    return response; // Retourne { status, message, data: { user... } }
+    return response;
   },
-
   /**
    * Change le mot de passe de l'utilisateur connecté
    */
@@ -45,7 +40,7 @@ export const userService = {
       method: 'POST',
       body: JSON.stringify(passwordData),
     });
-    
+
     return response;
   },
 
@@ -57,7 +52,7 @@ export const userService = {
       method: 'POST',
       body: JSON.stringify({ newEmail }),
     });
-    
+
     return response;
   },
 
@@ -69,7 +64,7 @@ export const userService = {
     const response = await fetchApi(`/api/users/confirm-email-change?token=${token}`, {
       method: 'GET',
     });
-    
+
     return response;
   },
 
@@ -77,11 +72,11 @@ export const userService = {
    * Demande la réinitialisation du mot de passe (mot de passe oublié)
    */
   forgotPassword: async (email: string) => {
-    const response = await fetchApi('/api/users/forgot-password', { // Assurez-vous que c'est la bonne route API
+    const response = await fetchApi('/api/users/request-reset-pwd', { // Assurez-vous que c'est la bonne route API
       method: 'POST',
       body: JSON.stringify({ email }),
     });
-    
+
     return response;
   },
 
@@ -93,7 +88,7 @@ export const userService = {
       method: 'POST',
       body: JSON.stringify(passwords),
     });
-    
+
     return response;
   }
 };

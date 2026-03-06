@@ -38,6 +38,7 @@ export async function fetchApi(endpoint: string, options: RequestInit = {}) {
   const response = await fetch(endpoint, {
     ...options,
     headers,
+    credentials: "include",
   });
 
   // 4. Parser la réponse en JSON

@@ -42,6 +42,7 @@ export const ROLE_ALLOWED_FIELDS = {
   property_manager: [
     "name",
     "age",
+    "companyLogo",
     "phone",
     "avatar",
     "city",
