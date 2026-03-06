@@ -63,6 +63,8 @@ export default {
     errorEmailRequired: "Email is required",
     errorPasswordRequired: "Password is required",
     errorEmailInvalid: "Invalid email format",
+    prestataire: "Prospector",
+    prestataireBio: "I am looking for a property for my clients",
     errorPasswordLength: "Password must be at least 8 characters long",
     errorGeneric: "An error occurred. Please try again.",
     errorEmailAlreadyExists: "This email is already in use",
@@ -221,5 +223,28 @@ export default {
     errorGeneric: "An error occurred. Please try again.",
     errorNetwork: "Network error, please check your internet connection.",
     success : "Logged in successfully",
-  }
+  },
+
+  dashboard: {
+    title1: "My Properties",
+    subTitle1: "Manage your listings, track performance and schedule visits",
+    buttonAdd: "Add Property",
+    stats1: "Total Properties",
+    stats2: "Properties for Rent",
+    stats3: "Properties for Sale",
+    stats4: "Furnished Properties",
+    title2: "Overview",
+    stats5: "Total Views",
+    stats6: "Favorites Received",
+    search: "Search Property...",
+    type1: "All Types",
+    type2: "Apartment",
+    type3: "Villa",
+    type4: "Studio",
+    type5: "Office",
+    type6: "Land",
+    status1 : "All status",
+    status2 : "Available",
+    status3 : "Unavailable",
+}
 } as const
