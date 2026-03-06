@@ -30,7 +30,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { mockProperties } from '@/data/mock';
-import UpdateProfileForm from '@/forms/updateRegister';
+import UpdateRegisterForm from '@/forms/updateRegister';
 import { useEffect, useState } from "react";
 import { useAuth } from '@/contexts/AuthContext';
 import Modal from '@/components/ui/modal';
@@ -41,7 +41,7 @@ import { useDictionary } from '@/hooks/useDictionary';
 export default function Dashboard() {
 
   const { language, setLanguage } = useLanguage()
-  const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [showUpdateModal, setShowUpdateModal] = useState(true);
   const {dictionary} = useDictionary();
 
 const stats = [
@@ -68,22 +68,23 @@ const offerLabels: Record<string, { label: string; className: string }> = {
   furnished: { label: 'Meublé', className: 'bg-emerald-100 text-emerald-700' },
 };
   // Supposons que 'user' vient de votre contexte d'authentification ou d'un fetch
-  const { user } = useAuth();
+    const { user } = useAuth();
 
   useEffect(() => {
     if (user) {
+      console.log('user>', user);
       const createdAt = new Date(user.createdAt).getTime();
       const updatedAt = new Date(user.updatedAt).getTime();
       console.log(user)
 
       // Si updatedAt est égal à createdAt, le profil n'a jamais été mis à jour
       // On ajoute une marge de 1000ms car parfois la DB enregistre avec un micro-décalage
-      if (user.role = 'owner') {
-        setShowUpdateModal(true);
+      if (user) {
+        setShowUpdateModal(!showUpdateModal);
         console.log('role', user.role)
       }
     }
-  }, [user]);
+  }, []);
   
   return (
     <>
@@ -285,7 +286,7 @@ const offerLabels: Record<string, { label: string; className: string }> = {
         showBlur={true} 
         closeOnClickOutside={false} 
       >
-        <UpdateProfileForm /> 
+        <UpdateRegisterForm /> 
       </Modal>
       </div>
     </>

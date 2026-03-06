@@ -6,6 +6,7 @@ import { Mail, ArrowLeft, Loader2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { userService } from "@/services/userService";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
+import { useDictionary } from "@/hooks/useDictionary";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");  
@@ -13,12 +14,13 @@ export default function ForgotPasswordPage() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const {dictionary} = useDictionary();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!email) {
-      toast.error("Veuillez entrer votre adresse e-mail.");
+      setError(dictionary.forgotPassword?.errorEmailRequired || "Veuillez entrer votre adresse e-mail.");
       return;
     }
 
@@ -27,14 +29,14 @@ export default function ForgotPasswordPage() {
       // Appel à votre service
       const result = await userService.forgotPassword(email);
       if (result.statut === 200){
-        setError(result.message || "Une erreur est survenue lors de l'envoi.");
+        setError(dictionary.forgotPassword?.errorMessage || "Une erreur est survenue lors de l'envoi.");
       }
        else {
-        setSuccessMessage("Un e-mail de réinitialisation a été envoyé à votre adresse.");
+        setSuccessMessage(dictionary.forgotPassword?.successMessage || "Un e-mail de réinitialisation a été envoyé à votre adresse.");
         setIsSubmitted(true);
       }
     } catch (error: any) {
-      setError(error.message);
+      setError(dictionary.forgotPassword?.errorMessage || "Une erreur est survenue lors de l'envoi.");
     } finally {
       setIsLoading(false);
     }
@@ -50,7 +52,7 @@ export default function ForgotPasswordPage() {
           className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-[#1a2b4b] transition-colors"
         >
           <ArrowLeft size={16} className="mr-2" />
-          Retour à la connexion
+          { dictionary.forgotPassword?.back || "Retour à la connexion" }
         </Link>
       </div>
 
@@ -58,10 +60,10 @@ export default function ForgotPasswordPage() {
         
         {/* En-tête */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-extrabold mb-3">Mot de passe oublié ?</h1>
+          <h1 className="text-3xl font-extrabold mb-3">{ dictionary.forgotPassword?.title || "Mot de passe oublié ?"}</h1>
           {!isSubmitted && (
             <p className="text-gray-500 text-sm leading-relaxed">
-              Saisissez l'adresse e-mail associée à votre compte imoVisite et nous vous enverrons un lien pour réinitialiser votre mot de passe.
+              { dictionary.forgotPassword?.subtitle || "Saisissez l'adresse e-mail associée à votre compte ImoVisite et nous vous enverrons un lien pour réinitialiser votre mot de passe."}
             </p>
           )}
         </div>
@@ -83,7 +85,7 @@ export default function ForgotPasswordPage() {
                   </div>
                 )}
               <label htmlFor="email" className="text-sm font-bold text-gray-700">
-                Adresse e-mail
+                { dictionary.forgotPassword?.email || "Adresse e-mail"}
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -110,10 +112,10 @@ export default function ForgotPasswordPage() {
               {isLoading ? (
                 <>
                   <LoadingSpinner loading={!isLoading} fullScreen={false} />
-                  <p>Envoi en cours...</p>
+                  <p>{ dictionary.forgotPassword?.sending || "Envoi en cours..."}</p>
                 </>
               ) : (
-                "Envoyer le lien"
+                  <p>{ dictionary.forgotPassword?.send || "Envoyer"}</p>
               )}
             </button>
           </form>
@@ -123,19 +125,19 @@ export default function ForgotPasswordPage() {
             <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mb-6">
               <CheckCircle2 size={40} className="text-green-500" />
             </div>
-            <h2 className="text-xl font-bold mb-2">Vérifiez votre boîte mail</h2>
+            <h2 className="text-xl font-bold mb-2">{ dictionary.forgotPassword?.verify || "Vérifiez votre boîte mail"}</h2>
             <p className="text-gray-500 text-sm leading-relaxed mb-8">
-              Nous avons envoyé un lien de réinitialisation à <br />
+              { dictionary.forgotPassword?.sendMessage || "Nous avons envoyé un lien de réinitialisation à "}<br />
               <span className="font-bold text-[#1a2b4b]">{email}</span>
             </p>
             
             <p className="text-xs text-gray-400 mb-6">
-              Vous n'avez rien reçu ? Vérifiez vos spams ou{" "}
+              { dictionary.forgotPassword?.notReceive || "Vous n'avez rien reçu ? Vérifiez vos spams ou"}{" "}
               <button 
                 onClick={() => setIsSubmitted(false)}
                 className="text-[#1a2b4b] font-bold hover:underline"
               >
-                réessayez
+                { dictionary.forgotPassword?.retry || "réessayez"}
               </button>
               .
             </p>
