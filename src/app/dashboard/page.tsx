@@ -26,6 +26,10 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import Modal from '@/components/ui/modal';
+import { useEffect, useState } from 'react';
+import UpdateProfileForm from '@/forms/updateRegister';
+import { useAuth } from '@/contexts/AuthContext';
 
 const performanceCards = [
   {
@@ -146,6 +150,24 @@ const chartCards = [
 ]
 
 export default function DashboardOverviewPage() {
+
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const { user } = useAuth();
+  
+    useEffect(() => {
+      if (user) {
+        const createdAt = new Date(user.createdAt).getTime();
+        const updatedAt = new Date(user.updatedAt).getTime();
+        console.log(user)
+  
+        // Si updatedAt est égal à createdAt, le profil n'a jamais été mis à jour
+        // On ajoute une marge de 1000ms car parfois la DB enregistre avec un micro-décalage
+        if (user.role == 'owner' && createdAt==updatedAt) {
+          setShowUpdateModal(true);
+          console.log('role', user.role)
+        }
+      }
+    }, [user]);
   return (
     <>
       <header className="bg-slate-50 border-b border-slate-200">
@@ -153,7 +175,7 @@ export default function DashboardOverviewPage() {
           <div>
             <h1 className="text-2xl font-semibold text-slate-900">Tableau de bord</h1>
             <p className="text-sm text-slate-500 mt-2">
-              Bienvenue Yves ZOGO, voici l&apos;état de votre activité immobilière en temps réel.
+              Bienvenue {user?.name || ''} voici l&apos;état de votre activité immobilière en temps réel.
             </p>
           </div>
           <Button className="bg-slate-900 hover:bg-slate-800 gap-2">
@@ -337,6 +359,19 @@ export default function DashboardOverviewPage() {
           </div>
         </div>
       </div>
+
+      <Modal 
+        isOpen={showUpdateModal} 
+        onClose={() => setShowUpdateModal(false)}
+        title="Finalisez votre profil pour une meilleure expérience"
+        size="full"  
+        rounded={false}     
+        locked={false}
+        showBlur={true} 
+        closeOnClickOutside={false}         
+      >
+        <UpdateProfileForm onClose={() => setShowUpdateModal(false)} /> 
+      </Modal>
     </>
   )
 }

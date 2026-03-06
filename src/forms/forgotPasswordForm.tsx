@@ -41,13 +41,14 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-4 font-sans text-[#1a2b4b]">
+       <div className="min-h-screen bg-gradient-to-br from-imo-primary via-imo-secondary to-imo-primary flex flex-col items-center justify-center p-4">
+
       
       {/* Bouton Retour */}
       <div className="w-full max-w-md mb-4">
         <Link 
           href="/login" 
-          className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-[#1a2b4b] transition-colors"
+          className="inline-flex items-center text-sm font-medium text-white transition-colors"
         >
           <ArrowLeft size={16} className="mr-2" />
           Retour à la connexion
