@@ -289,6 +289,7 @@ export default function UpdateRegister(props: { onClose?: () => void }) {
                 }`}
             >
               <div className={`mb-3 p-3 rounded-lg transition-transform group-hover:scale-110`}>
+                {/* @ts-ignore */}
                 <Icon size={32} className={isSelected ? 'text-[#2b3a67]' : 'text-gray-400'} />
               </div>
               <span className={`text-sm font-bold ${isSelected ? 'text-[#1a2b4b]' : 'text-gray-600'}`}>

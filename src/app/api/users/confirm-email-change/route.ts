@@ -1,63 +1,8 @@
-/**
- * @swagger
- * /api/users/confirm-email-change:
- *   get:
- *     tags:
- *       - Authentification
- *     summary: Confirme le changement d'email
- *     description: |
- *       Vérifie le token envoyé par mail pour confirmer le nouvel email d'un utilisateur.
- *       Le token contient l'id de l'utilisateur et le nouvel email.
- *     parameters:
- *       - in: query
- *         name: token
- *         required: true
- *         description: Token JWT envoyé par mail pour valider le nouvel email
- *         schema:
- *           type: string
- *           example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
- *     responses:
- *       200:
- *         description: Email mis à jour avec succès
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: number
- *                   example: 200
- *                 message:
- *                   type: string
- *                   example: Email mis à jour avec succès !
- *                 data:
- *                   type: object
- *                   properties:
- *                     email:
- *                       type: string
- *                       example: nouveauemail@example.com
- *       400:
- *         description: Token manquant ou invalide / expiré
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 status:
- *                   type: number
- *                   example: 400
- *                 message:
- *                   type: string
- *                   example: Lien invalide ou expiré
- *                 error:
- *                   type: string
- *                   example: jwt expired
- */
-
-
+export const dynamic = "force-dynamic";
 
 import { prisma } from "@/services/db";
 import { apiResponse } from "@/lib/api-response";
+import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.JWT_SECRET!;
 

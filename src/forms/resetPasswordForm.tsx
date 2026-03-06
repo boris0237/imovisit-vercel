@@ -9,7 +9,7 @@ import { userService } from "@/services/userService";
 export default function ResetPasswordPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const token = searchParams.get("token"); // Récupération du token dans l'URL
+  const token = searchParams?.get("token"); // Récupération du token dans l'URL
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");

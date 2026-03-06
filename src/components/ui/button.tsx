@@ -57,7 +57,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       >
         {loading ? (
           <div className="absolute inset-0 flex items-center justify-center">
-            <LoadingSpinner time={loadingTime} fullScreen={loadingFull}/>
+            <LoadingSpinner loading={loading} time={loadingTime} fullScreen={loadingFull}/>
           </div>
         ):children}
       </Comp>

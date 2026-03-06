@@ -1,16 +1,20 @@
 "use client"
 
-import { Footer } from '@/components/Footer';
-import { Header } from '@/components/Header';
+import { Suspense } from "react"
+import { Footer } from '@/components/Footer'
+import { Header } from '@/components/Header'
 import ResetPass from '@/forms/resetPasswordForm'
 
 export default function ResetPasswordPage() {
   return (
+    <div>
+      <Header />
 
-        <div>
-          <Header />
-              <ResetPass />
-          <Footer />
-      </div>
-  );
+      <Suspense fallback={<div>Chargement...</div>}>
+        <ResetPass />
+      </Suspense>
+
+      <Footer />
+    </div>
+  )
 }
