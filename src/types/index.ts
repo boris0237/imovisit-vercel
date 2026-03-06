@@ -7,6 +7,7 @@ export interface Property {
   type: 'apartment' | 'house' | 'studio' | 'villa' | 'duplex' | 'land' | 'office' | 'shop' | 'building';
   offerType: 'rent' | 'sale' | 'furnished';
   city: string;
+  docTitreFoncier?: String,
   neighborhood: string;
   address: string;
   surface: number;

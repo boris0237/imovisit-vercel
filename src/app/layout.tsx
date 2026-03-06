@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import { LanguageProvider } from '@/contexts/LanguageContext'
 import "./globals.css";
 import "./App.css";
+import { AuthProvider } from "@/contexts/AuthContext";
 
 
 export const metadata: Metadata = {
@@ -15,12 +17,16 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: {
+  children: React.ReactNode
+}) {
   return (
     <html lang="fr">
-      <body className="antialiased">{children}</body>
+      <AuthProvider>
+      <LanguageProvider>
+          <body className="antialiased">{children}</body>
+      </LanguageProvider>
+      </AuthProvider>
     </html>
-  );
+  )
 }

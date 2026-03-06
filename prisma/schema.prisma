@@ -1,0 +1,220 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL") //error est du au update de version de prima
+}
+
+// USER
+model User {
+  id          String     @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  age         Int?
+  typeCompte  TypeCompte @default(classique)
+  email       String     @unique
+  password    String?
+  phone       String?
+  avatar      String?
+  companyName String?
+  companyLogo String?
+
+  role UserRole @default(visitor)
+
+  accountStatus AccountStatus @default(unverified)
+
+  city       String?
+  country    String?
+  profession String?
+  services   String?
+
+  docJust         String?
+  docCNI          String?
+  docDiplome      String?
+  docContribuable String?
+  docRCCM         String?
+
+  authProvider AuthProvider @default(local)
+  isActive     Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+  updatedAt DateTime @updatedAt @default(now())
+}
+enum UserRole {
+  visitor
+  owner
+  property_manager
+  prospector
+  free_agent
+  agency
+  agent
+  admin
+}
+
+enum AuthProvider {
+  local
+  google
+}
+
+enum TypeCompte {
+  classique
+  premium
+}
+
+enum AccountStatus {
+  unverified
+  pending
+  verified
+  suspended
+  verifiedPremium
+}
+
+
+// PROPERTY
+model Property {
+  id                String        @id @default(auto()) @map("_id") @db.ObjectId 
+  title             String        
+  description       String        
+  price             Float         
+  priceType         PriceType     // Enum: vente mensuelle, quotidienne
+  type              PropertyType  // Enum: apartment, house, studio, villa, etc.
+  offerType         OfferType     // Enum: location, vente , meublé
+  city              String        
+  neighborhood      String        // Quartier spécifique
+  address           String        // Adresse exacte
+  surface           Float?       
+  rooms             Int           // Nombre total de pièces
+  bedrooms          Int?          // Nombre de chambres 
+  bathrooms         Int?          // Nombre de salles de bain 
+  images            String[]      
+  amenities         Amenity[]     // Enum ou type: piscine, ascenseur, parking...
+  visitType         VisitType     // Enum: in-person, remote, both
+  visitFee          Float?        // Frais éventuels pour la visite 
+  isAvailable       Boolean       @default(true) 
+  docTitreFoncier   String?      
+
+  userId            String        
+  userName          String        
+  userCompanyName   String?       
+  userCompanyLogo   String?       
+  userVerified      AccountStatus       
+  userAvatar        String?       
+
+  views             Int           @default(0)
+  visitsCount       Int           @default(0) 
+  createdAt         DateTime      @default(now())
+  updatedAt DateTime @updatedAt @default(now())
+}
+
+enum PriceType {
+  monthly
+  daily
+  sale
+}
+
+enum PropertyType {
+  apartment
+  house
+  studio
+  villa
+  duplex
+  land
+  office
+  shop
+  building
+}
+
+enum OfferType {
+  rent
+  sale
+  furnished
+}
+
+enum VisitType {
+  in_person
+  remote
+  both
+}
+
+enum Amenity {
+  pool
+  elevator
+  parking
+  gym
+  garden
+  security
+}
+
+
+//AGENDA
+model AvailabilityRule {//dispo tels jours
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  ownerId        String   
+  propertyId     String
+
+  recurrenceType RecurrenceType
+  dayOfWeek      WeekDay?
+  dayOfMonth     Int?
+
+  startTime      String   
+  endTime        String   
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model AvailabilityException { //pas dispo tels jours
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  ownerId     String
+  propertyId  String
+
+  date        DateTime?   // jour précis
+  dayOfWeek   WeekDay?
+  dayOfMonth  Int?
+
+  startTime   String?
+  endTime     String?
+
+  reason      String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Reservation { //exception tels jours
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+
+  propertyId  String
+  ownerId     String
+  clientId    String   
+
+  date        DateTime
+  startTime   String
+  endTime     String
+
+  status      ReservationStatus @default(pending)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum ReservationStatus {
+  pending
+  confirmed
+  cancelled
+}
+
+enum RecurrenceType {
+  weekly
+  monthly
+}
+
+enum WeekDay {
+  monday
+  tuesday
+  wednesday
+  thursday
+  friday
+  saturday
+  sunday
+}

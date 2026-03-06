@@ -6,8 +6,12 @@ import { Search, MapPin, Home } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { cities, propertyTypes, offerTypes } from '@/data/mock'
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useDictionary } from '@/hooks/useDictionary'
+
 
 export function Hero() {
+  const { dictionary } = useDictionary()
   const router = useRouter()
   const [searchParams, setSearchParams] = useState({
     city: '',
@@ -24,10 +28,10 @@ export function Hero() {
   }
 
   const stats = [
-    { value: '10,000+', label: 'Biens disponibles' },
-    { value: '5,000+', label: 'Utilisateurs actifs' },
-    { value: '2,000+', label: 'Visites réalisées' },
-    { value: '98%', label: 'Satisfaction client' },
+    { value: '10,000+', label: dictionary.hero?.lab1 || 'Biens disponibles' },
+    { value: '5,000+', label: dictionary.hero?.lab2 || 'Utilisateurs actifs' },
+    { value: '2,000+', label: dictionary.hero?.lab3 || 'Visites réalisées' },
+    { value: '98%', label: dictionary.hero?.lab4 || 'Satisfaction client' },
   ]
 
   return (
@@ -43,20 +47,19 @@ export function Hero() {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 mb-6">
             <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-            <span className="text-white/90 text-sm">Plateforme #1 des visites immobilières</span>
+            <span className="text-white/90 text-sm">{dictionary.hero?.badge || 'Plateforme #1 des visites immobilières'}</span>
           </div>
 
           {/* Title */}
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
-            Trouvez votre <span className="text-imo-highlight">bien idéal</span>
+           {dictionary.hero?.title1 || 'Trouver le'} <span className="text-imo-highlight">{dictionary.hero?.title2 || 'bien'} </span> {dictionary.hero?.title3 || 'que'}
             <br />
-            en toute confiance
+            {dictionary.hero?.title4 || 'vous souhaitez visiter '} 
           </h1>
 
           {/* Description */}
           <p className="text-lg md:text-xl text-white/80 mb-10 max-w-2xl mx-auto">
-            Découvrez des milliers de biens immobiliers vérifiés au Cameroun. 
-            Réservez vos visites en ligne et trouvez le logement de vos rêves.
+           {dictionary.hero?.description1 || 'Visitez de milliers de biens immobiliers en location, en'}  <br /> {dictionary.hero?.description2 || 'vente ou meublés à distance ou en présentiel'}
           </p>
 
           {/* Search Box */}
@@ -72,7 +75,7 @@ export function Hero() {
                   }
                 >
                   <SelectTrigger className="pl-10 h-12">
-                    <SelectValue placeholder="Ville" />
+                    <SelectValue placeholder={dictionary.hero?.town || "Ville"} />
                   </SelectTrigger>
                   <SelectContent>
                     {cities.map((city) => (
@@ -94,7 +97,7 @@ export function Hero() {
                   }
                 >
                   <SelectTrigger className="pl-10 h-12">
-                    <SelectValue placeholder="Type de bien" />
+                    <SelectValue placeholder={dictionary.hero?.propertyTypes || "Type de bien"} />
                   </SelectTrigger>
                   <SelectContent>
                     {propertyTypes.map((type) => (
@@ -116,7 +119,7 @@ export function Hero() {
                   }
                 >
                   <SelectTrigger className="pl-10 h-12">
-                    <SelectValue placeholder="Type d'offre" />
+                    <SelectValue placeholder={dictionary.hero?.offerTypes || "Type d'offre"} /> 
                   </SelectTrigger>
                   <SelectContent>
                     {offerTypes.map((type) => (
@@ -134,15 +137,23 @@ export function Hero() {
                 onClick={handleSearch}
               >
                 <Search className="w-5 h-5 mr-2" />
-                Rechercher
+                {dictionary.hero?.search || 'Rechercher'}
+                
               </Button>
             </div>
           </div>
 
           {/* Quick Links */}
           <div className="flex flex-wrap justify-center gap-3 mt-6">
-            <span className="text-white/60 text-sm">Populaires :</span>
-            {['Appartement Yaoundé', 'Villa Douala', 'Studio meublé', 'Terrain'].map((tag) => (
+            <span className="text-white/60 text-sm">
+              {dictionary.hero?.popular || "Populaires :"}
+            </span>
+            {[
+              dictionary.hero?.tag1 || "Appartement Yaoundé",
+              dictionary.hero?.tag2 || "Villa Douala",
+              dictionary.hero?.tag3 || "Studio meublé",
+              dictionary.hero?.tag4 || "Terrain"
+            ].map((tag) => (
               <button
                 key={tag}
                 className="text-white/80 text-sm hover:text-white underline underline-offset-2 transition-colors"

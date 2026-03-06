@@ -1,273 +1,293 @@
 "use client"
 
-import { useState } from 'react';
 import Link from 'next/link'
-import { Building2, Calendar, Users, DollarSign, Eye, Plus, Home, MessageSquare, Settings, LogOut, ChevronRight, Bell } from 'lucide-react';
+import {
+  Building2,
+  Calendar,
+  Plus,
+  MapPin,
+  BedDouble,
+  Bath,
+  Ruler,
+  Search,
+  KeyRound,
+  Tag,
+  Sofa,
+  Eye,
+  Heart,
+  Edit,
+  Trash,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { mockProperties, mockVisits } from '@/data/mock';
-
-const sidebarItems = [
-  { icon: Home, label: 'Tableau de bord', href: '/dashboard', active: true },
-  { icon: Building2, label: 'Mes biens', href: '/dashboard/properties', active: false },
-  { icon: Calendar, label: 'Calendrier', href: '/dashboard/calendar', active: false },
-  { icon: Users, label: 'Locataires', href: '/dashboard/tenants', active: false },
-  { icon: DollarSign, label: 'Paiements', href: '/dashboard/payments', active: false },
-  { icon: MessageSquare, label: 'Messages', href: '/dashboard/messages', active: false, badge: 3 },
-  { icon: Settings, label: 'Paramètres', href: '/dashboard/settings', active: false },
-];
-
-const stats = [
-  { title: 'Biens publiés', value: '8', icon: Building2, change: '+2 ce mois', color: 'bg-blue-500' },
-  { title: 'Visites ce mois', value: '24', icon: Calendar, change: '+12%', color: 'bg-green-500' },
-  { title: 'Vues totales', value: '1,234', icon: Eye, change: '+28%', color: 'bg-purple-500' },
-  { title: 'Revenus', value: '2.8M FCFA', icon: DollarSign, change: '+15%', color: 'bg-orange-500' },
-];
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { mockProperties } from '@/data/mock';
+import UpdateProfileForm from '@/forms/updateRegister';
+import { useEffect, useState } from "react";
+import { useAuth } from '@/contexts/AuthContext';
+import Modal from '@/components/ui/modal';
+import LanguageDropdown from '@/components/LanguageDropdown';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useDictionary } from '@/hooks/useDictionary';
 
 export default function Dashboard() {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
 
+  const { language, setLanguage } = useLanguage()
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const {dictionary} = useDictionary();
+
+const stats = [
+  { title: dictionary.dashboard?.stats1 || "Total Properties", value: '4', icon: Building2, color: 'bg-slate-100 text-slate-600' },
+  { title: dictionary.dashboard?.stats2 || "Properties for Rent", value: '02', icon: KeyRound, color: 'bg-emerald-100 text-emerald-600' },
+  { title: dictionary.dashboard?.stats3 || "Properties for Sale", value: '01', icon: Tag, color: 'bg-amber-100 text-amber-600' },
+  { title: dictionary.dashboard?.stats4 || "Furnished Properties", value: '01', icon: Sofa, color: 'bg-indigo-100 text-indigo-600' },
+];
+
+const typeLabels: Record<string, string> = {
+  apartment: 'Appartement',
+  villa: 'Villa',
+  studio: 'Studio',
+  duplex: 'Duplex',
+  office: 'Bureau',
+  land: 'Terrain',
+  house: 'Maison',
+  shop: 'Boutique',
+};
+
+const offerLabels: Record<string, { label: string; className: string }> = {
+  rent: { label: 'Location', className: 'bg-blue-100 text-blue-700' },
+  sale: { label: 'A vendre', className: 'bg-amber-100 text-amber-700' },
+  furnished: { label: 'Meublé', className: 'bg-emerald-100 text-emerald-700' },
+};
+  // Supposons que 'user' vient de votre contexte d'authentification ou d'un fetch
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (user) {
+      const createdAt = new Date(user.createdAt).getTime();
+      const updatedAt = new Date(user.updatedAt).getTime();
+      console.log(user)
+
+      // Si updatedAt est égal à createdAt, le profil n'a jamais été mis à jour
+      // On ajoute une marge de 1000ms car parfois la DB enregistre avec un micro-décalage
+      if (user.role = 'owner') {
+        setShowUpdateModal(true);
+        console.log('role', user.role)
+      }
+    }
+  }, [user]);
+  
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <aside
-        className={`bg-white border-r border-gray-200 flex-shrink-0 transition-all duration-300 ${
-          sidebarOpen ? 'w-64' : 'w-20'
-        }`}
-      >
-        <div className="h-full flex flex-col">
-          {/* Logo */}
-          <div className="h-16 flex items-center justify-center border-b border-gray-200">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-imo-primary rounded-lg flex items-center justify-center">
-                <Building2 className="w-6 h-6 text-white" />
-              </div>
-              {sidebarOpen && <span className="text-xl font-bold text-imo-primary">Imovisit</span>}
-            </Link>
+    <>
+      <header className="bg-slate-50 border-b border-slate-200">
+        <div className="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold text-slate-900">{dictionary.dashboard?.title1 || "Mes biens immobiliers"}</h1>
+            <p className="text-sm text-slate-500">
+              {dictionary.dashboard?.subTitle1 || "Gérez vos annonces, suivez les performances et planifiez vos visites"}
+            </p>
           </div>
-
-          {/* Navigation */}
-          <nav className="flex-1 py-4 px-3 space-y-1">
-            {sidebarItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
-                  item.active
-                    ? 'bg-imo-primary text-white'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                <item.icon className="w-5 h-5 flex-shrink-0" />
-                {sidebarOpen && (
-                  <>
-                    <span className="flex-1">{item.label}</span>
-                    {item.badge && (
-                      <Badge className="bg-red-500 text-white text-xs">{item.badge}</Badge>
-                    )}
-                  </>
-                )}
-              </Link>
-            ))}
-          </nav>
-
-          {/* User */}
-          <div className="p-4 border-t border-gray-200">
-            <div className="flex items-center gap-3">
-              <Avatar className="w-10 h-10">
-                <AvatarFallback className="bg-imo-primary text-white">JD</AvatarFallback>
-              </Avatar>
-              {sidebarOpen && (
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm truncate">Jean Dupont</p>
-                  <p className="text-xs text-gray-500 truncate">Propriétaire</p>
-                </div>
-              )}
-              <Button variant="ghost" size="icon" className="text-gray-400 hover:text-red-500">
-                <LogOut className="w-5 h-5" />
-              </Button>
-            </div>
+          <div className='flex flex-col-1 space-x-8'>
+            <LanguageDropdown
+             currentLanguage={language}
+             onLanguageChange={setLanguage}
+          />
+          <Link href="/dashboard/properties/new">
+            <Button className="bg-slate-900 hover:bg-slate-800 gap-2">
+              <Plus className="w-4 h-4" />
+              {dictionary.dashboard?.buttonAdd || "Ajouter un bien"}
+            </Button>
+          </Link>
           </div>
         </div>
-      </aside>
+      </header>
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col min-w-0">
-        {/* Header */}
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-            >
-              <ChevronRight className={`w-5 h-5 transition-transform ${sidebarOpen ? 'rotate-180' : ''}`} />
-            </Button>
-            <h1 className="text-xl font-semibold text-imo-primary">Tableau de bord</h1>
-          </div>
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
-            </Button>
-            <Link href="/dashboard/properties/new">
-              <Button className="bg-imo-primary hover:bg-imo-secondary gap-2">
-                <Plus className="w-4 h-4" />
-                Ajouter un bien
-              </Button>
-            </Link>
-          </div>
-        </header>
-
-        {/* Content */}
-        <div className="flex-1 overflow-auto p-6">
-          {/* Stats */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {stats.map((stat, index) => (
-              <Card key={index}>
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-sm text-gray-500 mb-1">{stat.title}</p>
-                      <p className="text-2xl font-bold text-imo-primary">{stat.value}</p>
-                      <p className="text-xs text-green-500 mt-1">{stat.change}</p>
-                    </div>
-                    <div className={`w-12 h-12 ${stat.color} rounded-lg flex items-center justify-center`}>
-                      <stat.icon className="w-6 h-6 text-white" />
-                    </div>
+      <div className="flex-1 overflow-auto">
+        <div className="max-w-6xl mx-auto px-6 py-8 space-y-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {stats.map((stat) => (
+              <Card key={stat.title} className="border-slate-200">
+                <CardContent className="p-5 flex items-center gap-4">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${stat.color}`}>
+                    <stat.icon className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500">{stat.title}</p>
+                    <p className="text-lg font-semibold text-slate-900">{stat.value}</p>
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Recent Properties */}
-            <Card className="lg:col-span-2">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Mes biens récents</CardTitle>
-                <Link href="/dashboard/properties">
-                  <Button variant="ghost" size="sm" className="gap-1">
-                    Voir tout
-                    <ChevronRight className="w-4 h-4" />
-                  </Button>
-                </Link>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {mockProperties.slice(0, 3).map((property) => (
-                    <div
-                      key={property.id}
-                      className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                    >
-                      <img
-                        src={property.images[0]}
-                        alt={property.title}
-                        className="w-20 h-20 rounded-lg object-cover"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-imo-primary truncate">{property.title}</h4>
-                        <p className="text-sm text-gray-500">{property.city}</p>
-                        <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
-                          <span>{property.price.toLocaleString()} F/mois</span>
-                          <span className="text-gray-300">|</span>
-                          <span>{property.views} vues</span>
-                          <span className="text-gray-300">|</span>
-                          <span>{property.visitsCount} visites</span>
-                        </div>
-                      </div>
-                      <Badge className={property.isAvailable ? 'bg-green-500' : 'bg-gray-400'}>
-                        {property.isAvailable ? 'Disponible' : 'Indisponible'}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Upcoming Visits */}
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Visites à venir</CardTitle>
-                <Link href="/dashboard/calendar">
-                  <Button variant="ghost" size="sm" className="gap-1">
-                    Voir tout
-                    <ChevronRight className="w-4 h-4" />
-                  </Button>
-                </Link>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {mockVisits.map((visit) => (
-                    <div key={visit.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                      <div className="w-10 h-10 bg-imo-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <Calendar className="w-5 h-5 text-imo-primary" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm truncate">{visit.propertyTitle}</p>
-                        <p className="text-xs text-gray-500">{visit.visitorName}</p>
-                        <div className="flex items-center gap-2 mt-1 text-xs text-gray-600">
-                          <span>{visit.date}</span>
-                          <span>à</span>
-                          <span>{visit.time}</span>
-                        </div>
-                      </div>
-                      <Badge
-                        className={
-                          visit.status === 'confirmed'
-                            ? 'bg-green-500'
-                            : visit.status === 'pending'
-                            ? 'bg-yellow-500'
-                            : 'bg-gray-400'
-                        }
-                      >
-                        {visit.status === 'confirmed'
-                          ? 'Confirmé'
-                          : visit.status === 'pending'
-                          ? 'En attente'
-                          : visit.status}
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Quick Actions */}
-          <div className="mt-8">
-            <h3 className="text-lg font-semibold text-imo-primary mb-4">Actions rapides</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <Link href="/dashboard/properties/new">
-                <Button variant="outline" className="w-full h-24 flex flex-col gap-2">
-                  <Plus className="w-6 h-6" />
-                  <span>Nouveau bien</span>
-                </Button>
-              </Link>
-              <Link href="/dashboard/calendar">
-                <Button variant="outline" className="w-full h-24 flex flex-col gap-2">
-                  <Calendar className="w-6 h-6" />
-                  <span>Gérer le calendrier</span>
-                </Button>
-              </Link>
-              <Link href="/dashboard/tenants">
-                <Button variant="outline" className="w-full h-24 flex flex-col gap-2">
-                  <Users className="w-6 h-6" />
-                  <span>Ajouter un locataire</span>
-                </Button>
-              </Link>
-              <Link href="/dashboard/payments">
-                <Button variant="outline" className="w-full h-24 flex flex-col gap-2">
-                  <DollarSign className="w-6 h-6" />
-                  <span>Voir les paiements</span>
-                </Button>
-              </Link>
+          <div>
+            <h2 className="text-sm font-semibold text-slate-800 mb-3">{ dictionary.dashboard?.title2 || "Vue d'ensemble"}</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card className="border-slate-200">
+                <CardContent className="p-5 flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                    <Eye className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500">{dictionary.dashboard?.stats5 ||"Vues totales"}</p>
+                    <p className="text-lg font-semibold text-slate-900">469</p>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="border-slate-200">
+                <CardContent className="p-5 flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-pink-100 text-pink-600 flex items-center justify-center">
+                    <Heart className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500">{dictionary.dashboard?.stats6 ||"Favoris reçus"}</p>
+                    <p className="text-lg font-semibold text-slate-900">44</p>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
+
+          <div className="flex flex-col lg:flex-row gap-3">
+            <div className="flex-1 relative">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <Input
+                placeholder={dictionary.dashboard?.search || "Rechercher un bien..."}
+                className="pl-9 bg-white border-slate-200"
+              />
+            </div>
+            <div className="flex gap-3">
+              <Select>
+                <SelectTrigger className="w-44 bg-white border-slate-200">
+                  <SelectValue placeholder={dictionary.dashboard?.type1 || "Tous les types"} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{dictionary.dashboard?.type1 || "Tous les types"}</SelectItem>
+                  <SelectItem value="apartment">{dictionary.dashboard?.type2 || "Appartement"}</SelectItem>
+                  <SelectItem value="villa">{dictionary.dashboard?.type3 || "Villa"}</SelectItem>
+                  <SelectItem value="studio">{dictionary.dashboard?.type4 || "Studio"}</SelectItem>
+                  <SelectItem value="office">{dictionary.dashboard?.type5 || "Bureau"}</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select>
+                <SelectTrigger className="w-44 bg-white border-slate-200">
+                  <SelectValue placeholder={dictionary.dashboard?.status1 || "Tous les statuts"} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{dictionary.dashboard?.status1 || "Tous les statuts"}</SelectItem>
+                  <SelectItem value="available">{dictionary.dashboard?.status2 || "Disponible"}</SelectItem>
+                  <SelectItem value="unavailable">{dictionary.dashboard?.status3 || "Indisponible"}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {mockProperties.slice(0, 6).map((property) => {
+              const offer = offerLabels[property.offerType] ?? offerLabels.rent;
+              return (
+                <Card key={property.id} className="border-slate-200 overflow-hidden">
+                  <div className="relative">
+                    <img
+                      src={property.images[0]}
+                      alt={property.title}
+                      className="w-full h-44 object-cover"
+                    />
+                    <div className="absolute top-3 left-3 flex items-center gap-2">
+                      <Badge className={`${offer.className} border-0`}>{offer.label}</Badge>
+                      <Badge className="bg-slate-900 text-white border-0">
+                        {typeLabels[property.type] ?? 'Bien'}
+                      </Badge>
+                    </div>
+                    <div className="absolute top-3 right-3 flex items-center gap-2">
+                      <Button size="icon" variant="secondary" className="h-8 w-8 bg-white/90 hover:bg-white">
+                        <Edit className="w-4 h-4 text-slate-700" />
+                      </Button>
+                      <Button size="icon" variant="secondary" className="h-8 w-8 bg-white/90 hover:bg-white">
+                        <Trash className="w-4 h-4 text-slate-700" />
+                      </Button>
+                    </div>
+                    <div className="absolute bottom-3 left-3 bg-white/90 text-slate-900 text-xs font-semibold px-2.5 py-1 rounded-lg">
+                      {property.price.toLocaleString('fr-FR')} F/mois
+                    </div>
+                  </div>
+                  <CardContent className="p-5 space-y-4">
+                    <div>
+                      <h3 className="font-semibold text-slate-900 leading-snug">{property.title}</h3>
+                      <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
+                        <MapPin className="w-3.5 h-3.5" />
+                        <span>
+                          {property.neighborhood}, {property.city}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between text-xs text-slate-600">
+                      <div className="flex items-center gap-1">
+                        <BedDouble className="w-4 h-4" />
+                        <span>{property.bedrooms ?? 1}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Bath className="w-4 h-4" />
+                        <span>{property.bathrooms ?? 1}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Ruler className="w-4 h-4" />
+                        <span>{property.surface} m²</span>
+                      </div>
+                    </div>
+                    <div className="pt-3 border-t border-slate-200 flex items-center justify-between text-xs text-slate-600">
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1">
+                          <Eye className="w-4 h-4" />
+                          <span>{property.views}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Calendar className="w-4 h-4" />
+                          <span>{property.visitsCount}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-slate-500">
+                          {property.isAvailable ? 'Actif' : 'Inactif'}
+                        </span>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            defaultChecked={property.isAvailable}
+                            className="sr-only peer"
+                          />
+                          <div className="relative w-9 h-5 bg-slate-200 rounded-full peer peer-checked:bg-emerald-500 after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:h-4 after:w-4 after:rounded-full after:transition-transform peer-checked:after:translate-x-4" />
+                        </label>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            })}
+          </div>
         </div>
-      </main>
-    </div>
+        
+      <Modal 
+        isOpen={showUpdateModal} 
+        onClose={() => setShowUpdateModal(false)}
+        title="Finalisez votre profil professionnel"
+        size="full"  
+        rounded={false}     
+        locked={true}
+        showBlur={true} 
+        closeOnClickOutside={false} 
+      >
+        <UpdateProfileForm /> 
+      </Modal>
+      </div>
+    </>
   );
 }

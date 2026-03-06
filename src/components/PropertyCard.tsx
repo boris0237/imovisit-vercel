@@ -1,11 +1,11 @@
 "use client"
 
 import Link from 'next/link'
-import { MapPin, Bed, Bath, Maximize, Heart, Eye, Calendar, BadgeCheck } from 'lucide-react';
+import { MapPin, Bed, Bath, Maximize, Heart, Eye, Calendar, BadgeCheck, Clock } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import type { Property } from '@/types';
+import type { Property } from '@/types'; 
 
 interface PropertyCardProps {
   property: Property;

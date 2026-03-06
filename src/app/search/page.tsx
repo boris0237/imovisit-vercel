@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { mockProperties } from '@/data/mock'
 import type { FilterOptions } from '@/types'
+import { useDictionary } from '@/hooks/useDictionary'
 
 function SearchContent() {
   const searchParams = useSearchParams()
@@ -48,6 +49,8 @@ function SearchContent() {
     })
   }, [filters])
 
+  const { dictionary } = useDictionary()
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
@@ -57,14 +60,15 @@ function SearchContent() {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
             <div>
               <h1 className="text-2xl md:text-3xl font-bold text-imo-primary">
-                Rechercher un bien
+                {dictionary.searchPage?.title1 || "Rechercher un bien"}
               </h1>
               <p className="text-gray-600 mt-1">
-                {filteredProperties.length} biens trouvés
+                {filteredProperties.length}
+                {dictionary.searchPage?.paragraph1 || " biens trouvés"}
               </p>
             </div>
             <div className="flex items-center gap-3">
-              {/* View Mode Toggle */}
+              {/* View Mode Toggle 
               <div className="hidden md:flex items-center bg-white rounded-lg border p-1">
                 <Button
                   variant={viewMode === 'grid' ? 'default' : 'ghost'}
@@ -82,19 +86,19 @@ function SearchContent() {
                 >
                   <List className="w-4 h-4" />
                 </Button>
-              </div>
+              </div>*/}
 
               {/* Mobile Filters */}
               <Sheet>
                 <SheetTrigger asChild>
                   <Button variant="outline" className="md:hidden gap-2">
                     <SlidersHorizontal className="w-4 h-4" />
-                    Filtres
+                    {dictionary.searchPage?.filterButton || "Filtres"}
                   </Button>
                 </SheetTrigger>
                 <SheetContent side="left" className="w-[320px]">
                   <SheetHeader>
-                    <SheetTitle>Filtres</SheetTitle>
+                    <SheetTitle>{dictionary.searchPage?.filterButton || "Filtres"}</SheetTitle>
                   </SheetHeader>
                   <div className="mt-6">
                     <SearchFilters filters={filters} onFilterChange={setFilters} />
@@ -109,7 +113,7 @@ function SearchContent() {
             {/* Sidebar Filters - Desktop */}
             <aside className="hidden md:block w-72 flex-shrink-0">
               <div className="bg-white rounded-xl p-6 shadow-sm sticky top-24">
-                <h2 className="font-semibold text-lg mb-4">Filtres</h2>
+                <h2 className="font-semibold text-lg mb-4">{dictionary.searchPage?.filterButton || "Filtres"}</h2>
                 <SearchFilters filters={filters} onFilterChange={setFilters} />
               </div>
             </aside>
@@ -122,10 +126,10 @@ function SearchContent() {
                     <SlidersHorizontal className="w-10 h-10 text-gray-400" />
                   </div>
                   <h3 className="text-lg font-semibold text-gray-700 mb-2">
-                    Aucun bien trouvé
+                    {dictionary.searchPage?.title2 || "Aucun bien trouvé"}
                   </h3>
                   <p className="text-gray-500">
-                    Essayez de modifier vos critères de recherche
+                      {dictionary.searchPage?.paragraph2 || "Essayez de modifier vos critères de recherche"}
                   </p>
                 </div>
               ) : (
@@ -151,8 +155,9 @@ function SearchContent() {
 }
 
 export default function SearchPage() {
+  const { dictionary } = useDictionary()
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Chargement...</div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"> {dictionary.searchPage?.loading || "Chargement..."} </div>}>
       <SearchContent />
     </Suspense>
   )

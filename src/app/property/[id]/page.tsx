@@ -2,16 +2,38 @@
 
 import { useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { MapPin, Bed, Bath, Maximize, Calendar, Phone, Share2, Heart, ArrowLeft, BadgeCheck, Home, Check } from 'lucide-react'
+import {
+  MapPin,
+  Bed,
+  Bath,
+  Maximize,
+  Calendar,
+  Phone,
+  Share2,
+  Heart,
+  BadgeCheck,
+  Check,
+  Home,
+  Car,
+  Eye,
+  Clock,
+  ShieldCheck,
+  Star,
+  CalendarCheck,
+  ChevronRight,
+  Video,
+} from 'lucide-react'
 import { Header } from '@/components/Header'
 import { Footer } from '@/components/Footer'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Input } from '@/components/ui/input'
 import { mockProperties, amenitiesList } from '@/data/mock'
+import { useDictionary } from '@/hooks/useDictionary'
 
 export default function PropertyDetail() {
+  const {dictionary} = useDictionary()
   const params = useParams()
   const router = useRouter()
   const [selectedImage, setSelectedImage] = useState(0)
@@ -25,8 +47,12 @@ export default function PropertyDetail() {
         <Header />
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-700 mb-4">Bien non trouvé</h1>
-            <Button onClick={() => router.push('/search')}>Retour à la recherche</Button>
+            <h1 className="text-2xl font-bold text-gray-700 mb-4">
+              {dictionary.propertyPage?.title1 || "Bien non trouvé"}
+            </h1>
+            <Button onClick={() => router.push('/search')}>
+              {dictionary.propertyPage?.btn1 || "Retour à la recherche"}
+            </Button>
           </div>
         </main>
         <Footer />
@@ -72,190 +98,371 @@ export default function PropertyDetail() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-1 bg-gray-50">
-        {/* Back Button */}
-        <div className="container mx-auto px-4 py-4">
-          <Button variant="ghost" onClick={() => router.back()} className="gap-2">
-            <ArrowLeft className="w-4 h-4" />
-            Retour
-          </Button>
+      <main className="flex-1 bg-slate-50">
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex items-center gap-2 text-xs text-slate-500">
+            <span>{dictionary.propertyPage?.sp1 || "Bien que location"} </span>
+            <ChevronRight className="w-3 h-3" />
+            <span className="text-slate-700">{property.title}</span>
+          </div>
         </div>
 
         <div className="container mx-auto px-4 pb-12">
-          {/* Image Gallery */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
-            <div className="aspect-[4/3] rounded-xl overflow-hidden">
-              <img
-                src={property.images[selectedImage]}
-                alt={property.title}
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              {property.images.slice(0, 4).map((image, index) => (
-                <button
-                  key={index}
-                  onClick={() => setSelectedImage(index)}
-                  className={`aspect-square rounded-lg overflow-hidden border-2 ${
-                    selectedImage === index ? 'border-imo-primary' : 'border-transparent'
-                  }`}
-                >
-                  <img src={image} alt={`${property.title} ${index + 1}`} className="w-full h-full object-cover" />
-                </button>
-              ))}
-            </div>
-          </div>
-
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Main Content */}
-            <div className="lg:col-span-2">
-              {/* Header */}
-              <div className="bg-white rounded-xl p-6 mb-6">
-                <div className="flex flex-wrap gap-2 mb-4">
-                  <Badge className="bg-imo-primary">{getOfferTypeLabel(property.offerType)}</Badge>
-                  <Badge variant="secondary">{getTypeLabel(property.type)}</Badge>
-                  {property.ownerVerified && (
-                    <Badge className="bg-green-500">
-                      <BadgeCheck className="w-3 h-3 mr-1" />
-                      Bailleur vérifié
-                    </Badge>
-                  )}
-                </div>
+            <div className="lg:col-span-2 space-y-6">
+              {/* Image Gallery */}
+              <Card className="border-slate-200 overflow-hidden">
+                <CardContent className="p-0">
+                  <div className="relative">
+                    <img
+                      src={property.images[selectedImage]}
+                      alt={property.title}
+                      className="w-full h-[340px] object-cover"
+                    />
+                    <div className="absolute top-4 left-4 flex items-center gap-2">
+                      <Badge className="bg-slate-900 text-white border-0">
+                        {getOfferTypeLabel(property.offerType)}
+                      </Badge>
+                      <Badge className="bg-white/90 text-slate-700 border-0">
+                        {getTypeLabel(property.type)}
+                      </Badge>
+                    </div>
+                    <button
+                      onClick={() => setIsFavorite(!isFavorite)}
+                      className="absolute top-4 right-4 h-9 w-9 rounded-full bg-white/90 flex items-center justify-center text-slate-700 hover:bg-white"
+                      aria-label="Ajouter aux favoris"
+                    >
+                      <Heart className={`w-4 h-4 ${isFavorite ? 'fill-current text-rose-500' : ''}`} />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-5 gap-2 p-4">
+                    {property.images.slice(0, 5).map((image, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setSelectedImage(index)}
+                        className={`h-20 rounded-lg overflow-hidden border ${
+                          selectedImage === index ? 'border-slate-900' : 'border-transparent'
+                        }`}
+                      >
+                        <img src={image} alt={`${property.title} ${index + 1}`} className="w-full h-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
 
-                <h1 className="text-2xl md:text-3xl font-bold text-imo-primary mb-2">
-                  {property.title}
-                </h1>
+              {/* Summary */}
+              <Card className="border-slate-200">
+                <CardContent className="p-6 space-y-5">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h1 className="text-2xl font-semibold text-slate-900">
+                        {property.title} - {property.neighborhood}
+                      </h1>
+                      <div className="flex items-center gap-2 text-sm text-slate-500 mt-2">
+                        <MapPin className="w-4 h-4" />
+                        <span>{property.neighborhood}, {property.city}, {dictionary.propertyPage?.sp2 || "Cameroun"}</span>
+                      </div>
+                    </div>
+                    {property.ownerVerified && (
+                      <Badge className="bg-emerald-100 text-emerald-700 border-0">
+                        <ShieldCheck className="w-3 h-3 mr-1" />
+                        {dictionary.propertyPage?.badge || "Bien vérifié"}
+                      </Badge>
+                    )}
+                  </div>
 
-                <div className="flex items-center gap-2 text-gray-600 mb-4">
-                  <MapPin className="w-5 h-5" />
-                  <span>{property.address}, {property.neighborhood}, {property.city}</span>
-                </div>
+                  <div className="text-2xl font-semibold text-slate-900">
+                    {formatPrice(property.price, property.offerType)}
+                  </div>
 
-                <div className="text-3xl font-bold text-imo-primary">
-                  {formatPrice(property.price, property.offerType)}
-                </div>
-              </div>
+                  <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500">
+                    <div className="flex items-center gap-1">
+                      <Eye className="w-4 h-4" />
+                      <span>{property.views} {dictionary.propertyPage?.sp3 || "vues"}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <CalendarCheck className="w-4 h-4" />
+                      <span>{property.visitsCount} {dictionary.propertyPage?.sp4 || "visites réservées"}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Clock className="w-4 h-4" />
+                      <span>{dictionary.propertyPage?.sp5 || "Publié il y a 2 jours"}</span>
+                    </div>
+                  </div>
 
-              {/* Tabs */}
-              <Tabs defaultValue="details" className="bg-white rounded-xl">
-                <TabsList className="w-full justify-start p-4 border-b">
-                  <TabsTrigger value="details">Détails</TabsTrigger>
-                  <TabsTrigger value="amenities">Commodités</TabsTrigger>
-                  <TabsTrigger value="location">Localisation</TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="details" className="p-6">
-                  <h3 className="font-semibold text-lg mb-4">Description</h3>
-                  <p className="text-gray-600 leading-relaxed mb-6">{property.description}</p>
-
-                  <h3 className="font-semibold text-lg mb-4">Caractéristiques</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
-                      <Maximize className="w-5 h-5 text-imo-primary" />
-                      <div>
-                        <div className="text-sm text-gray-500">Surface</div>
-                        <div className="font-semibold">{property.surface} m²</div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className="flex items-center gap-3 rounded-xl border border-slate-200 p-3">
+                      <Maximize className="w-4 h-4 text-slate-700" />
+                      <div className="text-xs">
+                        <p className="text-slate-500">{dictionary.propertyPage?.p1 || "Surface"}</p>
+                        <p className="font-semibold text-slate-900">{property.surface} m²</p>
                       </div>
                     </div>
                     {property.bedrooms !== undefined && (
-                      <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
-                        <Bed className="w-5 h-5 text-imo-primary" />
-                        <div>
-                          <div className="text-sm text-gray-500">Chambres</div>
-                          <div className="font-semibold">{property.bedrooms}</div>
+                      <div className="flex items-center gap-3 rounded-xl border border-slate-200 p-3">
+                        <Bed className="w-4 h-4 text-slate-700" />
+                        <div className="text-xs">
+                          <p className="text-slate-500">{dictionary.propertyPage?.p2 || "Chambres"}</p>
+                          <p className="font-semibold text-slate-900">{property.bedrooms}</p>
                         </div>
                       </div>
                     )}
                     {property.bathrooms !== undefined && (
-                      <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
-                        <Bath className="w-5 h-5 text-imo-primary" />
-                        <div>
-                          <div className="text-sm text-gray-500">Salles de bain</div>
-                          <div className="font-semibold">{property.bathrooms}</div>
+                      <div className="flex items-center gap-3 rounded-xl border border-slate-200 p-3">
+                        <Bath className="w-4 h-4 text-slate-700" />
+                        <div className="text-xs">
+                          <p className="text-slate-500">{dictionary.propertyPage?.p3 || "Salles de bain"}</p>
+                          <p className="font-semibold text-slate-900">{property.bathrooms}</p>
                         </div>
                       </div>
                     )}
-                    <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-lg">
-                      <Home className="w-5 h-5 text-imo-primary" />
-                      <div>
-                        <div className="text-sm text-gray-500">Pièces</div>
-                        <div className="font-semibold">{property.rooms}</div>
+                    <div className="flex items-center gap-3 rounded-xl border border-slate-200 p-3">
+                      <Car className="w-4 h-4 text-slate-700" />
+                      <div className="text-xs">
+                        <p className="text-slate-500">{dictionary.propertyPage?.p4 || "Parking"}</p>
+                        <p className="font-semibold text-slate-900">
+                          {property.amenities.includes('parking') ? '2 places' : 'Non inclus'}
+                        </p>
                       </div>
                     </div>
                   </div>
-                </TabsContent>
 
-                <TabsContent value="amenities" className="p-6">
-                  <h3 className="font-semibold text-lg mb-4">Commodités incluses</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="space-y-3 text-sm text-slate-600 leading-relaxed">
+                    <p>
+                      {dictionary.propertyPage?.p5 || "Magnifique appartement rénové situé dans un quartier résidentiel calme. Proche de toutes commodités, transports en commun et écoles."}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Amenities */}
+              <Card className="border-slate-200">
+                <CardContent className="p-6">
+                  <h2 className="text-sm font-semibold text-slate-800 mb-4">{dictionary.propertyPage?.title2 || "Commodités"}</h2>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                     {property.amenities.map((amenityId) => {
                       const amenity = amenitiesList.find((a) => a.id === amenityId)
                       return (
-                        <div key={amenityId} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                          <Check className="w-5 h-5 text-green-500" />
+                        <div key={amenityId} className="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                          <Check className="w-4 h-4 text-emerald-500" />
                           <span>{amenity?.name || amenityId}</span>
                         </div>
                       )
                     })}
                   </div>
-                </TabsContent>
+                </CardContent>
+              </Card>
 
-                <TabsContent value="location" className="p-6">
-                  <h3 className="font-semibold text-lg mb-4">Localisation</h3>
-                  <div className="aspect-video bg-gray-100 rounded-lg flex items-center justify-center">
-                    <div className="text-center text-gray-500">
-                      <MapPin className="w-12 h-12 mx-auto mb-2" />
-                      <p>Carte interactive</p>
-                      <p className="text-sm">{property.address}</p>
-                    </div>
-                  </div>
-                </TabsContent>
-              </Tabs>
-            </div>
-
-            {/* Sidebar */}
-            <div className="space-y-6">
-              {/* Owner Card */}
-              <Card>
-                <CardContent className="p-6">
-                  <h3 className="font-semibold text-lg mb-4">Propriétaire</h3>
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="w-16 h-16 bg-imo-primary/10 rounded-full flex items-center justify-center">
-                      <span className="text-2xl font-bold text-imo-primary">
+              {/* Owner */}
+              <Card className="border-slate-200">
+                <CardContent className="p-6 space-y-4">
+                  <h2 className="text-sm font-semibold text-slate-800">{dictionary.propertyPage?.title3 || "Propriétaire"}</h2>
+                  <div className="flex items-center justify-between gap-4 flex-wrap">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center text-slate-700 font-semibold">
                         {property.ownerName.charAt(0)}
-                      </span>
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold">{property.ownerName}</span>
-                        {property.ownerVerified && (
-                          <BadgeCheck className="w-5 h-5 text-blue-500" />
-                        )}
                       </div>
-                      <div className="text-sm text-gray-500">Membre depuis 2023</div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <p className="font-semibold text-slate-900">{property.ownerName}</p>
+                          <Badge className="bg-emerald-100 text-emerald-700 border-0">
+                            {dictionary.propertyPage?.badge2 || "Agence immobilière"}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-slate-500">
+                          {dictionary.propertyPage?.p6 || "Membre depuis Juin 2021"} 
+                        </p>
+                        <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
+                          <Star className="w-3.5 h-3.5 text-amber-400 fill-current" />
+                          <span>4.8</span>
+                          <span>({dictionary.propertyPage?.sp6 || "24 avis"})</span>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <Button className="w-full bg-imo-primary hover:bg-imo-secondary gap-2">
-                      <Calendar className="w-4 h-4" />
-                      Réserver une visite
-                    </Button>
-                    <Button variant="outline" className="w-full gap-2">
+                    <Button className="bg-slate-900 hover:bg-slate-800 gap-2">
                       <Phone className="w-4 h-4" />
-                      Contacter
+                      {dictionary.propertyPage?.btn2 || "Contacter"}
                     </Button>
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-slate-500">
+                    <span>{dictionary.propertyPage?.sp7 || "Signaler ce bailleur"}</span>
+                    {property.ownerVerified && (
+                      <span className="flex items-center gap-1 text-emerald-600">
+                        <BadgeCheck className="w-4 h-4" />
+                        {dictionary.propertyPage?.sp8 || "Bailleur vérifié"}
+                      </span>
+                    )}
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Actions Card */}
-              <Card>
+              {/* Similar Properties */}
+              <Card className="border-slate-200">
+                <CardContent className="p-6 space-y-6">
+                  <div className="flex items-center gap-2 text-slate-900">
+                    <Home className="w-5 h-5" />
+                    <h2 className="text-lg font-semibold">{dictionary.propertyPage?.title4 || "Biens similaires"}</h2>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {mockProperties
+                      .filter((item) => item.id !== property.id)
+                      .slice(0, 4)
+                      .map((item) => (
+                        <Card key={item.id} className="border-slate-200 overflow-hidden">
+                          <CardContent className="p-0">
+                            <div className="relative">
+                              <img
+                                src={item.images[0]}
+                                alt={item.title}
+                                className="w-full h-44 object-cover"
+                              />
+                              <div className="absolute top-3 left-3 flex items-center gap-2">
+                                <Badge className="bg-slate-900 text-white border-0">
+                                  {getOfferTypeLabel(item.offerType)}
+                                </Badge>
+                                <Badge className="bg-white/90 text-slate-700 border-0">
+                                  {getTypeLabel(item.type)}
+                                </Badge>
+                              </div>
+                              <button
+                                className="absolute top-3 right-3 h-9 w-9 rounded-full bg-white/90 flex items-center justify-center text-slate-700 hover:bg-white"
+                                aria-label="Ajouter aux favoris"
+                              >
+                                <Heart className="w-4 h-4" />
+                              </button>
+                              <div className="absolute bottom-3 left-3 text-white text-sm font-semibold drop-shadow">
+                                {formatPrice(item.price, item.offerType)}
+                              </div>
+                            </div>
+
+                            <div className="p-4 space-y-3">
+                              <div>
+                                <h3 className="font-semibold text-slate-900">{item.title}</h3>
+                                <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
+                                  <MapPin className="w-4 h-4" />
+                                  <span>{item.neighborhood}, {item.city}</span>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-4 text-xs text-slate-500">
+                                <div className="flex items-center gap-1">
+                                  <Bed className="w-4 h-4" />
+                                  <span>{item.bedrooms ?? 1}</span>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <Bath className="w-4 h-4" />
+                                  <span>{item.bathrooms ?? 1}</span>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <Maximize className="w-4 h-4" />
+                                  <span>{item.surface} m²</span>
+                                </div>
+                              </div>
+                              <div className="flex items-center justify-between border-t border-slate-200 pt-3 text-xs text-slate-500">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-7 h-7 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center text-[11px] font-semibold">
+                                    {item.ownerName.charAt(0)}
+                                  </div>
+                                  <span>{item.ownerName}</span>
+                                  {item.ownerVerified && (
+                                    <Badge className="bg-emerald-100 text-emerald-700 border-0">
+                                      <BadgeCheck className="w-3 h-3" />
+                                    </Badge>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-3">
+                                  <div className="flex items-center gap-1">
+                                    <Eye className="w-4 h-4" />
+                                    <span>{item.views}</span>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <CalendarCheck className="w-4 h-4" />
+                                    <span>{item.visitsCount}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                  </div>
+
+                  <div>
+                    <Button className="bg-slate-900 hover:bg-slate-800 gap-2">
+                      {dictionary.propertyPage?.btn3 || "Voir plus de bien"}
+                      <ChevronRight className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Sidebar */}
+            <div className="space-y-6">
+              <Card className="border-slate-200">
+                <CardContent className="p-6 space-y-5">
+                  <div>
+                    <h2 className="text-sm font-semibold text-slate-800 mb-2">{dictionary.propertyPage?.title5 || "Réserver une visite"}</h2>
+                    <div className="flex items-center justify-between text-xs text-slate-500">
+                      <span>{dictionary.propertyPage?.sp9 || "Frais de visite"}</span>
+                      <span className="font-semibold text-slate-900">
+                        {property.visitFee > 0 ? `${property.visitFee.toLocaleString()} FCFA` : 'Gratuit'}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-xs text-slate-500 mb-2">{dictionary.propertyPage?.p7 || "Type de visite"}</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button variant="outline" className="h-12 flex-col gap-1 text-xs">
+                        <MapPin className="w-4 h-4" />
+                        {dictionary.propertyPage?.btn4 || "En présentiel"}
+                      </Button>
+                      <Button variant="outline" className="h-12 flex-col gap-1 text-xs">
+                        <Video className="w-4 h-4" />
+                        {dictionary.propertyPage?.btn5 || "À distance"}
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl bg-slate-50 border border-slate-200 p-3 text-xs text-slate-600">
+                    <div className="flex items-center gap-2">
+                      <BadgeCheck className="w-4 h-4 text-emerald-500" />
+                      <span>{dictionary.propertyPage?.sp10 || "Vous recevrez l'adresse exacte quelques heures avant la visite."}</span>
+                    </div>
+                  </div> 
+
+                  <div>
+                    <p className="text-xs text-slate-500 mb-2">{dictionary.propertyPage?.p8 || "Date souhaitée"}</p>
+                    <Input type="date" className="bg-white border-slate-200" />
+                  </div>
+
+                  <div>
+                    <p className="text-xs text-slate-500 mb-2">{dictionary.propertyPage?.p9 || "Créneau horaire"}</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {['9h00', '10h30', '14h00', '15h30', '16h30'].map((slot) => (
+                        <Button key={slot} variant="outline" className="h-9 text-xs">
+                          {slot}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <Button className="w-full bg-slate-900 hover:bg-slate-800 gap-2">
+                    <Calendar className="w-4 h-4" />
+                    {dictionary.propertyPage?.btn6 || "Réserver la visite"}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card className="border-slate-200">
                 <CardContent className="p-6">
                   <div className="flex gap-3">
                     <Button
                       variant="outline"
-                      className={`flex-1 gap-2 ${isFavorite ? 'text-red-500 border-red-500' : ''}`}
+                      className={`flex-1 gap-2 ${isFavorite ? 'text-rose-500 border-rose-500' : ''}`}
                       onClick={() => setIsFavorite(!isFavorite)}
                     >
                       <Heart className={`w-4 h-4 ${isFavorite ? 'fill-current' : ''}`} />
@@ -267,39 +474,9 @@ export default function PropertyDetail() {
                   </div>
                 </CardContent>
               </Card>
-
-              {/* Visit Info */}
-              <Card>
-                <CardContent className="p-6">
-                  <h3 className="font-semibold text-lg mb-4">Informations visite</h3>
-                  <div className="space-y-3 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Type de visite</span>
-                      <span className="font-medium">
-                        {property.visitType === 'in-person'
-                          ? 'Présentiel'
-                          : property.visitType === 'remote'
-                          ? 'À distance'
-                          : 'Présentiel ou à distance'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Frais de visite</span>
-                      <span className="font-medium">
-                        {property.visitFee > 0 ? `${property.visitFee.toLocaleString()} FCFA` : 'Gratuit'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Disponibilité</span>
-                      <Badge className={property.isAvailable ? 'bg-green-500' : 'bg-red-500'}>
-                        {property.isAvailable ? 'Disponible' : 'Indisponible'}
-                      </Badge>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
             </div>
           </div>
+
         </div>
       </main>
       <Footer />

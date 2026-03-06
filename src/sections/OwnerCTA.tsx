@@ -1,6 +1,11 @@
+"use client"
+
 import Link from 'next/link'
 import { Building2, TrendingUp, Users, Shield, ArrowRight, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useLanguage } from '@/contexts/LanguageContext';
+import LanguageDropdown from '@/components/LanguageDropdown';
+import { useDictionary } from '@/hooks/useDictionary'
 
 const benefits = [
   'Publication gratuite de vos biens',
@@ -11,7 +16,14 @@ const benefits = [
   'Support client dédié',
 ];
 
+const languages = [
+    { code: 'fr', name: 'Français', flag: "FR" },
+    { code: 'en', name: 'English', flag: "EN" },
+  ];
+
 export function OwnerCTA() {
+  const { dictionary } = useDictionary()
+
   return (
     <section className="py-16 md:py-24 bg-gradient-to-br from-imo-primary to-imo-secondary">
       <div className="container mx-auto px-4">
@@ -20,65 +32,60 @@ export function OwnerCTA() {
           <div className="text-white">
             <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 mb-6">
               <Building2 className="w-4 h-4" />
-              <span className="text-sm">Espace propriétaire</span>
+              <span className="text-sm">
+                {dictionary.ownercta?.subtitle || "Espace Bailleur"}</span>
             </div>
 
             <h2 className="text-3xl md:text-4xl font-bold mb-6">
-              Vous êtes propriétaire ?
+              {dictionary.ownercta?.title1 || "Que vous soyez un proporiétaire, un agent, une agence immobilière, un gestionnaire de bien"}
             </h2>
 
             <p className="text-white/80 text-lg mb-8">
-              Publiez vos biens gratuitement et gérez vos visites en toute simplicité. 
-              Rejoignez des milliers de propriétaires qui nous font confiance.
+              {dictionary.ownercta?.para1 || "La solution imovisit vous accompagne au quotidien en augmentant vos revenu et en professionnalisant vos activités immobilières."}
+            
+              <br />
+              {dictionary.ownercta?.para2 || "Ajoutez vos biens gratuitement et gérer vos visites en toute simplicité."}
+               <br /> {dictionary.ownercta?.para3 || "Rejoignez des milliers de bailleurs qui nous font confiance."} 
+              <br /><br /> 
+              {dictionary.ownercta?.para4 || "Inscrivez vous gratuitement en cliquant ici:"}
             </p>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-              {benefits.map((benefit, index) => (
-                <div key={index} className="flex items-center gap-3">
-                  <div className="w-6 h-6 bg-imo-highlight rounded-full flex items-center justify-center flex-shrink-0">
-                    <Check className="w-4 h-4 text-imo-primary" />
-                  </div>
-                  <span className="text-white/90 text-sm">{benefit}</span>
-                </div>
-              ))}
-            </div>
 
             <div className="flex flex-col sm:flex-row gap-4">
               <Link href="/register?type=owner">
                 <Button className="bg-imo-highlight hover:bg-yellow-400 text-imo-primary font-semibold gap-2">
-                  Devenir propriétaire
+                  {dictionary.ownercta?.buttonText || "Je suis un bailleur"}
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               </Link>
-              <Link href="/owner-info">
-                <Button variant="outline" className="border-white/30 text-white hover:bg-white/10 gap-2">
-                  En savoir plus
-                </Button>
-              </Link>
+          
             </div>
           </div>
 
           {/* Stats Cards */}
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 text-white">
-              <TrendingUp className="w-10 h-10 mb-4 text-imo-highlight" />
-              <div className="text-3xl font-bold mb-1">+45%</div>
-              <div className="text-white/70 text-sm">Taux de conversion moyen</div>
-            </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 text-white">
               <Users className="w-10 h-10 mb-4 text-imo-highlight" />
-              <div className="text-3xl font-bold mb-1">5,000+</div>
-              <div className="text-white/70 text-sm">Propriétaires actifs</div>
-            </div>
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 text-white">
-              <Shield className="w-10 h-10 mb-4 text-imo-highlight" />
-              <div className="text-3xl font-bold mb-1">100%</div>
-              <div className="text-white/70 text-sm">Bailleurs vérifiés</div>
+              <div className="text-3xl font-bold mb-1">100+</div>
+              <div className="text-white/70 text-sm">
+              {dictionary.ownercta?.lab1 || "bailleurs actifs"}
+              </div>
             </div>
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 text-white">
               <Building2 className="w-10 h-10 mb-4 text-imo-highlight" />
-              <div className="text-3xl font-bold mb-1">10,000+</div>
-              <div className="text-white/70 text-sm">Biens publiés</div>
+              <div className="text-3xl font-bold mb-1">200+</div>
+              <div className="text-white/70 text-sm">
+              {dictionary.ownercta?.lab2 || "biens publiés"}</div>
+            </div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 text-white">
+              <TrendingUp className="w-10 h-10 mb-4 text-imo-highlight" />
+              <div className="text-3xl font-bold mb-1">500+</div>
+              <div className="text-white/70 text-sm">{dictionary.ownercta?.lab3 || "visites réalisées"}</div>
+            </div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 text-white">
+              <Users className="w-10 h-10 mb-4 text-imo-highlight" />
+              <div className="text-3xl font-bold mb-1">150+</div>
+              <div className="text-white/70 text-sm">
+              {dictionary.ownercta?.lab4 || "locataires"}</div>
             </div>
           </div>
         </div>
