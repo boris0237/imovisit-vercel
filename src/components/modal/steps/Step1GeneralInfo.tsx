@@ -10,26 +10,28 @@ import {
 } from "@/components/ui/select";
 import { KeyRound, Tag, Armchair } from "lucide-react";
 import { useState } from "react";
+import { useContext, createContext } from "react";
 
-export interface PropertyFormData {
-  type?: "appartement" | "maison" | "terrain" | "";
-  offerType?: "location" | "vente" | "meuble" | "";
+
+interface PropertyFormData {
+  type: string;
+  offerType: string;
   title: string;
-  description?: string;
+  description: string;
 }
 
 interface Props {
   data: PropertyFormData;
   updateData: (values: Partial<PropertyFormData>) => void;
-  prev: () => void;
   next: () => void;
+  prev: () => void;
 }
 
 export default function Step1GeneralInfo({
   data,
   updateData,
-  prev,
   next,
+  prev,
 }: Props) {
 
   const selectOffer = (value: "location" | "vente" | "meuble") => {
@@ -51,6 +53,11 @@ export default function Step1GeneralInfo({
     !!data.type &&
     !!data.offerType &&
     data.title?.trim().length > 0;
+
+    const Step1Context = createContext<{Step1GeneralInfo: PropertyFormData, updateStep1Data: (values: Partial<PropertyFormData>) => void}>({
+      Step1GeneralInfo: formData,
+      updateStep1Data: updateFormData,
+    });
 
   return (
     <div className="max-w-4xl mx-auto px-2 space-y-8">

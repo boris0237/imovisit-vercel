@@ -34,12 +34,13 @@ import { useEffect, useState } from "react";
 import { useAuth } from '@/contexts/AuthContext';
 import Modal from '@/components/ui/modal';
 import { PropertyFormData } from '@/types/index';
-import { useRouter } from 'next/dist/client/router';
+import { useRouter } from "next/navigation" 
 import Step5Success from '@/components/modal/steps/Step5Success';
 import Step4Media from '@/components/modal/steps/Step4Media';
 import Step3Features from '@/components/modal/steps/Step3Features';
 import Step2Location from '@/components/modal/steps/Step2Location';
 import Step1GeneralInfo from '@/components/modal/steps/Step1GeneralInfo';
+import React, { createContext, useContext } from 'react';
 
 const stats = [
   { title: 'Biens total', value: '4', icon: Building2, color: 'bg-slate-100 text-slate-600' },
@@ -66,6 +67,7 @@ const offerLabels: Record<string, { label: string; className: string }> = {
 };
 
 
+
 export default function Dashboard() {
   const router = useRouter();
   const [step, setStep] = useState(1);
@@ -74,7 +76,6 @@ export default function Dashboard() {
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [showAddPropertyModal, setShowAddPropertyModal] = useState(false);
   const { user } = useAuth();
-
 
   useEffect(() => {
     if (user) {
@@ -98,7 +99,7 @@ function onFinish() {
  
 const initialFormData: PropertyFormData = {
   type: "",
-  offerType: "",
+  offerType: "location ",
   title: "",
   description: "",
   surface: undefined,
@@ -108,6 +109,8 @@ const initialFormData: PropertyFormData = {
   price: undefined,
   visitFee: undefined,
   images: [],
+  city: "",
+  neighborhood:"",
 };
 
 const [formData, setFormData] = useState<PropertyFormData>(initialFormData);
@@ -231,7 +234,7 @@ const resetForm = () => {
                 <Card key={property.id} className="border-slate-200 overflow-hidden">
                   <div className="relative">
                     <img
-                      src={property.images[0]}
+                      src={typeof property.images[0] === 'string' ? property.images[0] : URL.createObjectURL(property.images[0])}
                       alt={property.title}
                       className="w-full h-44 object-cover"
                     />
@@ -368,13 +371,15 @@ const resetForm = () => {
 
   {step === 5 && (
     <Step5Success
-  data={formData}
-  onFinish={() => {
-    resetForm();
-    setShowAddPropertyModal(false);
-  }}/>
+      data={formData}
+      onFinish={() => {
+        resetForm();
+        setShowAddPropertyModal(false);
+        console.log (setShowAddPropertyModal)
+      }}
+    />
   )}
-
+  
 </Modal>
       </div>
     </>

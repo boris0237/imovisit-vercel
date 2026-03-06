@@ -2,6 +2,7 @@
 
 import { Input } from "@/components/ui/input";
 import { useRef } from "react";
+import { useContext, createContext } from "react";
 
 interface PropertyFormData {
   images?: File[];
@@ -145,12 +146,15 @@ export default function Step4Media({
         </div>
 
         <Input
-          ref={inputRef}
           type="file"
           multiple
           accept="image/*"
-          className="hidden"
-          onChange={(e) => handleFiles(e.target.files)}
+          onChange={(e) => {
+            if (!e.target.files) return;
+
+            const filesArray = Array.from(e.target.files);
+            updateData({ images: filesArray });
+          }}
         />
       </div>
 
@@ -173,4 +177,17 @@ export default function Step4Media({
       </div>
     </div>
   );
+}
+
+interface PropertyFormData {
+  images?: File[];
+  price?: number;
+  visitFee?: number;
+}
+
+interface Step4MediaProps {
+  data: PropertyFormData;
+  updateData: (values: Partial<PropertyFormData>) => void;
+  next: () => void;
+  prev: () => void;
 }
