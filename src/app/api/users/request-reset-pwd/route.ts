@@ -137,12 +137,6 @@ export async function POST(req: Request) {
     });
 
 
-    await sendEmail({
-      to: email,
-      subject: "Réinitialisation mot de passe",
-      html: `Clique ici pour réinitialiser ton mot de passe : <a href="${resetLink}">${resetLink}</a>`,
-    });
-
     return apiResponse({
       status: 200,
       message: "Email de réinitialisation envoyé !",
