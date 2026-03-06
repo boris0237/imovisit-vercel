@@ -45,6 +45,7 @@ enum UserRole {
   owner
   property_manager
   prospector
+  provider
   free_agent
   agency
   agent
