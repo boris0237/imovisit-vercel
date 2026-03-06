@@ -1,6 +1,6 @@
 /**
  * @swagger
- * /api/agenda/rule:
+ * /api/agenda/rules:
  *   post:
  *     tags:
  *       - Agenda
@@ -123,7 +123,7 @@ export async function POST(req: NextRequest) {
         dayOfWeek,
         dayOfMonth,
         startTime,
-        endTime
+        endTime,
       }
     });
 
@@ -138,32 +138,74 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// --- Lister les règles avec filtres ---
+
+// --- Lister les règles avec filtres avancés ---
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
 
+    // Pagination
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "10");
+    const skip = (page - 1) * limit;
+
     const filters: any = {};
+
     const propertyId = searchParams.get("propertyId");
-    const ownerId = searchParams.get("ownerId");
     const recurrenceType = searchParams.get("recurrenceType");
+    const date = searchParams.get("date");
     const dayOfWeek = searchParams.get("dayOfWeek");
     const dayOfMonth = searchParams.get("dayOfMonth");
+    const startTime = searchParams.get("startTime");
+    const endTime = searchParams.get("endTime");
 
     if (propertyId) filters.propertyId = propertyId;
-    if (ownerId) filters.ownerId = ownerId;
-    if (recurrenceType) filters.recurrenceType = recurrenceType;
-    if (dayOfWeek) filters.dayOfWeek = dayOfWeek;
-    if (dayOfMonth) filters.dayOfMonth = parseInt(dayOfMonth);
 
-    const rules = await prisma.availabilityRule.findMany({
-      where: filters,
-      orderBy: { createdAt: "desc" }
+    if (recurrenceType) {
+      filters.recurrenceType = recurrenceType;
+    }
+
+    if (date) {
+      filters.date = new Date(date);
+    }
+
+    if (dayOfWeek) {
+      filters.dayOfWeek = dayOfWeek.toUpperCase(); // si enum en MAJ
+    }
+
+    if (dayOfMonth) {
+      filters.dayOfMonth = parseInt(dayOfMonth);
+    }
+
+    if (startTime) {
+      filters.startTime = startTime;
+    }
+
+    if (endTime) {
+      filters.endTime = endTime;
+    }
+
+    const [rules, total] = await Promise.all([
+      prisma.availabilityRule.findMany({
+        where: filters,
+        skip,
+        take: limit,
+        orderBy: { createdAt: "desc" },
+      }),
+      prisma.availabilityRule.count({ where: filters }),
+    ]);
+
+    return apiResponse({
+      status: 200,
+      message: "Règles récupérées",
+      data: { rules, total, page, limit },
     });
 
-    return apiResponse({ status: 200, message: "Règles récupérées", data: rules });
-
   } catch (err: any) {
-    return apiResponse({ status: 500, message: err.message });
+    console.log(err);
+    return apiResponse({
+      status: 500,
+      message: err.message || "Erreur serveur",
+    });
   }
 }
