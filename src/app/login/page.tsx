@@ -106,13 +106,13 @@ const handleBackendLogin = (email: string) => {
     .then(({ ok, status, data }) => {
       if (ok) {
         setSuccessMessage(dictionary?.login?.success || "Connexion réussie !");
-        const loggedInUser = data.user;
+        const loggedInUser = data?.data?.user;
         login(loggedInUser);
         
         // Redirection après un court délai
-        setTimeout(() => {         
+        setTimeout(() => {   
         if (loggedInUser.role === 'owner' || loggedInUser.role === 'OWNER') {
-          router.push('/dashboard/user'); // router.push est plus fluide que window.location.href
+          router.push('/dashboard'); // router.push est plus fluide que window.location.href
         } else {
           router.push('/');
         }
@@ -202,9 +202,8 @@ const loginWithGoogleData = () => {
         // Redirection après un court délai
 
         setTimeout(() => {
-        console.log('utilisateur login dans le context', loggedInUser);
           if (loggedInUser?.role !== 'visitor' && loggedInUser?.role !== undefined) {
-            window.location.href = '/dashboard/user'; 
+            window.location.href = '/dashboard'; 
           } else {
             window.location.href = '/';
           }

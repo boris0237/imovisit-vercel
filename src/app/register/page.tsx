@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link'
-import { Mail, Lock, Users, Phone, MapPin, Building2, ArrowRight, Store } from 'lucide-react';
+import { Mail, Lock, Users, Phone, MapPin, Building2, ArrowRight, Store, Briefcase } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,12 +17,13 @@ import InternationalPhoneInput from '@/components/ui/InternationalPhoneInput';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { isValidPhoneNumber } from 'react-phone-number-input';
 import loginUserBackend from '@/app/login/page'
+import { useAuth } from '@/contexts/AuthContext';
 
 
 
 
 export default function Register() {
-  const [accountType, setAccountType] = useState<'visitor' | 'owner' | 'prospector'>('visitor');
+  const [accountType, setAccountType] = useState<'visitor' | 'owner' | 'provider'>('visitor');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -39,6 +40,8 @@ export default function Register() {
   const currentYear = new Date().getFullYear();
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
+  const {user, login} = useAuth();
+
   const [successMessage, setSuccessMessage] = useState('');
   const renderError = (field: string) => {
     return errors[field] ? (
@@ -54,12 +57,12 @@ useEffect(() => {
   }
 }, [userData]); // Se déclenche dès que userData change après l'appel à withGoogle()
 
-const handleBackendLogin = (email: string) => {
+const handleBackendLogin = (email: string, password?: string) => {
   setIsLoading(true);
   setErrors({});
   resetError();
 
-  const loginData = { email: email };
+  const loginData = { email: email, password: password };
 
   fetch('/api/users/login', {
     method: 'POST',
@@ -76,14 +79,19 @@ const handleBackendLogin = (email: string) => {
         data: data
       }));
     })
-    .then(({ ok, status, data }) => {
+    .then(async({ ok, status, data }) => {
       if (ok) {
         setSuccessMessage(dictionary?.login?.success || "Connexion réussie !");
-        
+         const loggedInUser = data?.data?.user;
+         console.log("Logged in user:", loggedInUser);
+         await login(loginData);
+
         // Redirection après un court délai
-        setTimeout(() => {
-          window.location.href = '/dashboard/user';
-        }, 2000);
+         if (loggedInUser?.role !== 'visitor' && loggedInUser?.role !== undefined) {
+            window.location.href = '/dashboard'; 
+          } else {
+            window.location.href = '/';
+          }
       } else {
         // Gestion précise des erreurs via le statut HTTP
         switch (status) {
@@ -150,7 +158,7 @@ const registerUserBackend = () => {
         data: data
       }));
     })
-    .then(({ ok, data }) => {
+    .then(async({ ok, data }) => {
       if (ok) {
         setSuccessMessage(dictionary?.signup?.success || "Inscription réussie !");
         
@@ -161,10 +169,14 @@ const registerUserBackend = () => {
           role: accountType, acceptTerms: false,
         });
 
+        await login({ email: userData?.email || "", password: "" }); // On logue l'utilisateur sans mot de passe car c'est une auth Google
+
         // Redirection
-        setTimeout(() => {
-          window.location.href = '/dashboard/user';
-        }, 3000);
+        if (accountType !== 'visitor') {
+            window.location.href = '/dashboard';
+          } else {
+            window.location.href = '/';
+          }
       }  // Gestion précise des erreurs via le statut HTTP
         switch (data.status) {
           case 400:
@@ -289,12 +301,10 @@ const submitGoogle = () => {
           acceptTerms: false,
         });
 
-        setTimeout(() => {
-          window.location.href = '/login';
-        }, 3000);
+        handleBackendLogin(formData.email, formData.password);
       } else {switch (data.status) {
           case 400:
-          setErrors({general : dictionary.signup?.errorMissing || "Veuillez remplir tous les champs requis ou changer d'adresse mail."});
+          setErrors({general : data.message || dictionary.signup?.errorMissing || "Veuillez remplir tous les champs requis ou changer d'adresse mail."});
             break;
           case 500:
           setErrors({general : dictionary.singup.errorNetwork})    
@@ -358,17 +368,17 @@ const submitGoogle = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setAccountType('prospector')}
-                  className={`p-4 rounded-xl border-2 text-center transition-all ${accountType === 'prospector'
+                  onClick={() => setAccountType('provider')}
+                  className={`p-4 rounded-xl border-2 text-center transition-all ${accountType === 'provider'
                       ? 'border-imo-primary bg-imo-primary/5'
                       : 'border-gray-200 hover:border-gray-300'
                     }`}
                 >
-                  <Store className={`w-8 h-8 mx-auto mb-2 ${accountType === 'prospector' ? 'text-imo-primary' : 'text-gray-400'}`} />
-                  <div className={`font-medium ${accountType === 'prospector' ? 'text-imo-primary' : 'text-gray-600'}`}>
+                  <Briefcase className={`w-8 h-8 mx-auto mb-2 ${accountType === 'provider' ? 'text-imo-primary' : 'text-gray-400'}`} />
+                  <div className={`font-medium ${accountType === 'provider' ? 'text-imo-primary' : 'text-gray-600'}`}>
                     {dictionary?.signup?.prestataire || "Prestataire"}
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">{dictionary?.signup?.prestataireBio || "Je recherche un bien pour mes clients"}</div>
+                  <div className="text-xs text-gray-500 mt-1">{dictionary?.signup?.prestataireBio}</div>
                 </button>
               </div>
 
@@ -522,6 +532,7 @@ const submitGoogle = () => {
                     <Button
                       type="submit"
                       className="w-full bg-imo-primary hover:bg-imo-secondary gap-2"
+                      loading={isLoading} 
                     >
                       {dictionary.signup?.submit || "Créer mon compte"}
                       <ArrowRight className="w-4 h-4" />

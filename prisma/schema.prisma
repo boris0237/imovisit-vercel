@@ -50,6 +50,7 @@ enum UserRole {
   agency
   agent
   admin
+  provider
 }
 
 enum AuthProvider {
