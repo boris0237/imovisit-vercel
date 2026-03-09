@@ -3,6 +3,41 @@ import { NextRequest } from "next/server";
 import { apiResponse } from "@/lib/api-response";
 import { authMiddleware } from "@/middlewares/auth-middleware";
 
+/**
+ * @swagger
+ * /api/cities:
+ *   post:
+ *     tags:
+ *       - Geolocalisation
+ *     summary: Créer une ville
+ *     description: Permet d’ajouter une nouvelle ville associée à un pays.
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - countryId
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: Yaoundé
+ *               countryId:
+ *                 type: string
+ *                 example: 65fa12ab34cd56ef78901234
+ *     responses:
+ *       201:
+ *         description: Ville créée avec succès
+ *       400:
+ *         description: Ville déjà existante ou champs manquants
+ *       500:
+ *         description: Erreur serveur
+ */
+
 // Créer une ville
 export async function POST(req: NextRequest) {
   try {
@@ -31,6 +66,48 @@ export async function POST(req: NextRequest) {
     return apiResponse({ status: 500, message: error.message });
   }
 }
+
+
+/**
+ * @swagger
+ * /api/cities:
+ *   get:
+ *     tags:
+ *       - Geolocalisation
+ *     summary: Lister les villes
+ *     description: Retourne la liste des villes avec filtres et pagination.
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         example: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         example: 10
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         example: Douala
+ *       - in: query
+ *         name: countryId
+ *         schema:
+ *           type: string
+ *         example: 65fa12ab34cd56ef78901234
+ *       - in: query
+ *         name: isActive
+ *         schema:
+ *           type: boolean
+ *         example: true
+ *     responses:
+ *       200:
+ *         description: Liste des villes récupérée
+ *       500:
+ *         description: Erreur serveur
+ */
 
 //filter les villes "pays", "recherche"
 export async function GET(req: NextRequest) {
