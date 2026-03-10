@@ -184,7 +184,7 @@ export default {
     loading: "Chargement...",
     haveAccount: "Vous avez déjà un compte ? ",
     prestataire: "Prestataire",
-    prestataireBio: "Je recherche un bien pour mes clients",
+    prestataireBio: "Je veux proposer mes services.",
     login: "Se connecter",
     rights: "Imovisit. Tous droits réservés.",
     canConnect: "Impossible de se connecter au serveur. Veuillez vérifier votre connexion internet.",

@@ -64,7 +64,7 @@ export default {
     errorPasswordRequired: "Password is required",
     errorEmailInvalid: "Invalid email format",
     prestataire: "Prospector",
-    prestataireBio: "I am looking for a property for my clients",
+    prestataireBio: "I want to offer my services.",
     errorPasswordLength: "Password must be at least 8 characters long",
     errorGeneric: "An error occurred. Please try again.",
     errorEmailAlreadyExists: "This email is already in use",

@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useRef, useState, ChangeEvent } from 'react';
-import { UploadCloud, X, FileText, FileImage, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { UploadCloud, X, FileText, FileImage, AlertCircle, CheckCircle2, Router } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import SuccessRegistrationAlert from '@/components/SuccessRegistrationAlert';
@@ -10,6 +10,7 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import Modal from '@/components/ui/modal';
 import Toast from '@/components/ui/toast';
 import { userService } from '@/services/userService';
+import { useRouter } from 'next/navigation';
 
 const HomeIcone = () => (
   <svg width="54" height="54" viewBox="0 0 54 54" fill="none" xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink">
@@ -121,7 +122,7 @@ const LANDLORD_TYPES = [
   { id: 'prospector', label: 'Promoteur', icon: Construction },
 ];
 
-export default function UpdateRegister() {
+export default function UpdateRegister(props: { onClose?: () => void }) {
   const [selectedType, setSelectedType] = useState('owner');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const fileIdentityInputRef = useRef<HTMLInputElement>(null);
@@ -135,6 +136,7 @@ export default function UpdateRegister() {
   const [errorMessage, setErrorMessage] = useState<string>('');
   const { user, refreshUser } = useAuth();
 
+  const router = useRouter();
 
   const MAX_FILES = 3;
   const MAX_SIZE_MB = 5;
@@ -205,6 +207,8 @@ export default function UpdateRegister() {
   const handleUpdateProfile = async (updatedFields: Record<string, any>) => {
     try {
       const formData = new FormData();
+      if (selectedType) formData.append("role", selectedType);
+
 
       // Ajout des fichiers si présents
       if (logoFile) formData.append("companyLogo", logoFile);
@@ -225,6 +229,10 @@ export default function UpdateRegister() {
         setIsLoading(false);
         setShowError(false);
         setShowRegistrationSucces(true);
+      console.log("Response Update Profile:", result);
+      if (result?.status==200){
+        setIsLoading(false);
+        if(props.onClose) props.onClose();
         console.log("Profil mis à jour avec succès:", result);
       }
       else {
@@ -268,8 +276,8 @@ export default function UpdateRegister() {
     <div className="max-w-4xl mx-auto p-6 bg-white font-sans text-[#1a2b4b]">
       {/* Header */}
       <header className="text-center mb-10">
-        <h1 className="text-3xl font-extrabold mb-2">Type de bailleur</h1>
-        <p className="text-gray-500 text-sm">Précisez votre compte professionnel</p>
+        <h1 className="text-3xl font-extrabold mb-2">Type de Profile</h1>
+        <p className="text-gray-500 text-sm">Finissez de configurer votre compte </p>
       </header>
 
       {/* Grid de sélection */}
@@ -443,6 +451,74 @@ export default function UpdateRegister() {
             Formats acceptés : PDF, PNG, JPG (Max 3 documents)
           </p>
         </div>
+       {selectedType == "agency" && 
+        
+        <div className="space-y-8">
+          {/* Nom de la société */}
+        
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-bold text-gray-700">Nom de l'agence</label>
+            <Input 
+              type="text" 
+              placeholder="Ex: Imovisit SARL"
+              className="w-full p-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2b3a67] focus:border-transparent transition-all"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </div>
+          </div>
+    }
+
+          {/* Upload Logo */}
+
+          <div className="space-y-6">
+          {selectedType == "agency" && 
+            <div className="flex flex-col gap-2 mt-10">
+              <label className="text-sm font-bold text-gray-700">Logo de l'agence</label>
+              
+              {/* 1. L'input de fichier réel, mais CACHÉ */}
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleLogoChange}
+                accept="image/*"
+                className="hidden"
+              />
+
+              {/* 2. Le conteneur visuel qui sert de bouton */}
+              <div 
+                onClick={handleContainerClick}
+                className="border-2 border-dashed border-gray-200 rounded-2xl p-10 flex flex-col items-center justify-center bg-gray-50/50 hover:bg-gray-50 transition-colors cursor-pointer group"
+              >
+                <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center mb-4 group-hover:bg-gray-300 transition-colors overflow-hidden">
+                  {previewUrl ? (
+                    <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+                  ) : (
+                    <svg width="54" height="54" viewBox="0 0 54 54" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <rect width="54" height="54" fill="url(#pattern0_1332_11183)"/>
+                      <defs>
+                        <pattern id="pattern0_1332_11183" patternContentUnits="objectBoundingBox" width="1" height="1">
+                          <use href="#image0_1332_11183" transform="scale(0.00195312)"/>
+                        </pattern>
+                        <image id="image0_1332_11183" width="512" height="512" href="data:image/png;base64,..." />
+                      </defs>
+                    </svg>
+                  )}
+                </div>
+                <p className="text-sm font-bold mb-1">
+                  {logoFile ? logoFile.name : "Cliquer pour ajouter votre logo"}
+                </p>
+                <p className="text-xs text-gray-400">Format recommandé : PNG, JPG (max 2MB)</p>
+                <p className="text-[10px] text-gray-300 mt-1 italic">Ce logo sera visible sur votre profil et vos annonces</p>
+              </div>
+            </div>
+          }
+ 
+        {/* Documents justificatifs */}
+        <div className="flex flex-col gap-2">
+    
+    
+    </div>
         {/* Bouton de validation */}
         <button onClick={onSubmit} className="w-full bg-[#1a2b4b] hover:bg-[#121d33] text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg active:scale-[0.98]">
           Finaliser l'inscription

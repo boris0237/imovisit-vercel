@@ -33,7 +33,6 @@ import { mockProperties } from '@/data/mock';
 import UpdateRegisterForm from '@/forms/updateRegister';
 import { useEffect, useState } from "react";
 import { useAuth } from '@/contexts/AuthContext';
-import Modal from '@/components/ui/modal';
 import LanguageDropdown from '@/components/LanguageDropdown';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useDictionary } from '@/hooks/useDictionary';
@@ -85,6 +84,7 @@ const offerLabels: Record<string, { label: string; className: string }> = {
       }
     }
   }, []);
+
   
   return (
     <>
@@ -288,6 +288,7 @@ const offerLabels: Record<string, { label: string; className: string }> = {
       >
         <UpdateRegisterForm /> 
       </Modal>
+
       </div>
     </>
   );
