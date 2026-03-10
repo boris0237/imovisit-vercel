@@ -191,7 +191,8 @@ async function createProperty() {
 
     const response = await fetch("/api/biens/", {
       method: "POST",
-      body: formDataToSend
+      body: formDataToSend,
+      include: "credentials",
     });
 
     if (!response.ok) {
