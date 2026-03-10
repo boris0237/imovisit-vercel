@@ -45,11 +45,11 @@ enum UserRole {
   owner
   property_manager
   prospector
+  provider
   free_agent
   agency
   agent
   admin
-  provider
 }
 
 enum AuthProvider {
@@ -280,4 +280,28 @@ model District { // quartier
   updatedAt DateTime @updatedAt
 
   @@unique([name, cityId]) // unique par ville
+}
+
+
+// DEPENSES
+model Expense {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  assetId     String   @db.ObjectId  //id du bien 
+  type        ExpenseType            //type de dépense
+  amount      Float
+  currency    String                //devise (USD, EUR, XAF)
+  date        DateTime
+  description String?
+  vendor      String?               //la personne qui a fait le service
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum ExpenseType {
+  maintenance
+  repair
+  insurance
+  transport
+  other
 }

@@ -2,6 +2,31 @@ import { apiResponse } from "@/lib/api-response";
 import { NextRequest } from "next/server";
 import { prisma } from "@/services/db";
 
+
+/**
+ * @swagger
+ * /api/countries/{id}:
+ *   get:
+ *     tags:
+ *       - Geolocalisation
+ *     summary: Détail d’un pays
+ *     description: Récupère un pays par son ID avec ses villes associées.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         example: 65fa12ab34cd56ef78901234
+ *     responses:
+ *       200:
+ *         description: Pays trouvé
+ *       404:
+ *         description: Pays introuvable
+ *       500:
+ *         description: Erreur serveur
+ */
+
 // voir un pays
 export async function GET(
   req: NextRequest,
@@ -23,6 +48,50 @@ export async function GET(
     return apiResponse({ status: 500, message: error.message });
   }
 }
+
+
+/**
+ * @swagger
+ * /api/countries/{id}:
+ *   patch:
+ *     tags:
+ *       - Geolocalisation
+ *     summary: Modifier un pays
+ *     description: Permet de modifier les informations d’un pays existant.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: République du Cameroun
+ *               code:
+ *                 type: string
+ *                 example: CM
+ *               isActive:
+ *                 type: boolean
+ *                 example: true
+ *     responses:
+ *       200:
+ *         description: Pays modifié avec succès
+ *       400:
+ *         description: Nom ou code déjà existant
+ *       404:
+ *         description: Pays introuvable
+ *       500:
+ *         description: Erreur serveur
+ */
 
 // modifier un pays
 export async function PATCH(
@@ -89,6 +158,32 @@ export async function PATCH(
     return apiResponse({ status: 500, message: error.message });
   }
 }
+
+
+/**
+ * @swagger
+ * /api/countries/{id}:
+ *   delete:
+ *     tags:
+ *       - Geolocalisation
+ *     summary: Supprimer un pays
+ *     description: Supprime un pays du système. Les villes associées sont conservées.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Pays supprimé avec succès
+ *       404:
+ *         description: Pays introuvable
+ *       500:
+ *         description: Erreur serveur
+ */
 
 // supprimer un pays
 export async function DELETE(
