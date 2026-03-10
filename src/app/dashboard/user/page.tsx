@@ -41,7 +41,24 @@ import Step2Location from '@/components/modal/steps/Step2Location';
 import Step3Features from '@/components/modal/steps/Step3Features';
 import Step4Media from '@/components/modal/steps/Step4Media';
 import Step5Success from '@/components/modal/steps/Step5Success';
-import type { PropertyFormData } from '@/types/index';
+import type { PropertyFormData } from '@/types';
+
+
+interface PropertyFormDataExtended extends PropertyFormData {
+  country?: string;
+  city?: string;
+  district?: string;
+  address?: string;
+  price?: number;
+  visitFee?: number;
+  surface?: number;
+  offerType?: string;
+  rooms?: number;
+  bathrooms?: number;
+  amenities?: string[];
+  images?: File[];
+  
+}
 
 export default function Dashboard() {
 
@@ -50,7 +67,7 @@ export default function Dashboard() {
   const [showAddPropertyModal, setShowAddPropertyModal] = useState(false);
   const [step, setStep] = useState(1);
   const {dictionary} = useDictionary();
-
+  const [loading, setLoading] = useState(false);
   const nextStep = () => setStep(prev => prev + 1);
   const prevStep = () => setStep(prev => prev - 1);
 
@@ -100,9 +117,9 @@ function onFinish() {
   setStep(1);
 }
  
-const initialFormData: PropertyFormData = {
+const initialFormData: PropertyFormDataExtended = {
   type: "",
-  offerType: "location ",
+  offerType: "rent",
   title: "",
   description: "",
   surface: undefined,
@@ -112,13 +129,15 @@ const initialFormData: PropertyFormData = {
   price: undefined,
   visitFee: undefined,
   images: [],
+  country: "",
   city: "",
-  neighborhood:"",
+  district: "",
+  address: "",
 };
 
-const [formData, setFormData] = useState<PropertyFormData>(initialFormData);
+const [formData, setFormData] = useState<PropertyFormDataExtended>(initialFormData);
 
-const updateFormData = (values: Partial<PropertyFormData>) => {
+const updateFormData = (values: Partial<PropertyFormDataExtended>) => {
   setFormData(prev => ({ ...prev, ...values }));
 };
 
@@ -127,7 +146,86 @@ const resetForm = () => {
   setStep(1);
 };
 
+async function createProperty() {
 
+  try {
+
+    if (!formData.title || !formData.type || !formData.offerType || !formData.price || !formData.city) {
+      alert("Veuillez remplir tous les champs obligatoires");
+      return;
+    }
+
+    setLoading(true);
+
+    const formDataToSend = new FormData();
+
+    const fields = {
+      title: formData.title,
+      type: formData.type,
+      offerType: formData.offerType,
+      description: formData.description || "",
+      country: formData.country || "",
+      city: formData.city,
+      district: formData.district || "",
+      address: formData.address || "",
+      price: String(formData.price),
+      visitFee: String(formData.visitFee || 0)
+    };
+
+    Object.entries(fields).forEach(([key, value]) => {
+      formDataToSend.append(key, value);
+    });
+
+    // ajout images
+    if (Array.isArray(formData.images) && formData.images.length > 0) {
+
+      formData.images.forEach((image) => {
+
+        if (image instanceof File) {
+          formDataToSend.append("images", image);
+        }
+
+      });
+
+    }
+
+    const response = await fetch("/api/biens/", {
+      method: "POST",
+      body: formDataToSend
+    });
+
+    if (!response.ok) {
+
+      const errorText = await response.text();
+      console.error("Erreur serveur :", errorText);
+
+      throw new Error("Erreur lors de l'ajout du bien");
+
+    }
+
+    const result = await response.json();
+
+    console.log("Bien créé :", result);
+
+    resetForm();
+    setShowAddPropertyModal(false);
+
+  } catch (error) {
+
+    console.error("Erreur API :", error);
+
+    alert(
+      error instanceof Error
+        ? error.message
+        : "Une erreur est survenue"
+    );
+
+  } finally {
+
+    setLoading(false);
+
+  }
+}
 
   return (
     <>
@@ -141,8 +239,11 @@ const resetForm = () => {
           </div>
           <div className='flex flex-row items-center space-x-8'>
             <Button
-                onClick={() => setShowAddPropertyModal(true)} 
-                className="bg-slate-900 hover:bg-slate-800 gap-2">
+                onClick={() => {
+                resetForm();
+                setShowAddPropertyModal(true);
+              }}
+            >
                 <Plus className="w-4 h-4" />
                 Ajouter un bien
             </Button>
@@ -241,7 +342,13 @@ const resetForm = () => {
                 <Card key={property.id} className="border-slate-200 overflow-hidden">
                   <div className="relative">
                     <img
-                      src={typeof property.images[0] === 'string' ? property.images[0] : URL.createObjectURL(property.images[0])}
+                      src={
+                        property.images?.[0]
+                          ? typeof property.images[0] === "string"
+                            ? property.images[0]
+                            : URL.createObjectURL(property.images[0])
+                          : "/placeholder.jpg"
+                      }
                       alt={property.title}
                       className="w-full h-44 object-cover"
                     />
@@ -332,7 +439,7 @@ const resetForm = () => {
         <UpdateProfileForm /> 
       </Modal>
 
-      <Modal
+<Modal
   isOpen={showAddPropertyModal}
   onClose={() => setShowAddPropertyModal(false)}
   title="Ajouter un bien"
@@ -376,19 +483,19 @@ const resetForm = () => {
     />
   )}
 
-  {step === 5 && (
-    <Step5Success
-      data={formData}
-      onFinish={() => {
-        resetForm();
-        setShowAddPropertyModal(false);
-        console.log (setShowAddPropertyModal)
-      }}
-    />
-  )}
+ {step === 5 && (
+  <Step5Success
+    data={formData}
+    onFinish={createProperty}
+
+  />
+)}
+
+
   
 </Modal>
       </div>
     </>
   );
 }
+
