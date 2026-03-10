@@ -1,3 +1,5 @@
+// src/app/api/biens/route.ts
+
 /**
  * @swagger
  * /api/biens:
