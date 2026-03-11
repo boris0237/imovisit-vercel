@@ -8,13 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-interface PropertyFormData {
-  country?: string;
-  city?: string;
-  district?: string;
-  address?: string;
-}
+import type { PropertyFormData } from "@/types";
 
 interface Props {
   data: PropertyFormData;
@@ -83,15 +77,18 @@ export default function Step2Location({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
         <div className="space-y-2">
-
           <label className="text-sm font-medium">
             Pays *
           </label>
 
           <Select
-            value={data.country || ""}
+            value={data.country ?? ""}
             onValueChange={(value) =>
-              updateData({ country: value })
+              updateData({
+                country: value,
+                city: "",
+                district: ""
+              })
             }
           >
             <SelectTrigger className="h-11">
@@ -108,15 +105,18 @@ export default function Step2Location({
         </div>
 
         <div className="space-y-2">
-
           <label className="text-sm font-medium">
             Ville *
           </label>
 
           <Select
-            value={data.city || ""}
+            value={data.city ?? ""}
+            disabled={!data.country}
             onValueChange={(value) =>
-              updateData({ city: value })
+              updateData({
+                city: value,
+                district: ""
+              })
             }
           >
             <SelectTrigger className="h-11">
@@ -130,7 +130,6 @@ export default function Step2Location({
             </SelectContent>
 
           </Select>
-
         </div>
 
       </div>
@@ -143,7 +142,7 @@ export default function Step2Location({
         </label>
 
         <Input
-          value={data.district || ""}
+          value={data.district ?? ""}
           disabled={!data.city}
           onChange={(e) =>
             updateData({ district: e.target.value })
@@ -162,7 +161,7 @@ export default function Step2Location({
         </label>
 
         <Input
-          value={data.address || ""}
+          value={data.address ?? ""}
           onChange={(e) =>
             updateData({ address: e.target.value })
           }

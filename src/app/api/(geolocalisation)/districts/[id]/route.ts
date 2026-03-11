@@ -3,6 +3,29 @@ import { NextRequest } from "next/server";
 import { apiResponse } from "@/lib/api-response";
 import { authMiddleware } from "@/middlewares/auth-middleware";
 
+/**
+ * @swagger
+ * /api/districts/{id}:
+ *   get:
+ *     tags:
+ *       - Geolocalisation
+ *     summary: Détail d’un quartier
+ *     description: Récupère un quartier par son ID avec sa ville et le pays associé.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         example: 65fa12ab34cd56ef78901234
+ *     responses:
+ *       200:
+ *         description: Quartier trouvé
+ *       404:
+ *         description: Quartier introuvable
+ *       500:
+ *         description: Erreur serveur
+ */
 
 // GET ONE
 export async function GET(
@@ -33,6 +56,48 @@ export async function GET(
 }
 
 
+/**
+ * @swagger
+ * /api/districts/{id}:
+ *   patch:
+ *     tags:
+ *       - Geolocalisation
+ *     summary: Modifier un quartier
+ *     description: Permet de modifier les informations d’un quartier existant.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: Bonapriso
+ *               cityId:
+ *                 type: string
+ *                 example: 65fa12ab34cd56ef78901234
+ *               isActive:
+ *                 type: boolean
+ *                 example: true
+ *     responses:
+ *       200:
+ *         description: Quartier mis à jour
+ *       400:
+ *         description: Quartier déjà existant pour cette ville
+ *       404:
+ *         description: Quartier introuvable
+ *       500:
+ *         description: Erreur serveur
+ */
 
 // UPDATE
 export async function PATCH(
@@ -87,6 +152,32 @@ export async function PATCH(
     return apiResponse({ status: 500, message: error.message });
   }
 }
+
+
+/**
+ * @swagger
+ * /api/districts/{id}:
+ *   delete:
+ *     tags:
+ *       - Geolocalisation
+ *     summary: Supprimer un quartier
+ *     description: Supprime définitivement un quartier du système.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Quartier supprimé avec succès
+ *       404:
+ *         description: Quartier introuvable
+ *       500:
+ *         description: Erreur serveur
+ */
 
 // DELETE PHYSIQUE
 export async function DELETE(

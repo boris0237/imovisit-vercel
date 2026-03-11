@@ -1,4 +1,4 @@
-export interface Property {
+export interface PropertyData {
   id: string;
   title: string;
   description: string;
@@ -29,6 +29,10 @@ export interface Property {
 }
 
 export interface PropertyFormData{
+  country: any;
+  district: any;
+  address: any;
+  price: any;
   data: string;
   updateData: string;
   next: boolean;
@@ -44,6 +48,10 @@ export interface PropertyFormData{
   visitType: "gratuit" | "payant";
   isAvailable: boolean;
   surface: number;
+  rooms: number;
+  bathrooms: number;
+  amenities: string[];
+  images: File[];
 }
 
 export interface User {

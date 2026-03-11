@@ -125,6 +125,13 @@ export async function PATCH(req: NextRequest) {
     const allowedFieldsForRole = ROLE_ALLOWED_FIELDS[role] || [];
     const updateData = filterFormDataFields(rawData, allowedFieldsForRole);
 
+    if (updateData.phone) {
+      updateData.phone = String(updateData.phone); // Force le téléphone en texte
+    }
+    if (updateData.age) {
+      updateData.age = parseInt(String(updateData.age), 10); // Force l'âge en nombre entier
+    }
+
     // Mise à jour du User
     const updatedUser = await prisma.user.update({
       where: { id: user.id },

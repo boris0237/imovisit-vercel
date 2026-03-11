@@ -25,6 +25,8 @@ import ProfileDropdown from '@/components/ProfileDropdown'
 import { useState } from 'react'
 import Modal from '@/components/ui/modal'
 import  UpdateProfileForm from '@/forms/UpdateProfile'
+import {translateRole} from '@/utils/translateRole'
+import { useDictionary } from '@/hooks/useDictionary'
 
 const primaryNav = [
   { icon: LayoutGrid, label: "Vue d'ensemble", href: '/dashboard' },
@@ -52,6 +54,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const { user } = useAuth();
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  const [showProfil, setShowProfil] = useState(false);
+  const { dictionary } = useDictionary();
 
   const pathname = usePathname()
 
@@ -76,16 +80,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </Link>
           </div>
 
-          <div className="px-6 py-6">
+          <div className="px-6 py-6 cursor-pointer" onClick={() => setShowProfil(true)}>
             <div className="flex items-center gap-3 rounded-2xl bg-slate-50 p-4 border border-slate-200">
               <div className="relative">
                 <ProfileDropdown
                   onOpenUpdateProfile={() => setIsUpdateModalOpen(true)}
+                  isOpen={showProfil}
+                  setIsOpen={setShowProfil}
                 />
               </div>
               <div className="min-w-0">
                 <p className="font-semibold text-sm text-slate-900 truncate">{user?.name}</p>
-                <p className="text-xs text-slate-500 truncate">{user?.role}</p>
+                <p className="text-xs text-slate-500 truncate">{translateRole(user?.role || " ", dictionary)}</p>
               </div>
             </div>
           </div>

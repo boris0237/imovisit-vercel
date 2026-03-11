@@ -77,7 +77,7 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center p-4 font-sans text-[#1a2b4b]">
+      <div className="min-h-screen bg-gradient-to-br from-imo-primary via-imo-secondary to-imo-primary flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md bg-white rounded-3xl shadow-xl shadow-slate-200/50 overflow-hidden border border-slate-100 p-8 relative">
         
         {/* En-tête */}

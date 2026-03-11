@@ -8,7 +8,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
 import { KeyRound, Tag, Armchair } from "lucide-react";
 
 interface PropertyFormData {
