@@ -181,12 +181,13 @@
  *                 limit:
  *                   type: integer
  */
+
 import { prisma } from "@/services/db";
 import { NextRequest } from "next/server";
 import { apiResponse } from "@/lib/api-response";
 import { authMiddleware } from "@/middlewares/auth-middleware";
 
-// creation reservation
+// --- CREER UNE RESERVATION ---
 export async function POST(req: NextRequest) {
   try {
     const authError = authMiddleware(req);
@@ -205,39 +206,23 @@ export async function POST(req: NextRequest) {
     const dayOfMonth = reservationDate.getDate();
 
     // Vérifier bien
-    const property = await prisma.property.findUnique({
-      where: { id: propertyId }
-    });
-
-    if (!property) {
-      return apiResponse({ status: 404, message: "Bien introuvable" });
-    }
+    const property = await prisma.property.findUnique({ where: { id: propertyId } });
+    if (!property) return apiResponse({ status: 404, message: "Bien introuvable" });
 
     // Vérifier propriétaire
-    const owner = await prisma.user.findUnique({
-      where: { id: property.userId }
-    });
-
-    if (!owner) {
-      return apiResponse({ status: 404, message: "Propriétaire introuvable" });
-    }
+    const owner = await prisma.user.findUnique({ where: { id: property.userId } });
+    if (!owner) return apiResponse({ status: 404, message: "Propriétaire introuvable" });
 
     if (property.userId === decodedUser.id) {
-      return apiResponse({
-        status: 400,
-        message: "Vous ne pouvez pas réserver votre propre bien"
-      });
+      return apiResponse({ status: 400, message: "Vous ne pouvez pas réserver votre propre bien" });
     }
 
-    // Vérification Premium
+    // Vérifier Premium pour visite à distance
     if (visitType === "remote" && owner.typeCompte !== "premium") {
-      return apiResponse({
-        status: 403,
-        message: "Visite à distance réservée aux comptes premium"
-      });
+      return apiResponse({ status: 403, message: "Visite à distance réservée aux comptes premium" });
     }
 
-    // Vérifier conflit réservation
+    // Vérifier conflit avec autres réservations
     const overlappingReservation = await prisma.reservation.findFirst({
       where: {
         propertyId,
@@ -248,10 +233,7 @@ export async function POST(req: NextRequest) {
         ]
       }
     });
-
-    if (overlappingReservation) {
-      return apiResponse({ status: 400, message: "Créneau déjà réservé" });
-    }
+    if (overlappingReservation) return apiResponse({ status: 400, message: "Créneau déjà réservé" });
 
     // Vérifier exceptions
     const overlappingException = await prisma.availabilityException.findFirst({
@@ -264,21 +246,12 @@ export async function POST(req: NextRequest) {
         ]
       }
     });
+    if (overlappingException) return apiResponse({ status: 400, message: "Créneau indisponible (exception)" });
 
-    if (overlappingException) {
-      return apiResponse({ status: 400, message: "Créneau indisponible (exception)" });
-    }
+    // Générer le contexte de visite
+    const visitContext = visitType === "remote" ? `https://wa.me/${owner.phone}` : property.address;
 
-    // Génération contexte visite
-    let visitContext = "";
-
-    if (visitType === "remote") {
-      visitContext = `https://wa.me/${owner.phone}`;
-    } else {
-      visitContext = property.address;
-    }
-
-    // Créer réservation
+    // Créer la réservation
     const reservation = await prisma.reservation.create({
       data: {
         propertyId,
@@ -287,25 +260,20 @@ export async function POST(req: NextRequest) {
         date: reservationDate,
         startTime,
         endTime,
-        visitType: "in_person",
-        visitContext: property.address,
-
-        status: "pending",
+        visitType: visitType as any,
+        visitContext,
+        status: "pending"
       }
     });
 
-    return apiResponse({
-      status: 201,
-      message: "Réservation créée",
-      data: reservation
-    });
+    return apiResponse({ status: 201, message: "Réservation créée", data: reservation });
 
   } catch (err: any) {
     return apiResponse({ status: 500, message: err.message });
   }
 }
 
-// GET all reservations avec filtres
+// --- LISTER LES RESERVATIONS AVEC FILTRES ---
 export async function GET(req: NextRequest) {
   try {
     const authError = authMiddleware(req);
@@ -318,7 +286,6 @@ export async function GET(req: NextRequest) {
     const skip = (page - 1) * limit;
 
     const filters: any = {};
-
     const propertyId = searchParams.get("propertyId");
     const ownerId = searchParams.get("ownerId");
     const clientId = searchParams.get("clientId");
@@ -345,11 +312,7 @@ export async function GET(req: NextRequest) {
       prisma.reservation.count({ where: filters })
     ]);
 
-    return apiResponse({
-      status: 200,
-      message: "Liste des réservations",
-      data: { reservations, total, page, limit }
-    });
+    return apiResponse({ status: 200, message: "Liste des réservations", data: { reservations, total, page, limit } });
 
   } catch (err: any) {
     return apiResponse({ status: 500, message: err.message });
