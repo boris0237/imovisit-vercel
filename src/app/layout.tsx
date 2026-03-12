@@ -3,6 +3,7 @@ import { LanguageProvider } from '@/contexts/LanguageContext'
 import "./globals.css";
 import "./App.css";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { CalendarProvider } from "@/contexts/CalendarContext";
 
 
 export const metadata: Metadata = {
@@ -22,11 +23,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="fr">
-      <AuthProvider>
-      <LanguageProvider>
-          <body className="antialiased">{children}</body>
-      </LanguageProvider>
-      </AuthProvider>
+      <CalendarProvider>
+        <AuthProvider>
+          <LanguageProvider>
+            <body className="antialiased">{children}</body>
+          </LanguageProvider>
+        </AuthProvider>
+      </CalendarProvider>
     </html>
   )
 }
