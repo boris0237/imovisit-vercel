@@ -2,11 +2,12 @@
 
 import MyAvalability from '@/forms/availabilityForm'
 import Modal from '@/components/ui/modal'
+import UpdateRegister from '@/forms/updateRegister';
 
 export default function test() {
   return (
-    <Modal title='Definissez vos créneaux horaires réguliers' isOpen={true} closeOnClickOutside={false} onClose={() => {}} rounded={false} locked={false} >
-        <MyAvalability />
+    <Modal title=' ' isOpen={true} closeOnClickOutside={false} onClose={() => {}} rounded={false} locked={false} >
+        <UpdateRegister />
     </Modal>
   );
 }

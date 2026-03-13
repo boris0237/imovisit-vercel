@@ -119,18 +119,21 @@ export function CalendarProvider({ children, propertyId }: { children: ReactNode
       date,
       startTime,
       endTime,
-      isAvailable: false
+      isAvailable: true
     };
     setExceptions(prev => [...prev, tempException]);
 
     // 2. Appel API réel
     try {
-      // await agendaService.createException({ propertyId, date, startTime, endTime, isAvailable: false });
+      // await agendaService.createException({ date, startTime, endTime });
       toast.success("Créneau bloqué avec succès");
+      console.log("Créneau bloqué avec succès");
+      refreshData();
     } catch (error) {
       // En cas d'erreur, on annule la mise à jour optimiste
       setExceptions(prev => prev.filter(exc => exc.id !== tempException.id));
       toast.error("Impossible de bloquer ce créneau");
+      console.log("Impossible de bloquer ce créneau");
     }
   };
 

@@ -5,130 +5,114 @@
  *     tags:
  *       - Agenda
  *     summary: Créer une exception de disponibilité
- *     description: Permet au propriétaire de bloquer une date ou une plage horaire (congé, indisponibilité ponctuelle).
+ *     description: |
+ *       Permet au propriétaire de bloquer sa disponibilité.
+ *       L'ownerId est automatiquement récupéré depuis le token d'authentification.
+ *
+ *       Deux types de JSON sont possibles :
+ *
+ *       1. Bloquer un intervalle de jours :
+ *       {
+ *         "dateStart": "2026-03-22",
+ *         "dateEnd": "2026-03-26",
+ *         "reason": "vacances"
+ *       }
+ *
+ *       2. Bloquer un jour précis avec heures :
+ *       {
+ *         "date": "2026-03-20",
+ *         "startTime": "10:00",
+ *         "endTime": "16:00",
+ *         "reason": "maintenance"
+ *       }
+ *
+ *       Types d'exceptions possibles :
+ *       - Jour précis
+ *       - Intervalle de jours
+ *       - Jour de la semaine récurrent
+ *       - Jour du mois récurrent
+ *
  *     security:
  *       - bearerAuth: []
+ *
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - propertyId
  *             properties:
- *               propertyId:
- *                 type: string
- *                 description: ID du bien concerné
+ *
  *               date:
  *                 type: string
- *                 format: date-time
- *                 description: Date spécifique à bloquer
+ *                 format: date
+ *                 description: Bloquer un jour précis
+ *                 example: "2026-03-20"
+ *
+ *               dateStart:
+ *                 type: string
+ *                 format: date
+ *                 description: Début d'un intervalle de jours
+ *                 example: "2026-03-22"
+ *
+ *               dateEnd:
+ *                 type: string
+ *                 format: date
+ *                 description: Fin d'un intervalle de jours
+ *                 example: "2026-03-26"
+ *
+ *               dayOfWeek:
+ *                 type: string
+ *                 enum:
+ *                   - monday
+ *                   - tuesday
+ *                   - wednesday
+ *                   - thursday
+ *                   - friday
+ *                   - saturday
+ *                   - sunday
+ *                 description: Bloquer un jour spécifique de la semaine
+ *                 example: "sunday"
+ *
+ *               dayOfMonth:
+ *                 type: integer
+ *                 description: Bloquer un jour précis du mois
+ *                 example: 5
+ *
  *               startTime:
  *                 type: string
- *                 example: "14:00"
+ *                 description: Heure de début de l'indisponibilité
+ *                 example: "10:00"
+ *
  *               endTime:
  *                 type: string
- *                 example: "18:00"
+ *                 description: Heure de fin de l'indisponibilité
+ *                 example: "16:00"
+ *
  *               reason:
  *                 type: string
- *                 example: "Congé"
+ *                 description: Raison de l'indisponibilité
+ *                 example: "Vacances"
+ *
  *     responses:
  *       201:
  *         description: Exception créée avec succès
+ *
  *       400:
- *         description: propertyId requis
+ *         description: Mauvaise requête
+ *
  *       401:
  *         description: Non autorisé
- *       500:
- *         description: Erreur serveur
  *
- *   get:
- *     tags:
- *       - Agenda
- *     summary: Récupérer la liste des exceptions
- *     description: Permet de récupérer les exceptions avec filtres dynamiques (propriété, propriétaire, date, plage horaire).
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: query
- *         name: propertyId
- *         schema:
- *           type: string
- *         description: Filtrer par ID du bien
- *
- *       - in: query
- *         name: ownerId
- *         schema:
- *           type: string
- *         description: Filtrer par ID du propriétaire
- *
- *       - in: query
- *         name: dayOfWeek
- *         schema:
- *           type: string
- *           enum: [monday, tuesday, wednesday, thursday, friday, saturday, sunday]
- *         description: Filtrer par jour de la semaine
- *
- *       - in: query
- *         name: date
- *         schema:
- *           type: string
- *           format: date-time
- *         description: Filtrer par date exacte
- *
- *       - in: query
- *         name: dateStart
- *         schema:
- *           type: string
- *           format: date-time
- *         description: Date de début de période
- *
- *       - in: query
- *         name: dateEnd
- *         schema:
- *           type: string
- *           format: date-time
- *         description: Date de fin de période
- *
- *       - in: query
- *         name: startTime
- *         schema:
- *           type: string
- *         description: Filtrer par heure de début
- *
- *       - in: query
- *         name: endTime
- *         schema:
- *           type: string
- *         description: Filtrer par heure de fin
- *
- *       - in: query
- *         name: page
- *         schema:
- *           type: integer
- *         description: Numéro de page
- *
- *       - in: query
- *         name: limit
- *         schema:
- *           type: integer
- *         description: Nombre d'éléments par page
- *
- *     responses:
- *       200:
- *         description: Liste des exceptions récupérée
- *       401:
- *         description: Non autorisé
  *       500:
  *         description: Erreur serveur
  */
+
 
 import { prisma } from "@/services/db";
 import { NextRequest } from "next/server";
 import { apiResponse } from "@/lib/api-response";
 import { authMiddleware } from "@/middlewares/auth-middleware";
-
 
 // CREATE exception
 export async function POST(req: NextRequest) {
@@ -137,19 +121,80 @@ export async function POST(req: NextRequest) {
     if (authError) return authError;
 
     const body = await req.json();
-    const { propertyId, date, startTime, endTime, reason } = body;
-
-    if (!propertyId) {
-      return apiResponse({ status: 400, message: "propertyId requis" });
-    }
+    const { date, dateStart, dateEnd, startTime, endTime, reason } = body;
 
     const decodedUser = (req as any).user;
+
+    // CAS 1 : INTERVALLE DE JOURS
+    if (dateStart && dateEnd) {
+
+      // vérifier chevauchement avec autre intervalle
+      const intervalExist = await prisma.availabilityException.findFirst({
+        where: {
+          ownerId: decodedUser.id,
+          dateStart: { not: null },
+          AND: [
+            { dateStart: { lte: new Date(dateEnd) } },
+            { dateEnd: { gte: new Date(dateStart) } }
+          ]
+        }
+      });
+
+      if (intervalExist) {
+        return apiResponse({
+          status: 400,
+          message: "Un intervalle existe déjà dans cette période"
+        });
+      }
+
+    }
+
+    // CAS 2 : JOUR + HEURE
+    if (date && startTime && endTime) {
+
+      // vérifier si un intervalle couvre ce jour
+      const intervalCover = await prisma.availabilityException.findFirst({
+        where: {
+          ownerId: decodedUser.id,
+          dateStart: { lte: new Date(date) },
+          dateEnd: { gte: new Date(date) }
+        }
+      });
+
+      if (intervalCover) {
+        return apiResponse({
+          status: 400,
+          message: "Ce jour est déjà bloqué par un intervalle"
+        });
+      }
+
+      // vérifier chevauchement horaire
+      const hourConflict = await prisma.availabilityException.findFirst({
+        where: {
+          ownerId: decodedUser.id,
+          date: new Date(date),
+          AND: [
+            { startTime: { lte: endTime } },
+            { endTime: { gte: startTime } }
+          ]
+        }
+      });
+
+      if (hourConflict) {
+        return apiResponse({
+          status: 400,
+          message: "Une exception horaire existe déjà"
+        });
+      }
+
+    }
 
     const exception = await prisma.availabilityException.create({
       data: {
         ownerId: decodedUser.id,
-        propertyId,
         date: date ? new Date(date) : null,
+        dateStart: dateStart ? new Date(dateStart) : null,
+        dateEnd: dateEnd ? new Date(dateEnd) : null,
         startTime,
         endTime,
         reason
@@ -167,7 +212,6 @@ export async function POST(req: NextRequest) {
   }
 }
 
-
 // GET all exceptions avec filtres dynamiques
 export async function GET(req: NextRequest) {
   try {
@@ -176,68 +220,115 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
 
-    // Pagination
     const page = parseInt(searchParams.get("page") || "1");
     const limit = parseInt(searchParams.get("limit") || "10");
     const skip = (page - 1) * limit;
 
-    // Filtres dynamiques
     const filters: any = {};
 
     const propertyId = searchParams.get("propertyId");
     const ownerId = searchParams.get("ownerId");
     const dayOfWeek = searchParams.get("dayOfWeek");
+    const dayOfMonth = searchParams.get("dayOfMonth");
     const date = searchParams.get("date");
     const dateStart = searchParams.get("dateStart");
     const dateEnd = searchParams.get("dateEnd");
     const startTime = searchParams.get("startTime");
     const endTime = searchParams.get("endTime");
 
-
-    // Filtres simples
     if (propertyId) filters.propertyId = propertyId;
     if (ownerId) filters.ownerId = ownerId;
-    if (dayOfWeek) filters.dayOfWeek = dayOfWeek;
+    if (dayOfMonth) filters.dayOfMonth = parseInt(dayOfMonth);
     if (startTime) filters.startTime = startTime;
     if (endTime) filters.endTime = endTime;
 
-    // Filtre date exacte
     if (date) {
       filters.date = new Date(date);
     }
 
-    // Filtre période
     if (dateStart || dateEnd) {
-      filters.date = {};
-      if (dateStart) filters.date.gte = new Date(dateStart);
-      if (dateEnd) filters.date.lte = new Date(dateEnd);
+      filters.OR = [
+        {
+          dateStart: { lte: dateEnd ? new Date(dateEnd) : undefined },
+          dateEnd: { gte: dateStart ? new Date(dateStart) : undefined }
+        },
+        {
+          date: {
+            gte: dateStart ? new Date(dateStart) : undefined,
+            lte: dateEnd ? new Date(dateEnd) : undefined
+          }
+        }
+      ];
     }
 
-    const [exceptions, total] = await Promise.all([
-      prisma.availabilityException.findMany({
-        where: filters,
-        skip,
-        take: limit,
-        orderBy: { createdAt: "desc" },
-      }),
-      prisma.availabilityException.count({
-        where: filters,
-      }),
-    ]);
+    let exceptions = await prisma.availabilityException.findMany({
+      where: filters,
+      orderBy: { createdAt: "desc" }
+    });
+
+    // FILTRE PAR JOUR (calculé depuis la date)
+    if (dayOfWeek) {
+
+      const days = [
+        "sunday",
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
+        "saturday"
+      ];
+
+      exceptions = exceptions.filter((e) => {
+
+        // si dayOfWeek existe déjà
+        if (e.dayOfWeek) {
+          return e.dayOfWeek === dayOfWeek;
+        }
+
+        // sinon on calcule depuis date
+        if (e.date) {
+          const d = new Date(e.date);
+          const day = days[d.getDay()];
+          return day === dayOfWeek;
+        }
+
+        // si intervalle
+        if (e.dateStart && e.dateEnd) {
+          const start = new Date(e.dateStart);
+          const end = new Date(e.dateEnd);
+
+          let current = new Date(start);
+
+          while (current <= end) {
+            if (days[current.getDay()] === dayOfWeek) {
+              return true;
+            }
+            current.setDate(current.getDate() + 1);
+          }
+        }
+
+        return false;
+      });
+    }
+
+    const total = exceptions.length;
+
+    const paginated = exceptions.slice(skip, skip + limit);
 
     return apiResponse({
       status: 200,
       message: "Liste des exceptions",
       data: {
-        exceptions,
+        exceptions: paginated,
         total,
         page,
-        limit,
-      },
+        limit
+      }
     });
 
   } catch (error: any) {
-    console.log(error.message);
+    console.error(error.message);
     return apiResponse({
       status: 500,
       message: error.message || "Erreur récupération exceptions",

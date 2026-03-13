@@ -287,6 +287,7 @@ profil:{
   agency: "Agence",
   agent: "Agent",
   property_manager: "Gestionnaire de biens",
+  provider: "Prestataire",
   admin: "Administrateur",
   verified: "Vérifié",
   unverified: "Non vérifié",

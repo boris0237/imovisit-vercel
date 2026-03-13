@@ -290,6 +290,7 @@ profil:{
   agency: "Agency",
   agent: "Agent",
   property_manager: "Property Manager",
+  provider : "Provider",
   admin: "Administrator",
   verified: "Verified",
   unverified: "Unverified",
