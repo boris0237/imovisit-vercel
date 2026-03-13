@@ -122,74 +122,85 @@ export default function Dashboard() {
 
   async function createProperty() {
 
-    try {
+  try {
 
-      if (loading) return 
+    if (loading) return 
 
-      if (!formData.title || !formData.price || !formData.city) {
-        alert("Veuillez remplir les champs obligatoires")
-        return
-      }
-
-      setLoading(true)
-
-      const form = new FormData()
-
-      Object.entries(formData).forEach(([key, value]) => {
-
-        // gestion images
-        if (key === "images") {
-
-          (value as File[]).forEach((file) => {
-            form.append("images", file)
-          })
-
-        }
-
-        // FIX gestion tableaux
-        else if (Array.isArray(value)) {
-
-          value.forEach(v => form.append(key, String(v)))
-
-        }
-
-        else if (value !== undefined && value !== null) {
-
-          form.append(key, String(value))
-
-        }
-
-      })
-
-      const response = await fetch("/api/biens", {
-        method: "POST",
-        body: form,
-        credentials: "include"
-      })
-
-      if (!response.ok) {
-        throw new Error("Erreur lors de la création du bien")
-      }
-
-      const data = await response.json()
-
-      console.log("PROPERTY CREATED", data)
-
-      resetForm()
-      setShowAddPropertyModal(false)
-
-    } catch (error) {
-
-      console.error("Erreur création bien", error)
-      alert("Erreur lors de la création du bien")
-
-    } finally {
-
-      setLoading(false)
-
+    if (!formData.title || !formData.price || !formData.city) {
+      alert("Veuillez remplir les champs obligatoires")
+      return
     }
 
+    setLoading(true)
+
+    // récupération du token
+    const token = localStorage.getItem("token")
+
+    if (!token) {
+      alert("Utilisateur non authentifié")
+      return
+    }
+
+    const form = new FormData()
+
+    Object.entries(formData).forEach(([key, value]) => {
+
+      // gestion images
+      if (key === "images") {
+
+        (value as File[]).forEach((file) => {
+          form.append("images", file)
+        })
+
+      }
+
+      // gestion tableaux
+      else if (Array.isArray(value)) {
+
+        value.forEach(v => form.append(key, String(v)))
+
+      }
+
+      else if (value !== undefined && value !== null) {
+
+        form.append(key, String(value))
+
+      }
+
+    })
+
+    const response = await fetch("/api/biens", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
+      body: form
+    })
+
+    if (!response.ok) {
+  const errorData = await response.json()
+  throw new Error(errorData.message || "Erreur serveur")
+}
+
+    const data = await response.json()
+
+    console.log("PROPERTY CREATED", data)
+
+    resetForm()
+    setShowAddPropertyModal(false)
+
+  } catch (error) {
+
+    console.error("Erreur création bien", error)
+    alert("Erreur lors de la création du bien")
+
+  } finally {
+
+    setLoading(false)
+
   }
+
+}
 
   return (
     <>
