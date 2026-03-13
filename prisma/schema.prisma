@@ -110,6 +110,7 @@ model Property {
 enum PriceType {
   monthly
   daily
+  yearly
   sale
 }
 
@@ -138,12 +139,17 @@ enum PropertyVisitType {
 }
 
 enum Amenity {
+  water
+  electricity
+  wifi
   pool
   elevator
   parking
   gym
   garden
   security
+  borehole
+  cleaning
 }
 
 // FAVORIS

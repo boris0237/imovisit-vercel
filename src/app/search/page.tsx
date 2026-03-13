@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, Suspense } from 'react'
+import { useEffect, Suspense, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { SlidersHorizontal, Grid3X3, List } from 'lucide-react'
 import { Header } from '@/components/Header'
@@ -9,47 +9,104 @@ import { PropertyCard } from '@/components/PropertyCard'
 import { SearchFilters } from '@/components/SearchFilters'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
-import { mockProperties } from '@/data/mock'
 import type { FilterOptions } from '@/types'
 import { useDictionary } from '@/hooks/useDictionary'
+import { fetchApi } from '@/services/apiConfig'
 
 function SearchContent() {
   const searchParams = useSearchParams()
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
   const [filters, setFilters] = useState<FilterOptions>({
+    search: searchParams.get('search') || undefined,
     city: searchParams.get('city') || undefined,
     type: searchParams.get('type') || undefined,
     offerType: searchParams.get('offerType') || undefined,
   })
+  const [properties, setProperties] = useState<any[]>([])
+  const [loading, setLoading] = useState(false)
+  const [page, setPage] = useState(1)
+  const [limit] = useState(12)
+  const [total, setTotal] = useState(0)
+  const [cities, setCities] = useState<{ id: string; name: string }[]>([])
+  const [neighborhoods, setNeighborhoods] = useState<{ id: string; name: string }[]>([])
 
-  const filteredProperties = useMemo(() => {
-    return mockProperties.filter((property) => {
-      if (filters.city && !property.city.toLowerCase().includes(filters.city.toLowerCase())) {
-        return false
+  const fetchCities = async () => {
+    try {
+      const res = await fetchApi('/api/cities?limit=100');
+      setCities(res?.data?.data || []);
+    } catch {
+      setCities([]);
+    }
+  };
+
+  const fetchNeighborhoods = async (cityId?: string) => {
+    if (!cityId) {
+      setNeighborhoods([]);
+      return;
+    }
+    try {
+      const res = await fetchApi(`/api/districts?limit=100&cityId=${cityId}`);
+      const list = res?.data?.data || [];
+      setNeighborhoods(list);
+    } catch {
+      setNeighborhoods([]);
+    }
+  };
+
+  const fetchProperties = async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      params.set('page', String(page));
+      params.set('limit', String(limit));
+      if (filters.search) params.set('search', filters.search);
+      if (filters.city) params.set('city', filters.city);
+      if (filters.neighborhood) params.set('neighborhood', filters.neighborhood);
+      if (filters.type) params.set('type', filters.type);
+      if (filters.offerType) params.set('offerType', filters.offerType);
+      if (filters.rooms) params.set('rooms', String(filters.rooms));
+      if (filters.minPrice !== undefined) params.set('minPrice', String(filters.minPrice));
+      if (filters.maxPrice !== undefined) params.set('maxPrice', String(filters.maxPrice));
+
+      const res = await fetchApi(`/api/biens/public?${params.toString()}`);
+      const payload = res?.data || {};
+      setProperties(payload?.properties || []);
+      setTotal(payload?.total || 0);
+    } catch {
+      setProperties([]);
+      setTotal(0);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCities();
+  }, []);
+
+  useEffect(() => {
+    if (!filters.city && cities.length > 0) {
+      const cityMatch = searchParams.get('city');
+      if (cityMatch) {
+        const found = cities.find((city) => city.name.toLowerCase() === cityMatch.toLowerCase());
+        if (found) {
+          setFilters((prev) => ({ ...prev, cityId: found.id, city: found.name }));
+        }
       }
-      if (filters.neighborhood && property.neighborhood !== filters.neighborhood) {
-        return false
-      }
-      if (filters.type && property.type !== filters.type) {
-        return false
-      }
-      if (filters.offerType && property.offerType !== filters.offerType) {
-        return false
-      }
-      if (filters.minPrice && property.price < filters.minPrice) {
-        return false
-      }
-      if (filters.maxPrice && property.price > filters.maxPrice) {
-        return false
-      }
-      if (filters.rooms && property.rooms < filters.rooms) {
-        return false
-      }
-      return true
-    })
-  }, [filters])
+    }
+  }, [cities, filters.city, searchParams]);
+
+  useEffect(() => {
+    fetchNeighborhoods(filters.cityId);
+  }, [filters.cityId]);
+
+  useEffect(() => {
+    fetchProperties();
+  }, [filters, page, limit]);
 
   const { dictionary } = useDictionary()
+
+  const totalPages = Math.max(1, Math.ceil(total / limit));
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -63,7 +120,7 @@ function SearchContent() {
                 {dictionary.searchPage?.title1 || "Rechercher un bien"}
               </h1>
               <p className="text-gray-600 mt-1">
-                {filteredProperties.length}
+                {total}
                 {dictionary.searchPage?.paragraph1 || " biens trouvés"}
               </p>
             </div>
@@ -101,7 +158,15 @@ function SearchContent() {
                     <SheetTitle>{dictionary.searchPage?.filterButton || "Filtres"}</SheetTitle>
                   </SheetHeader>
                   <div className="mt-6">
-                    <SearchFilters filters={filters} onFilterChange={setFilters} />
+                  <SearchFilters
+                    filters={filters}
+                    onFilterChange={(next) => {
+                      setFilters(next);
+                      setPage(1);
+                    }}
+                    cities={cities}
+                    neighborhoods={neighborhoods}
+                  />
                   </div>
                 </SheetContent>
               </Sheet>
@@ -114,13 +179,25 @@ function SearchContent() {
             <aside className="hidden md:block w-72 flex-shrink-0">
               <div className="bg-white rounded-xl p-6 shadow-sm sticky top-24">
                 <h2 className="font-semibold text-lg mb-4">{dictionary.searchPage?.filterButton || "Filtres"}</h2>
-                <SearchFilters filters={filters} onFilterChange={setFilters} />
+                <SearchFilters
+                  filters={filters}
+                  onFilterChange={(next) => {
+                    setFilters(next);
+                    setPage(1);
+                  }}
+                  cities={cities}
+                  neighborhoods={neighborhoods}
+                />
               </div>
             </aside>
 
             {/* Results */}
             <div className="flex-1">
-              {filteredProperties.length === 0 ? (
+              {loading ? (
+                <div className="bg-white rounded-xl p-12 text-center text-gray-500">
+                  {dictionary.searchPage?.loading || "Chargement..."}
+                </div>
+              ) : properties.length === 0 ? (
                 <div className="bg-white rounded-xl p-12 text-center">
                   <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <SlidersHorizontal className="w-10 h-10 text-gray-400" />
@@ -140,9 +217,35 @@ function SearchContent() {
                       : 'grid-cols-1'
                   }`}
                 >
-                  {filteredProperties.map((property) => (
+                  {properties.map((property) => (
                     <PropertyCard key={property.id} property={property} />
                   ))}
+                </div>
+              )}
+
+              {total > 0 && (
+                <div className="flex items-center justify-between border-t border-gray-200 mt-8 pt-4 text-sm text-gray-600">
+                  <div>
+                    Page {page} sur {totalPages}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      className="h-9"
+                      onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+                      disabled={page === 1}
+                    >
+                      Précédent
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="h-9"
+                      onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+                      disabled={page >= totalPages}
+                    >
+                      Suivant
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>

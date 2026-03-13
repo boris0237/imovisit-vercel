@@ -122,6 +122,12 @@
  *           enum: [VENTE, LOCATION, FURNISHED]
  *         example: VENTE
  *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [available, unavailable]
+ *         example: available
+ *       - in: query
  *         name: rooms
  *         schema:
  *           type: integer
@@ -255,6 +261,8 @@ export async function GET(req: NextRequest) {
     const authError = authMiddleware(req);
     if (authError) return authError;
 
+    const currentUser = (req as any).user;
+
     const { searchParams } = new URL(req.url);
 
     // Pagination
@@ -270,6 +278,7 @@ export async function GET(req: NextRequest) {
     const neighborhood = searchParams.get("neighborhood");
     const type = searchParams.get("type");
     const offerType = searchParams.get("offerType");
+    const status = searchParams.get("status");
     const rooms = searchParams.get("rooms");
     const minPrice = searchParams.get("minPrice");
     const maxPrice = searchParams.get("maxPrice");
@@ -279,6 +288,8 @@ export async function GET(req: NextRequest) {
     if (type) filters.type = type;
     if (offerType) filters.offerType = offerType;
     if (rooms) filters.rooms = parseInt(rooms);
+    if (status === "available") filters.isAvailable = true;
+    if (status === "unavailable") filters.isAvailable = false;
 
     // Filtre prix
     if (minPrice || maxPrice) {
@@ -293,6 +304,11 @@ export async function GET(req: NextRequest) {
         { title: { contains: search, mode: "insensitive" } },
         { description: { contains: search, mode: "insensitive" } },
       ];
+    }
+
+    // Par défaut, un utilisateur ne voit que ses biens
+    if (currentUser?.role !== UserRole.admin) {
+      filters.userId = currentUser?.id;
     }
 
     const [properties, total] = await Promise.all([
