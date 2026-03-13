@@ -47,6 +47,12 @@
  *               date:
  *                 type: string
  *                 format: date-time
+ *               dateStart:
+ *                 type: string
+ *                 format: date-time
+ *               dateEnd:
+ *                 type: string
+ *                 format: date-time
  *               dayOfWeek:
  *                 type: string
  *                 enum: [monday, tuesday, wednesday, thursday, friday, saturday, sunday]
@@ -115,7 +121,6 @@ export async function GET(req: NextRequest, { params }: Params) {
         }
 
         return apiResponse({ status: 200, message: "Exception récupérée", data: exception });
-
     } catch (error: any) {
         return apiResponse({ status: 500, message: error.message });
     }
@@ -129,16 +134,20 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
         const body = await req.json();
 
+        // Conversion des dates si fournies
+        const dataToUpdate: any = {
+            ...body,
+            date: body.date ? new Date(body.date) : undefined,
+            dateStart: body.dateStart ? new Date(body.dateStart) : undefined,
+            dateEnd: body.dateEnd ? new Date(body.dateEnd) : undefined
+        };
+
         const updated = await prisma.availabilityException.update({
             where: { id: params.id },
-            data: {
-                ...body,
-                date: body.date ? new Date(body.date) : undefined
-            }
+            data: dataToUpdate
         });
 
         return apiResponse({ status: 200, message: "Exception mise à jour", data: updated });
-
     } catch (error: any) {
         console.log(error.message);
         return apiResponse({ status: 500, message: error.message });
@@ -155,9 +164,8 @@ export async function DELETE(req: NextRequest, { params }: Params) {
             where: { id: params.id }
         });
 
-        return apiResponse({status:200, message:"Exception supprimée"});
-
-    } catch (error:any) {
-          return apiResponse({ status: 500, message: error.message });
+        return apiResponse({ status: 200, message: "Exception supprimée" });
+    } catch (error: any) {
+        return apiResponse({ status: 500, message: error.message });
     }
 }
