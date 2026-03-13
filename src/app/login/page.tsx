@@ -123,8 +123,11 @@ export default function Login() {
               });
           }
         }
+        }, 2000);
+      } else {
+        }
       })
-      .catch((error) => {
+      .catch((error : any) => {
         console.error('Erreur réseau:', error);
         setErrors({
           general: dictionary?.login?.canConnect || "Impossible de se connecter au serveur."
