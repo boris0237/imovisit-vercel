@@ -3,6 +3,42 @@ import { NextRequest } from "next/server";
 import { apiResponse } from "@/lib/api-response";
 import { authMiddleware } from "@/middlewares/auth-middleware";
 
+/**
+ * @swagger
+ * /api/districts:
+ *   post:
+ *     tags:
+ *       - Geolocalisation
+ *     summary: Créer un quartier
+ *     description: Permet d’ajouter un nouveau quartier associé à une ville.
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - cityId
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: Bonapriso
+ *               cityId:
+ *                 type: string
+ *                 example: 65fa12ab34cd56ef78901234
+ *     responses:
+ *       201:
+ *         description: Quartier créé avec succès
+ *       400:
+ *         description: Quartier déjà existant ou champs manquants
+ *       404:
+ *         description: Ville introuvable
+ *       500:
+ *         description: Erreur serveur
+ */
 
 // CREATE DISTRICT
 export async function POST(req: NextRequest) {
@@ -49,6 +85,51 @@ export async function POST(req: NextRequest) {
 }
 
 
+/**
+ * @swagger
+ * /api/districts:
+ *   get:
+ *     tags:
+ *       - Geolocalisation
+ *     summary: Lister les quartiers
+ *     description: Retourne la liste des quartiers avec filtres par ville, pays et pagination.
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         example: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         example: 10
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         example: Bonapriso
+ *       - in: query
+ *         name: cityId
+ *         schema:
+ *           type: string
+ *         example: 65fa12ab34cd56ef78901234
+ *       - in: query
+ *         name: countryId
+ *         schema:
+ *           type: string
+ *         example: 65fa12ab34cd56ef78905678
+ *       - in: query
+ *         name: isActive
+ *         schema:
+ *           type: boolean
+ *         example: true
+ *     responses:
+ *       200:
+ *         description: Liste des quartiers récupérée
+ *       500:
+ *         description: Erreur serveur
+ */
 
 // LIST DISTRICTS
 

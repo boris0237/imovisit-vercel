@@ -28,6 +28,7 @@ export const mockProperties: Property[] = [
     createdAt: '2024-01-15',
     views: 245,
     visitsCount: 12,
+    userName: 'Jean Dupont',
   },
   {
     id: '2',

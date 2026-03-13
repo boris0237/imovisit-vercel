@@ -1,3 +1,5 @@
+// src/app/api/biens/[id]/route.ts
+
 import { NextRequest } from "next/server";
 import { prisma } from "@/services/db";
 import { apiResponse } from "@/lib/api-response";

@@ -1,4 +1,6 @@
 export interface Property {
+  userName?: string;
+  userVerified?: boolean;
   id: string;
   title: string;
   description: string;
@@ -56,6 +58,8 @@ export interface Visit {
 }
 
 export interface FilterOptions {
+  search?: string;
+  cityId?: string;
   city?: string;
   neighborhood?: string;
   minPrice?: number;

@@ -45,11 +45,11 @@ enum UserRole {
   owner
   property_manager
   prospector
+  provider
   free_agent
   agency
   agent
   admin
-  provider
 }
 
 enum AuthProvider {
@@ -110,6 +110,7 @@ model Property {
 enum PriceType {
   monthly
   daily
+  yearly
   sale
 }
 
@@ -138,12 +139,17 @@ enum PropertyVisitType {
 }
 
 enum Amenity {
+  water
+  electricity
+  wifi
   pool
   elevator
   parking
   gym
   garden
   security
+  borehole
+  cleaning
 }
 
 // FAVORIS
@@ -280,4 +286,47 @@ model District { // quartier
   updatedAt DateTime @updatedAt
 
   @@unique([name, cityId]) // unique par ville
+}
+
+
+// DEPENSES
+model Expense {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  assetId     String   @db.ObjectId  //id du bien 
+  type        ExpenseType            //type de dépense
+  amount      Float
+  currency    String                //devise (USD, EUR, XAF)
+  date        DateTime
+  description String?
+  vendor      String?               //la personne qui a fait le service
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum ExpenseType {
+  maintenance
+  repair
+  insurance
+  transport
+  other
+}
+
+
+// LOCATAIRES
+model Tenant {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  firstName String
+  lastName  String
+  email     String?   @unique
+  phone     String
+  assetId   String   @db.ObjectId    //id du bien
+  address   String?
+  startDate DateTime                //date de début de location
+  endDate   DateTime                //date de fin de location
+
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
 }
