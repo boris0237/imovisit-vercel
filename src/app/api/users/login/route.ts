@@ -196,7 +196,7 @@ export async function POST(req: Request) {
 
       } as User,
       JWT_SECRET,
-      { expiresIn: "1h" }
+      { expiresIn: "180d" }
     );
 
     const { password: _, ...userWithoutPassword } = user;
@@ -216,7 +216,7 @@ export async function POST(req: Request) {
     const res = NextResponse.json(responseData);
     res.cookies.set("jwt", token, {
       httpOnly: true,
-      maxAge: 60 * 60,
+      maxAge: 60 * 60 * 24 * 30 * 6,
       path: "/",
       sameSite: "strict",
       secure: process.env.NODE_ENV === "production",
@@ -232,5 +232,4 @@ export async function POST(req: Request) {
     });
   }
 }
-
 

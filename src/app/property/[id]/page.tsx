@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import {
   MapPin,
@@ -29,8 +29,9 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { mockProperties, amenitiesList } from '@/data/mock'
+import { amenitiesList } from '@/data/mock'
 import { useDictionary } from '@/hooks/useDictionary'
+import { fetchApi } from '@/services/apiConfig'
 
 export default function PropertyDetail() {
   const {dictionary} = useDictionary()
@@ -38,8 +39,84 @@ export default function PropertyDetail() {
   const router = useRouter()
   const [selectedImage, setSelectedImage] = useState(0)
   const [isFavorite, setIsFavorite] = useState(false)
+  const [property, setProperty] = useState<any | null>(null)
+  const [similarProperties, setSimilarProperties] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [favoriteLoading, setFavoriteLoading] = useState(false)
+  const hasViewedRef = useRef<string | null>(null)
 
-  const property = mockProperties.find((p) => p.id === params.id)
+  const propertyId = useMemo(() => {
+    if (!params?.id) return '';
+    return Array.isArray(params.id) ? params.id[0] : params.id;
+  }, [params]);
+
+  useEffect(() => {
+    if (!propertyId) return;
+    const fetchProperty = async () => {
+      try {
+        setLoading(true);
+        const res = await fetchApi(`/api/biens/${propertyId}`);
+        setProperty(res?.data || null);
+      } catch {
+        setProperty(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProperty();
+  }, [propertyId]);
+
+  useEffect(() => {
+    if (!propertyId) return;
+    if (hasViewedRef.current === propertyId) return;
+    hasViewedRef.current = propertyId;
+    const incrementView = async () => {
+      try {
+        const res = await fetchApi(`/api/biens/${propertyId}/view`, { method: 'POST' });
+        if (res?.data?.views && property) {
+          setProperty((prev: any) => (prev ? { ...prev, views: res.data.views } : prev));
+        }
+      } catch {
+        // ignore
+      }
+    };
+    incrementView();
+  }, [propertyId, property]);
+
+  useEffect(() => {
+    if (!propertyId) return;
+    if (typeof window === 'undefined') return;
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    const fetchFavorite = async () => {
+      try {
+        const res = await fetchApi(`/api/biens/${propertyId}/favorite`);
+        setIsFavorite(!!res?.data?.isFavorite);
+      } catch {
+        // ignore (not logged in or error)
+      }
+    };
+    fetchFavorite();
+  }, [propertyId]);
+
+  useEffect(() => {
+    if (!property) return;
+    setSelectedImage(0);
+    const fetchSimilar = async () => {
+      try {
+        const params = new URLSearchParams();
+        params.set('limit', '6');
+        if (property.city) params.set('city', property.city);
+        if (property.type) params.set('type', property.type);
+        const res = await fetchApi(`/api/biens/public?${params.toString()}`);
+        const list = (res?.data?.properties || []).filter((item: any) => item.id !== property.id);
+        setSimilarProperties(list.slice(0, 4));
+      } catch {
+        setSimilarProperties([]);
+      }
+    };
+    fetchSimilar();
+  }, [property]);
 
   if (!property) {
     return (
@@ -48,11 +125,13 @@ export default function PropertyDetail() {
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-gray-700 mb-4">
-              {dictionary.propertyPage?.title1 || "Bien non trouvé"}
+              {loading ? (dictionary.propertyPage?.loading || "Chargement...") : (dictionary.propertyPage?.title1 || "Bien non trouvé")}
             </h1>
-            <Button onClick={() => router.push('/search')}>
-              {dictionary.propertyPage?.btn1 || "Retour à la recherche"}
-            </Button>
+            {!loading && (
+              <Button onClick={() => router.push('/search')}>
+                {dictionary.propertyPage?.btn1 || "Retour à la recherche"}
+              </Button>
+            )}
           </div>
         </main>
         <Footer />
@@ -60,11 +139,12 @@ export default function PropertyDetail() {
     )
   }
 
-  const formatPrice = (price: number, type: string) => {
-    if (type === 'sale') {
-      return `${price.toLocaleString()} FCFA`
-    }
-    return `${price.toLocaleString()} F / mois`
+  const formatPrice = (price: number, priceType?: string, offerType?: string) => {
+    const formatted = price?.toLocaleString() ?? '0'
+    if (offerType === 'sale' || priceType === 'sale') return `${formatted} FCFA`
+    if (priceType === 'daily') return `${formatted} F / jour`
+    if (priceType === 'yearly') return `${formatted} F / an`
+    return `${formatted} F / mois`
   }
 
   const getOfferTypeLabel = (offerType: string) => {
@@ -116,7 +196,7 @@ export default function PropertyDetail() {
                 <CardContent className="p-0">
                   <div className="relative">
                     <img
-                      src={property.images[selectedImage]}
+                      src={property.images?.[selectedImage] || property.images?.[0] || '/placeholder-property.jpg'}
                       alt={property.title}
                       className="w-full h-[340px] object-cover"
                     />
@@ -129,7 +209,22 @@ export default function PropertyDetail() {
                       </Badge>
                     </div>
                     <button
-                      onClick={() => setIsFavorite(!isFavorite)}
+                      onClick={async () => {
+                        if (favoriteLoading) return;
+                        try {
+                          setFavoriteLoading(true);
+                          const res = await fetchApi(`/api/biens/${propertyId}/favorite`, { method: 'POST' });
+                          if (typeof res?.data?.isFavorite === 'boolean') {
+                            setIsFavorite(res.data.isFavorite);
+                          }
+                        } catch (error: any) {
+                          if (error?.status === 401) {
+                            router.push('/login');
+                          }
+                        } finally {
+                          setFavoriteLoading(false);
+                        }
+                      }}
                       className="absolute top-4 right-4 h-9 w-9 rounded-full bg-white/90 flex items-center justify-center text-slate-700 hover:bg-white"
                       aria-label="Ajouter aux favoris"
                     >
@@ -137,7 +232,7 @@ export default function PropertyDetail() {
                     </button>
                   </div>
                   <div className="grid grid-cols-5 gap-2 p-4">
-                    {property.images.slice(0, 5).map((image, index) => (
+                    {(property.images || []).slice(0, 5).map((image: string, index: number) => (
                       <button
                         key={index}
                         onClick={() => setSelectedImage(index)}
@@ -165,7 +260,7 @@ export default function PropertyDetail() {
                         <span>{property.neighborhood}, {property.city}, {dictionary.propertyPage?.sp2 || "Cameroun"}</span>
                       </div>
                     </div>
-                    {property.ownerVerified && (
+                    {(property.ownerVerified ?? property.userVerified) && (
                       <Badge className="bg-emerald-100 text-emerald-700 border-0">
                         <ShieldCheck className="w-3 h-3 mr-1" />
                         {dictionary.propertyPage?.badge || "Bien vérifié"}
@@ -174,7 +269,7 @@ export default function PropertyDetail() {
                   </div>
 
                   <div className="text-2xl font-semibold text-slate-900">
-                    {formatPrice(property.price, property.offerType)}
+                    {formatPrice(property.price, property.priceType, property.offerType)}
                   </div>
 
                   <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500">
@@ -188,7 +283,10 @@ export default function PropertyDetail() {
                     </div>
                     <div className="flex items-center gap-1">
                       <Clock className="w-4 h-4" />
-                      <span>{dictionary.propertyPage?.sp5 || "Publié il y a 2 jours"}</span>
+                      <span>
+                        {dictionary.propertyPage?.sp5 || "Publié le"}{' '}
+                        {property.createdAt ? new Date(property.createdAt).toLocaleDateString('fr-FR') : '--'}
+                      </span>
                     </div>
                   </div>
 
@@ -200,12 +298,12 @@ export default function PropertyDetail() {
                         <p className="font-semibold text-slate-900">{property.surface} m²</p>
                       </div>
                     </div>
-                    {property.bedrooms !== undefined && (
+                    {(property.bedrooms !== undefined || property.rooms !== undefined) && (
                       <div className="flex items-center gap-3 rounded-xl border border-slate-200 p-3">
                         <Bed className="w-4 h-4 text-slate-700" />
                         <div className="text-xs">
                           <p className="text-slate-500">{dictionary.propertyPage?.p2 || "Chambres"}</p>
-                          <p className="font-semibold text-slate-900">{property.bedrooms}</p>
+                          <p className="font-semibold text-slate-900">{property.bedrooms ?? property.rooms}</p>
                         </div>
                       </div>
                     )}
@@ -242,15 +340,22 @@ export default function PropertyDetail() {
                 <CardContent className="p-6">
                   <h2 className="text-sm font-semibold text-slate-800 mb-4">{dictionary.propertyPage?.title2 || "Commodités"}</h2>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {property.amenities.map((amenityId) => {
-                      const amenity = amenitiesList.find((a) => a.id === amenityId)
-                      return (
-                        <div key={amenityId} className="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600">
-                          <Check className="w-4 h-4 text-emerald-500" />
-                          <span>{amenity?.name || amenityId}</span>
-                        </div>
-                      )
-                    })}
+                    {(() => {
+                      const list = Array.isArray(property.amenities)
+                        ? property.amenities
+                        : typeof property.amenities === 'string'
+                          ? property.amenities.split(',').map((item: string) => item.trim()).filter(Boolean)
+                          : [];
+                      return list.map((amenityId: string) => {
+                        const amenity = amenitiesList.find((a) => a.id === amenityId)
+                        return (
+                          <div key={amenityId} className="flex items-center gap-2 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                            <Check className="w-4 h-4 text-emerald-500" />
+                            <span>{amenity?.name || amenityId}</span>
+                          </div>
+                        )
+                      })
+                    })()}
                   </div>
                 </CardContent>
               </Card>
@@ -262,11 +367,11 @@ export default function PropertyDetail() {
                   <div className="flex items-center justify-between gap-4 flex-wrap">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center text-slate-700 font-semibold">
-                        {property.ownerName.charAt(0)}
+                        {(property.ownerName || property.userName || 'U').charAt(0)}
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <p className="font-semibold text-slate-900">{property.ownerName}</p>
+                          <p className="font-semibold text-slate-900">{property.ownerName || property.userName || 'Utilisateur'}</p>
                           <Badge className="bg-emerald-100 text-emerald-700 border-0">
                             {dictionary.propertyPage?.badge2 || "Agence immobilière"}
                           </Badge>
@@ -281,14 +386,11 @@ export default function PropertyDetail() {
                         </div>
                       </div>
                     </div>
-                    <Button className="bg-slate-900 hover:bg-slate-800 gap-2">
-                      <Phone className="w-4 h-4" />
-                      {dictionary.propertyPage?.btn2 || "Contacter"}
-                    </Button>
+                    
                   </div>
                   <div className="flex items-center justify-between text-xs text-slate-500">
                     <span>{dictionary.propertyPage?.sp7 || "Signaler ce bailleur"}</span>
-                    {property.ownerVerified && (
+                    {(property.ownerVerified ?? property.userVerified) && (
                       <span className="flex items-center gap-1 text-emerald-600">
                         <BadgeCheck className="w-4 h-4" />
                         {dictionary.propertyPage?.sp8 || "Bailleur vérifié"}
@@ -307,15 +409,12 @@ export default function PropertyDetail() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {mockProperties
-                      .filter((item) => item.id !== property.id)
-                      .slice(0, 4)
-                      .map((item) => (
+                    {similarProperties.map((item) => (
                         <Card key={item.id} className="border-slate-200 overflow-hidden">
                           <CardContent className="p-0">
                             <div className="relative">
                               <img
-                                src={item.images[0]}
+                                src={item.images?.[0] || '/placeholder-property.jpg'}
                                 alt={item.title}
                                 className="w-full h-44 object-cover"
                               />
@@ -349,7 +448,7 @@ export default function PropertyDetail() {
                               <div className="flex items-center gap-4 text-xs text-slate-500">
                                 <div className="flex items-center gap-1">
                                   <Bed className="w-4 h-4" />
-                                  <span>{item.bedrooms ?? 1}</span>
+                                  <span>{item.bedrooms ?? item.rooms ?? 1}</span>
                                 </div>
                                 <div className="flex items-center gap-1">
                                   <Bath className="w-4 h-4" />
@@ -363,10 +462,10 @@ export default function PropertyDetail() {
                               <div className="flex items-center justify-between border-t border-slate-200 pt-3 text-xs text-slate-500">
                                 <div className="flex items-center gap-2">
                                   <div className="w-7 h-7 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center text-[11px] font-semibold">
-                                    {item.ownerName.charAt(0)}
+                                    {(item.ownerName || item.userName || 'U').charAt(0)}
                                   </div>
-                                  <span>{item.ownerName}</span>
-                                  {item.ownerVerified && (
+                                  <span>{item.ownerName || item.userName || 'Utilisateur'}</span>
+                                  {(item.ownerVerified ?? item.userVerified) && (
                                     <Badge className="bg-emerald-100 text-emerald-700 border-0">
                                       <BadgeCheck className="w-3 h-3" />
                                     </Badge>
