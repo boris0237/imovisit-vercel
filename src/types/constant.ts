@@ -109,7 +109,8 @@ export const ROLE_ALLOWED_FIELDS = {
     "docRCCM",
     "companyName",
     "companyLogo",
-    "typeCompte"
+    "typeCompte",
+    "role",
   ]
 } as const;
 

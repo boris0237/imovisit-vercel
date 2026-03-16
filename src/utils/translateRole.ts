@@ -21,6 +21,9 @@ export const translateRole = (
     case "property_manager":
       return dictionary?.profil?.property_manager || "Gestionnaire de biens";
 
+    case "provider":
+      return dictionary?.profil?.provider || "Prestataire";
+
     case "admin":
       return dictionary?.profil?.admin || "Administrateur";
 

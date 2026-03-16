@@ -88,7 +88,6 @@ model Property {
   updatedAt         DateTime @updatedAt
 }
 
-
 // FAVORIS
 model Favorite {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
@@ -240,4 +239,7 @@ model Tenant {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
 }
+
+
