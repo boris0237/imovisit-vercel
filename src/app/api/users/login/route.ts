@@ -141,8 +141,9 @@ import { prisma } from "@/services/db";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { NextResponse } from "next/server";
-import { AuthProvider, User } from "@prisma/client";
+import { User } from "@prisma/client";
 import { apiResponse } from "@/lib/api-response";
+import { AUTH_PROVIDER_ENUM } from "@/types/enums";
 
 
 const JWT_SECRET = process.env.JWT_SECRET!;
@@ -160,7 +161,7 @@ export async function POST(req: Request) {
     }
 
     // Vérification du mot de passe pour provider local
-    if (user.authProvider === AuthProvider.local) {
+    if (user.authProvider === AUTH_PROVIDER_ENUM.local) {
       if (!password) {
         return apiResponse({ status: 400, message: "Mot de passe requis" });
       }

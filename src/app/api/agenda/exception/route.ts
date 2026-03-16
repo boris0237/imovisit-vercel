@@ -114,6 +114,7 @@ import { NextRequest } from "next/server";
 import { apiResponse } from "@/lib/api-response";
 import { authMiddleware } from "@/middlewares/auth-middleware";
 
+
 // CREATE exception
 export async function POST(req: NextRequest) {
   try {
@@ -128,14 +129,17 @@ export async function POST(req: NextRequest) {
     // CAS 1 : INTERVALLE DE JOURS
     if (dateStart && dateEnd) {
 
-      // vérifier chevauchement avec autre intervalle
+      const start = new Date(dateStart);
+      const end = new Date(dateEnd);
+
+      // vérifier chevauchement intervalle ↔ intervalle
       const intervalExist = await prisma.availabilityException.findFirst({
         where: {
           ownerId: decodedUser.id,
           dateStart: { not: null },
           AND: [
-            { dateStart: { lte: new Date(dateEnd) } },
-            { dateEnd: { gte: new Date(dateStart) } }
+            { dateStart: { lte: end } },
+            { dateEnd: { gte: start } }
           ]
         }
       });
@@ -147,17 +151,36 @@ export async function POST(req: NextRequest) {
         });
       }
 
+      // vérifier si un jour précis existe dans cet intervalle
+      const dayInsideInterval = await prisma.availabilityException.findFirst({
+        where: {
+          ownerId: decodedUser.id,
+          date: {
+            gte: start,
+            lte: end
+          }
+        }
+      });
+
+      if (dayInsideInterval) {
+        return apiResponse({
+          status: 400,
+          message: "Un jour précis est déjà bloqué dans cet intervalle"
+        });
+      }
     }
 
     // CAS 2 : JOUR + HEURE
     if (date && startTime && endTime) {
 
+      const day = new Date(date);
+
       // vérifier si un intervalle couvre ce jour
       const intervalCover = await prisma.availabilityException.findFirst({
         where: {
           ownerId: decodedUser.id,
-          dateStart: { lte: new Date(date) },
-          dateEnd: { gte: new Date(date) }
+          dateStart: { lte: day },
+          dateEnd: { gte: day }
         }
       });
 
@@ -172,10 +195,10 @@ export async function POST(req: NextRequest) {
       const hourConflict = await prisma.availabilityException.findFirst({
         where: {
           ownerId: decodedUser.id,
-          date: new Date(date),
+          date: day,
           AND: [
-            { startTime: { lte: endTime } },
-            { endTime: { gte: startTime } }
+            { startTime: { lt: endTime } },
+            { endTime: { gt: startTime } }
           ]
         }
       });
@@ -186,7 +209,6 @@ export async function POST(req: NextRequest) {
           message: "Une exception horaire existe déjà"
         });
       }
-
     }
 
     const exception = await prisma.availabilityException.create({
@@ -280,11 +302,6 @@ export async function GET(req: NextRequest) {
       ];
 
       exceptions = exceptions.filter((e) => {
-
-        // si dayOfWeek existe déjà
-        if (e.dayOfWeek) {
-          return e.dayOfWeek === dayOfWeek;
-        }
 
         // sinon on calcule depuis date
         if (e.date) {

@@ -4,41 +4,62 @@
  *   get:
  *     tags:
  *       - Agenda
- *     summary: Récupérer une règle de disponibilité
- *     description: Permet de récupérer une règle par son ID.
+ *     summary: Récupérer une disponibilité
+ *     description: Permet de récupérer une disponibilité par son ID.
  *     security:
  *       - bearerAuth: []
+ *
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
- *         description: ID de la règle
+ *         description: ID de la disponibilité
+ *
  *     responses:
  *       200:
- *         description: Règle récupérée
+ *         description: Disponibilité récupérée avec succès
+ *
  *       404:
- *         description: Règle introuvable
+ *         description: Disponibilité introuvable
+ *
  *       401:
  *         description: Non autorisé
+ *
  *       500:
  *         description: Erreur serveur
+ *
  *
  *   patch:
  *     tags:
  *       - Agenda
- *     summary: Mettre à jour une règle de disponibilité
- *     description: Permet de modifier une règle existante.
+ *     summary: Mettre à jour une disponibilité
+ *     description: |
+ *       Permet de modifier une disponibilité existante.
+ *
+ *       Si un chevauchement d'horaire existe déjà pour cette date,
+ *       la modification est refusée afin d'éviter les doublons de créneaux.
+ *
+ *       Format JSON attendu :
+ *
+ *       {
+ *         "date": "2026-03-18",
+ *         "startTime": "11:00",
+ *         "endTime": "13:00"
+ *       }
+ *
  *     security:
  *       - bearerAuth: []
+ *
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
- *         description: ID de la règle
+ *         description: ID de la disponibilité
+ *
  *     requestBody:
  *       required: true
  *       content:
@@ -46,49 +67,64 @@
  *           schema:
  *             type: object
  *             properties:
- *               recurrenceType:
+ *
+ *               date:
  *                 type: string
- *                 enum: [weekly, monthly]
- *               dayOfWeek:
- *                 type: string
- *                 enum: [monday, tuesday, wednesday, thursday, friday, saturday, sunday]
- *               dayOfMonth:
- *                 type: integer
+ *                 format: date
+ *                 example: "2026-03-18"
+ *
  *               startTime:
  *                 type: string
+ *                 example: "11:00"
+ *
  *               endTime:
  *                 type: string
+ *                 example: "13:00"
+ *
  *     responses:
  *       200:
- *         description: Règle mise à jour
+ *         description: Disponibilité mise à jour avec succès
+ *
+ *       400:
+ *         description: Chevauchement détecté avec une autre disponibilité
+ *
  *       404:
- *         description: Règle introuvable
+ *         description: Disponibilité introuvable
+ *
  *       401:
  *         description: Non autorisé
+ *
  *       500:
  *         description: Erreur serveur
+ *
  *
  *   delete:
  *     tags:
  *       - Agenda
- *     summary: Supprimer une règle de disponibilité
- *     description: Permet de supprimer une règle par son ID.
+ *     summary: Supprimer une disponibilité
+ *     description: Permet de supprimer une disponibilité par son ID.
+ *
  *     security:
  *       - bearerAuth: []
+ *
  *     parameters:
  *       - in: path
  *         name: id
  *         required: true
  *         schema:
  *           type: string
- *         description: ID de la règle
+ *         description: ID de la disponibilité
+ *
  *     responses:
  *       200:
- *         description: Règle supprimée
+ *         description: Disponibilité supprimée avec succès
+ *
  *       404:
- *         description: Règle introuvable
+ *         description: Disponibilité introuvable
+ *
  *       401:
  *         description: Non autorisé
+ *
  *       500:
  *         description: Erreur serveur
  */
@@ -120,32 +156,81 @@ export async function GET(req: NextRequest, { params }: Params) {
   }
 }
 
-// PATCH 
+// PATCH disponibilité
 export async function PATCH(req: NextRequest, { params }: Params) {
   try {
     const authError = authMiddleware(req);
     if (authError) return authError;
 
     const body = await req.json();
+    const { date, startTime, endTime } = body;
 
-    // Filtrer les champs autorisés pour éviter les erreurs Prisma
-    const allowedFields = ["recurrenceType", "dayOfWeek", "dayOfMonth", "startTime", "endTime"];
-    const dataToUpdate: any = {};
-    allowedFields.forEach(field => {
-      if (body[field] !== undefined) dataToUpdate[field] = body[field];
+    const decodedUser = (req as any).user;
+
+    // récupérer la disponibilité actuelle
+    const existing = await prisma.availabilityRule.findUnique({
+      where: { id: params.id }
     });
 
+    if (!existing) {
+      return apiResponse({
+        status: 404,
+        message: "Disponibilité introuvable"
+      });
+    }
+
+    const newDate = date ? new Date(date) : existing.date;
+    const newStartTime = startTime || existing.startTime;
+    const newEndTime = endTime || existing.endTime;
+
+    // vérifier chevauchement avec autre disponibilité
+    const conflict = await prisma.availabilityRule.findFirst({
+      where: {
+        ownerId: decodedUser.id,
+        id: { not: params.id },
+        date: newDate,
+        startTime: { lt: newEndTime },
+        endTime: { gt: newStartTime }
+      }
+    });
+
+    if (conflict) {
+      return apiResponse({
+        status: 400,
+        message: "Une disponibilité existe déjà dans cet intervalle"
+      });
+    }
+
+    // mise à jour
     const updated = await prisma.availabilityRule.update({
       where: { id: params.id },
-      data: dataToUpdate
+      data: {
+        date: date ? new Date(date) : undefined,
+        startTime,
+        endTime
+      }
     });
 
-    return apiResponse({ status: 200, message: "Règle mise à jour", data: updated });
+    return apiResponse({
+      status: 200,
+      message: "Disponibilité mise à jour",
+      data: updated
+    });
+
   } catch (err: any) {
+    console.log(err);
+
     if (err.code === "P2025") {
-      return apiResponse({ status: 404, message: "Règle introuvable" });
+      return apiResponse({
+        status: 404,
+        message: "Disponibilité introuvable"
+      });
     }
-    return apiResponse({ status: 500, message: err.message });
+
+    return apiResponse({
+      status: 500,
+      message: err.message
+    });
   }
 }
 
