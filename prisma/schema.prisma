@@ -104,6 +104,7 @@ model AvailabilityRule { // règles de disponibilité du propriétaire
 
   ownerId   String
   date      DateTime? // date spécifique (optionnel)
+  dayOfWeek Int? 
 
   startTime String
   endTime   String

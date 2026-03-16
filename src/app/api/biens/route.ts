@@ -164,7 +164,8 @@ import { apiResponse } from "@/lib/api-response";
 import { authMiddleware } from "@/middlewares/auth-middleware";
 import { handlePropertyFormData, PropertyFormDataResult } from "@/utils/handle-property-formData";
 import { roleMiddleware } from "@/middlewares/role-middleware";
-import { UserRole } from "@prisma/client";
+import { USER_ROLE_ENUM } from "@/types/enums";
+
 
 // -- Creer les Bien --
 export async function POST(req: NextRequest) {
@@ -173,7 +174,7 @@ export async function POST(req: NextRequest) {
     const authError = authMiddleware(req);
     if (authError) return authError;
     const roleError = roleMiddleware(
-      [UserRole.admin, UserRole.agency, UserRole.agent, UserRole.owner, UserRole.property_manager, UserRole.prospector]
+      [USER_ROLE_ENUM.admin, USER_ROLE_ENUM.agency, USER_ROLE_ENUM.agent, USER_ROLE_ENUM.owner, USER_ROLE_ENUM.property_manager, USER_ROLE_ENUM.prospector]
     )(req as any)
     if (roleError) return roleError
 

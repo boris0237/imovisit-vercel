@@ -21,6 +21,17 @@ export const UserRole = createEnum([ // type de utilisateur
 ]);
 export type UserRole = typeof UserRole.type;
 export const USER_ROLES = UserRole.values;
+export const USER_ROLE_ENUM = {
+  visitor: "visitor",
+  owner: "owner",
+  property_manager: "property_manager",
+  prospector: "prospector", 
+  provider: "provider",
+  free_agent: "free_agent",
+  agency: "agency",
+  agent: "agent",
+  admin: "admin",
+} as const;
 
 
 export const AuthProvider = createEnum([  // type de login
