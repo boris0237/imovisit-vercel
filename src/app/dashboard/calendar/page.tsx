@@ -23,6 +23,7 @@ export default function CalendarPage() {
     currentDate,
     setCurrentDate,
     selectedDate, // Pour afficher les détails du jour cliqué dans la sidebar
+    setSelectedDate,
     viewMode,
     setViewMode,
     nextPeriod,
@@ -39,6 +40,7 @@ export default function CalendarPage() {
   const [selectedCell, setSelectedCell] = useState<{
     date: string;
     hour: string;
+    endHour: string;
     type: 'available' | 'reserved' | 'blocked';
     reservation?: any;
   } | null>(null);
@@ -64,6 +66,14 @@ export default function CalendarPage() {
       return `${String(hour).padStart(2, "0")}:${minutes}`;
     });
   }, []);
+  const [h, m] = selectedCell
+    ? selectedCell.hour.split(':').map(Number)
+    : [0, 0];
+  const date = new Date();
+  date.setHours(h);
+  date.setMinutes(m + 30);
+
+  const endHour = `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
 
   // --- 2. GÉNÉRATION DES JOURS DE LA SEMAINE (Vue Semaine) ---
   const weekDays = useMemo(() => {
@@ -361,10 +371,11 @@ export default function CalendarPage() {
 
                           // 1. Si bloqué (journée complète ou exception)
                           if (day.blocked || status === 'BLOCKED') {
+                            {console.log("le format envoye par le front : ",day.fullDate, hour)}
                             return (
                               <div key={`${day.fullDate}-${hour}`} className="px-2">
                                 <button
-                                  onClick={() => setSelectedCell({ date: day.fullDate, hour, type: 'blocked' })}
+                                  onClick={() => setSelectedCell({ date: day.fullDate, hour, endHour, type: 'blocked' })}
                                   className="h-12 w-full rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-500 text-[11px] flex items-center justify-center gap-2 transition-colors cursor-pointer"
                                 >
                                   <span className="h-4 w-4 rounded-full border border-rose-400 flex items-center justify-center text-[10px]">✕</span>
@@ -380,10 +391,10 @@ export default function CalendarPage() {
                             return (
                               <div key={`${day.fullDate}-${hour}`} className="px-2">
                                 <button
-                                  onClick={() => setSelectedCell({ date: day.fullDate, hour, type: 'reserved', reservation: res })}
+                                  onClick={() => setSelectedCell({ date: day.fullDate, hour, endHour, type: 'reserved', reservation: res })}
                                   className={`h-12 w-full rounded-lg border text-[11px] px-3 py-1 flex flex-col justify-center text-left transition-colors cursor-pointer ${isPending
-                                      ? 'border-orange-200 bg-orange-50 hover:bg-orange-100 text-orange-600'
-                                      : 'border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600'
+                                    ? 'border-orange-200 bg-orange-50 hover:bg-orange-100 text-orange-600'
+                                    : 'border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600'
                                     }`}
                                 >
                                   <div className="flex items-center gap-1.5 font-bold mb-0.5">
@@ -402,7 +413,7 @@ export default function CalendarPage() {
                           return (
                             <div key={`${day.fullDate}-${hour}`} className="px-2">
                               <button
-                                onClick={() => setSelectedCell({ date: day.fullDate, hour, type: 'available' })}
+                                onClick={() => setSelectedCell({ date: day.fullDate, hour, endHour, type: 'available' })}
                                 className="h-12 w-full rounded-lg border border-dashed border-emerald-300 bg-emerald-50/30 hover:bg-emerald-50/80 text-emerald-500 flex items-center justify-center transition-colors"
                               >
                                 <Plus className="w-4 h-4" />
@@ -437,7 +448,7 @@ export default function CalendarPage() {
                   <div className="mb-6 p-4 bg-slate-50 rounded-xl border border-slate-100">
                     <p className="text-sm font-semibold text-slate-500 mb-1">Date et heure</p>
                     <p className="text-[#1a2b4b] font-bold text-lg">
-                      Le {new Date(selectedCell.date).toLocaleDateString('fr-FR')} à {selectedCell.hour}
+                      Le {new Date(selectedCell.date).toLocaleDateString('fr-FR')} à {selectedCell.hour} jusqu'à {endHour}
                     </p>
                   </div>
 
@@ -447,15 +458,16 @@ export default function CalendarPage() {
                       <p className="text-sm text-slate-600 mb-4">Ce créneau est actuellement disponible. Souhaitez-vous le bloquer exceptionnellement ?</p>
                       <Button
                         onClick={() => {
-                          const [h, m] = selectedCell.hour.split(':');
-                          const endHour = `${String(parseInt(h) + 1).padStart(2, '0')}:${m}`;
-                          // On appelle la fonction de notre contexte
-                          blockSlot(selectedCell.date, selectedCell.hour, endHour);
-                          setSelectedCell({
-                            date: selectedCell.date,
-                            hour: selectedCell.hour,
-                            type: 'blocked'
+                          if (!selectedCell) return;
+                          blockSlot(selectedCell.date, selectedCell.hour, selectedCell.endHour);
+                          setSelectedCell(prev => {
+                            if (!prev) return null;
+                            return {
+                              ...prev,           
+                              type: 'blocked' 
+                            };
                           });
+
                         }}
                         className="w-full bg-rose-500 hover:bg-rose-600 text-white font-bold"
                       >
@@ -490,123 +502,232 @@ export default function CalendarPage() {
           </div>
         )}
 
-        {view === 'month' && (
-          <div className="mt-6">
-            <Card className="border-slate-200 overflow-hidden">
+        {viewMode === 'month' && (
+          <div className="mt-6 animate-in fade-in">
+            <Card className="border-slate-200 overflow-hidden shadow-sm bg-white">
               <CardContent className="p-0">
-                <div className="grid grid-cols-7 bg-slate-900 text-white text-sm">
+                
+                {/* En-tête des jours de la semaine */}
+                <div className="grid grid-cols-7 bg-[#1a2b4b] text-white text-sm">
                   {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map((d) => (
-                    <div key={d} className="py-3 text-center font-medium">
+                    <div key={d} className="py-3 text-center font-bold tracking-wider">
                       {d}
                     </div>
                   ))}
                 </div>
+
+                {/* Grille du calendrier (Mois) */}
                 <div className="grid grid-cols-7">
-                  {monthDays.map((day, index) => (
-                    <button
-                      key={`${day.date}-${index}`}
-                      onClick={() => setIsPanelOpen(true)}
-                      className={`h-32 border border-slate-100 text-left p-3 transition-colors hover:bg-slate-50 ${day.weekend ? 'text-rose-500' : 'text-slate-700'
-                        }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-semibold">{day.date}</span>
-                        {day.badge && (
-                          <span className="h-5 w-5 rounded-full bg-slate-200 text-[10px] text-slate-700 flex items-center justify-center">
-                            {day.badge}
+                  {monthDays.map((day, index) => {
+                    // 1. Trouver les réservations pour ce jour précis
+                    const dayReservations = reservations
+                      .filter(r => r.date === day.fullDate && r.status !== 'cancelled')
+                      .sort((a, b) => a.startTime.localeCompare(b.startTime)); // Trier par heure
+
+                    // 2. Vérifier si c'est "Aujourd'hui" pour le mettre en valeur
+                    const isToday = day.fullDate === new Date().toISOString().split('T')[0];
+
+                    return (
+                      <button
+                        key={`${day.fullDate}-${index}`}
+                        onClick={() => {
+                          // Met à jour le jour sélectionné dans le contexte
+                          setSelectedDate(new Date(day.fullDate));
+                          // Ouvre le panneau latéral
+                          setIsPanelOpen(true);
+                        }}
+                        className={`h-32 border-r border-b border-slate-100 text-left p-2 md:p-3 transition-colors hover:bg-slate-50 relative flex flex-col gap-2 
+                          ${!day.isCurrentMonth ? 'bg-slate-50/50 text-slate-400' : 'bg-white'} 
+                          ${day.weekend ? 'text-rose-500' : 'text-slate-700'}
+                        `}
+                      >
+                        {/* Numéro du jour et Badge */}
+                        <div className="flex items-center justify-between w-full">
+                          <span className={`text-sm font-semibold ${isToday ? 'bg-[#1a2b4b] text-white h-7 w-7 rounded-full flex items-center justify-center' : ''}`}>
+                            {day.date}
                           </span>
-                        )}
-                      </div>
-                      <div className="mt-3 space-y-2">
-                        {day.date === 20 && (
-                          <div className="text-[11px] bg-slate-100 text-slate-600 px-2 py-1 rounded-md">
-                            11:00 - Sophie Ndongo
-                          </div>
-                        )}
-                        {day.date === 24 && (
-                          <div className="text-[11px] bg-slate-100 text-slate-600 px-2 py-1 rounded-md">
-                            11:00 - Sophie Ndongo
-                          </div>
-                        )}
-                        {day.date === 27 && (
-                          <div className="text-[11px] border border-orange-300 text-orange-600 px-2 py-1 rounded-md">
-                            11:00 - Sophie Ndongo
-                          </div>
-                        )}
-                        {day.blocked && (
-                          <div className="text-[11px] border border-rose-300 text-rose-500 px-2 py-1 rounded-md">
-                            Bloqué - congés
-                          </div>
-                        )}
-                      </div>
-                    </button>
-                  ))}
+                          
+                          {/* Le badge rouge affiche le nombre de visites */}
+                          {day.badge && (
+                            <span className="h-5 w-5 rounded-full bg-rose-500 text-[10px] font-bold text-white flex items-center justify-center shadow-sm">
+                              {day.badge}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Liste des événements (Scrollable s'il y en a trop) */}
+                        <div className="flex flex-col gap-1.5 overflow-y-auto w-full scrollbar-hide">
+                          
+                          {/* Cas A : La journée est bloquée */}
+                          {day.blocked && (
+                            <div className="text-[10px] font-semibold border border-rose-200 bg-rose-50 text-rose-600 px-1.5 py-1 rounded truncate flex items-center gap-1.5">
+                              <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                              Bloqué - Congés
+                            </div>
+                          )}
+
+                          {/* Cas B : Affichage des réservations */}
+                          {!day.blocked && dayReservations.map((res, i) => {
+                            const isPending = res.status === 'pending';
+                            return (
+                              <div 
+                                key={res.id || i} 
+                                className={`text-[10px] font-semibold px-1.5 py-1 rounded truncate flex items-center gap-1.5
+                                  ${isPending 
+                                    ? 'border border-orange-200 bg-orange-50 text-orange-600' 
+                                    : 'border border-slate-200 bg-slate-50 text-slate-600'
+                                  }
+                                `}
+                              >
+                                <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isPending ? 'bg-orange-500' : 'bg-emerald-500'}`}></span>
+                                <span className="truncate">{res.startTime} - Client</span>
+                              </div>
+                            );
+                          })}
+
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
+                
               </CardContent>
             </Card>
           </div>
         )}
       </div>
 
-      {isPanelOpen && (
+     {isPanelOpen && (
         <div className="fixed inset-0 z-40">
-          <div className="absolute inset-0 bg-slate-900/30" onClick={() => setIsPanelOpen(false)} />
-          <aside className="absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-xl flex flex-col">
-            <div className="bg-slate-900 text-white p-6 flex items-center justify-between">
-              <h3 className="text-lg font-semibold">Détails du jour</h3>
-              <button onClick={() => setIsPanelOpen(false)} className="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center">
-                <X className="w-4 h-4" />
+          {/* Fond sombre cliquable pour fermer */}
+          <div className="absolute inset-0 bg-slate-900/30 backdrop-blur-sm transition-opacity" onClick={() => setIsPanelOpen(false)} />
+          
+          {/* Panneau latéral */}
+          <aside className="absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
+            
+            {/* Header du panneau */}
+            <div className="bg-[#1a2b4b] text-white p-6 flex items-center justify-between">
+              <h3 className="text-lg font-bold">Détails de la journée</h3>
+              <button 
+                onClick={() => setIsPanelOpen(false)} 
+                className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+              >
+                <X className="w-5 h-5" />
               </button>
             </div>
+
+            {/* Contenu principal */}
             <div className="p-6 overflow-auto flex-1 space-y-6">
+              
+              {/* Date dynamique géante */}
               <div className="text-center">
-                <p className="text-4xl font-semibold text-slate-900">24</p>
-                <p className="text-sm text-slate-500">Février</p>
+                <p className="text-5xl font-extrabold text-[#1a2b4b]">
+                  {(selectedDate || currentDate).getDate()}
+                </p>
+                <p className="text-lg font-medium text-slate-500 capitalize mt-1">
+                  {(selectedDate || currentDate).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+                </p>
               </div>
 
-              <div className="flex items-center justify-between">
-                <h4 className="font-semibold text-slate-900">Visites prévues(2)</h4>
-                <Button variant="outline" size="sm" className="gap-2">
+              {/* Titre Visites prévues dynamique */}
+              <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                <h4 className="font-bold text-slate-900">Visites prévues ({dayVisits.length})</h4>
+                <Button variant="outline" size="sm" className="gap-2 text-[#1a2b4b] border-slate-200 hover:bg-slate-50">
                   <Plus className="w-4 h-4" />
                   Ajouter
                 </Button>
               </div>
 
-              {dayVisits.map((visit) => (
-                <Card key={visit.id} className="border-slate-200">
-                  <CardContent className="p-5 space-y-3">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <p className="text-xl font-semibold text-slate-900">{visit.time}</p>
-                        <p className="text-sm text-slate-600">{visit.name}</p>
-                        <p className="text-xs text-slate-500">{visit.property}</p>
-                      </div>
-                      <Badge className="bg-slate-100 text-slate-600 border-0">
-                        {visit.type === 'Présentiel' ? (
-                          <span className="flex items-center gap-1">
-                            <Users className="w-3 h-3" /> {visit.type}
-                          </span>
-                        ) : (
-                          <span className="flex items-center gap-1">
-                            <Video className="w-3 h-3" /> {visit.type}
-                          </span>
-                        )}
-                      </Badge>
-                    </div>
-                    {visit.status === 'confirmed' ? (
-                      <Badge className="bg-emerald-100 text-emerald-700 border-0 w-fit">
-                        <Check className="w-3 h-3 mr-1" /> Confirmer
-                      </Badge>
-                    ) : (
-                      <Badge className="bg-amber-100 text-amber-700 border-0 w-fit">En attente</Badge>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
+              {/* Liste des visites dynamiques */}
+              {dayVisits.length === 0 ? (
+                <div className="text-center py-10 text-slate-400 font-medium">
+                  Aucune visite programmée ce jour.
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {dayVisits.map((visit) => (
+                    <Card 
+                      key={visit.id} 
+                      onClick={() => {
+                        // 1. On récupère la vraie date sous format YYYY-MM-DD
+                        const realDate = selectedDate || currentDate;
+                        const dateStr = [
+                          realDate.getFullYear(),
+                          String(realDate.getMonth() + 1).padStart(2, '0'),
+                          String(realDate.getDate()).padStart(2, '0')
+                        ].join('-');
+                        
+                        // 2. On retrouve l'objet complet de la réservation
+                        const res = reservations.find(r => r.id === visit.id);
+
+                        // 3. Calculer l'endHour à partir de visit.time
+                        const [h, m] = visit.time.split(':').map(Number);
+                        const endDate = new Date();
+                        endDate.setHours(h);
+                        endDate.setMinutes(m + 30);
+                        const calculatedEndHour = `${String(endDate.getHours()).padStart(2, "0")}:${String(endDate.getMinutes()).padStart(2, "0")}`;
+
+                        // 4. On déclenche l'ouverture de la modale centrale !
+                        setSelectedCell({
+                          date: dateStr,
+                          hour: visit.time,
+                          endHour: calculatedEndHour,
+                          type: 'reserved',
+                          reservation: res
+                        });
+                        
+                        // 5. (Optionnel) on ferme le panneau latéral pour bien voir la modale
+                        setIsPanelOpen(false); 
+                      }}
+                      className="border-slate-200 cursor-pointer hover:border-[#1a2b4b]/30 hover:shadow-md transition-all group bg-white"
+                    >
+                      <CardContent className="p-5 space-y-3">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <p className="text-xl font-bold text-[#1a2b4b] group-hover:text-blue-600 transition-colors">
+                              {visit.time}
+                            </p>
+                            <p className="text-sm font-semibold text-slate-700 mt-1">{visit.name}</p>
+                            <p className="text-xs text-slate-500">{visit.property}</p>
+                          </div>
+                          
+                          {/* Type de visite (Badge) */}
+                          <Badge className="bg-slate-50 text-slate-600 border border-slate-200">
+                            {visit.type === 'Présentiel' ? (
+                              <span className="flex items-center gap-1 font-medium">
+                                <Users className="w-3.5 h-3.5" /> {visit.type}
+                              </span>
+                            ) : (
+                              <span className="flex items-center gap-1 font-medium">
+                                <Video className="w-3.5 h-3.5" /> {visit.type}
+                              </span>
+                            )}
+                          </Badge>
+                        </div>
+                        
+                        {/* Statut de la visite (Badge) */}
+                        <div>
+                          {visit.status === 'confirmed' ? (
+                            <Badge className="bg-emerald-100 text-emerald-700 border-0 w-fit px-2 py-1">
+                              <Check className="w-3 h-3 mr-1" strokeWidth={3} /> Confirmé
+                            </Badge>
+                          ) : (
+                            <Badge className="bg-amber-100 text-amber-700 border-0 w-fit px-2 py-1 font-semibold">
+                              En attente
+                            </Badge>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </div>
-            <div className="p-6 border-t border-slate-200">
-              <Button className="w-full bg-slate-900 hover:bg-slate-800 gap-2">
-                <Plus className="w-4 h-4" />
+
+            {/* Footer du panneau */}
+            <div className="p-6 border-t border-slate-100 bg-slate-50">
+              <Button className="w-full bg-[#1a2b4b] hover:bg-[#121d33] text-white gap-2 py-6 rounded-xl font-bold shadow-md transition-colors">
+                <Plus className="w-5 h-5" />
                 Ajouter une nouvelle visite
               </Button>
             </div>
