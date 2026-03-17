@@ -67,9 +67,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const login = async (credentials: LoginCredentials) => {
     try {
-      const userData = await authService.login(credentials);
+      const authData = await authService.login(credentials);
+      const userData = authData?.user ?? authData;
+      const token = authData?.token;
 
       localStorage.setItem('user', JSON.stringify(userData));
+      if (token) {
+        localStorage.setItem('token', token);
+      }
       setUser(userData);
 
       return userData;
@@ -85,6 +90,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.error("Erreur lors de la déconnexion serveur", error);
     } finally {
       localStorage.removeItem('user');
+      localStorage.removeItem('token');
       setUser(null);
       router.push('/login');
     }

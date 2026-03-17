@@ -56,6 +56,8 @@ export interface Visit {
 }
 
 export interface FilterOptions {
+  search?: string;
+  cityId?: string;
   city?: string;
   neighborhood?: string;
   minPrice?: number;

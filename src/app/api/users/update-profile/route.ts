@@ -101,7 +101,8 @@ import { handleFormData } from "@/utils/handle-formData";
 import { filterFormDataFields } from "@/utils/filter-formData-fields";
 import { NextRequest } from "next/server";
 import { ROLE_ALLOWED_FIELDS } from "@/types/constant";
-import { AccountStatus } from "@prisma/client";
+import { AccountStatus } from "@/types/enums";
+
 
 export async function PATCH(req: NextRequest) {
   try {

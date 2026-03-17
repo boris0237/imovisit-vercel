@@ -141,8 +141,9 @@ import { prisma } from "@/services/db";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { NextResponse } from "next/server";
-import { AuthProvider, User } from "@prisma/client";
+import { User } from "@prisma/client";
 import { apiResponse } from "@/lib/api-response";
+import { AUTH_PROVIDER_ENUM } from "@/types/enums";
 
 
 const JWT_SECRET = process.env.JWT_SECRET!;
@@ -160,7 +161,7 @@ export async function POST(req: Request) {
     }
 
     // Vérification du mot de passe pour provider local
-    if (user.authProvider === AuthProvider.local) {
+    if (user.authProvider === AUTH_PROVIDER_ENUM.local) {
       if (!password) {
         return apiResponse({ status: 400, message: "Mot de passe requis" });
       }
@@ -196,7 +197,7 @@ export async function POST(req: Request) {
 
       } as User,
       JWT_SECRET,
-      { expiresIn: "1h" }
+      { expiresIn: "180d" }
     );
 
     const { password: _, ...userWithoutPassword } = user;
@@ -216,7 +217,7 @@ export async function POST(req: Request) {
     const res = NextResponse.json(responseData);
     res.cookies.set("jwt", token, {
       httpOnly: true,
-      maxAge: 60 * 60,
+      maxAge: 60 * 60 * 24 * 30 * 6,
       path: "/",
       sameSite: "strict",
       secure: process.env.NODE_ENV === "production",
@@ -232,5 +233,4 @@ export async function POST(req: Request) {
     });
   }
 }
-
 

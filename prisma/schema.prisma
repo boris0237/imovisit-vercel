@@ -4,30 +4,31 @@ generator client {
 
 datasource db {
   provider = "mongodb"
-  url      = env("DATABASE_URL") //error est du au update de version de prima
+  url      = env("DATABASE_URL")
 }
 
 // USER
 model User {
-  id          String     @id @default(auto()) @map("_id") @db.ObjectId
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
   name        String
   age         Int?
-  typeCompte  TypeCompte @default(classique)
-  email       String     @unique
+
+  typeCompte  String   @default("classique") // TypeCompte : classique | premium
+  email       String   @unique
   password    String?
   phone       String?
   avatar      String?
+
   companyName String?
   companyLogo String?
 
-  role UserRole @default(visitor)
+  role        String   @default("visitor") // UserRole : visitor | owner | property_manager | prospector | provider | free_agent | agency | agent | admin
+  accountStatus String @default("unverified") // AccountStatus : unverified | pending | verified | suspended | verifiedPremium
 
-  accountStatus AccountStatus @default(unverified)
-
-  city       String?
-  country    String?
-  profession String?
-  services   String?
+  city        String?
+  country     String?
+  profession  String?
+  services    String?
 
   docJust         String?
   docCNI          String?
@@ -35,115 +36,56 @@ model User {
   docContribuable String?
   docRCCM         String?
 
-  authProvider AuthProvider @default(local)
-  isActive     Boolean      @default(true)
-  createdAt    DateTime     @default(now())
-  updatedAt DateTime @updatedAt @default(now())
-}
-enum UserRole {
-  visitor
-  owner
-  property_manager
-  prospector
-  provider
-  free_agent
-  agency
-  agent
-  admin
-}
+  authProvider String @default("local") // AuthProvider : local | google
 
-enum AuthProvider {
-  local
-  google
-}
+  isActive   Boolean  @default(true)
 
-enum TypeCompte {
-  classique
-  premium
-}
-
-enum AccountStatus {
-  unverified
-  pending
-  verified
-  suspended
-  verifiedPremium
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
 
 // PROPERTY
 model Property {
-  id                String        @id @default(auto()) @map("_id") @db.ObjectId 
-  title             String        
-  description       String        
-  price             Float         
-  priceType         PriceType     // Enum: vente mensuelle, quotidienne
-  type              PropertyType  // Enum: apartment, house, studio, villa, etc.
-  offerType         OfferType     // Enum: location, vente , meublé
-  city              String        
-  neighborhood      String        // Quartier spécifique
-  address           String        // Adresse exacte
-  surface           Float?       
-  rooms             Int           // Nombre total de pièces
-  bedrooms          Int?          // Nombre de chambres 
-  bathrooms         Int?          // Nombre de salles de bain 
-  images            String[]      
-  amenities         Amenity[]     // Enum ou type: piscine, ascenseur, parking...
-  visitType         PropertyVisitType     // Enum: in-person, remote, both
-  visitFee          Float?        // Frais éventuels pour la visite 
-  isAvailable       Boolean       @default(true) 
-  docTitreFoncier   String?      
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  title             String
+  description       String
+  price             Float
 
-  userId            String        
-  userName          String        
-  userCompanyName   String?       
-  userCompanyLogo   String?       
-  userVerified      AccountStatus       
-  userAvatar        String?       
+  priceType         String // PriceType : monthly | daily | sale
+  type              String // PropertyType : apartment | house | studio | villa | duplex | land | office | shop | building | cleaning
+  offerType         String // OfferType : rent | sale | furnished
 
-  views             Int           @default(0)
-  visitsCount       Int           @default(0) 
-  createdAt         DateTime      @default(now())
-  updatedAt DateTime @updatedAt @default(now())
-}
+  city              String
+  neighborhood      String  // Quartier spécifique
+  address           String  // Adresse exacte
 
-enum PriceType {
-  monthly
-  daily
-  sale
-}
+  surface           Float?
+  rooms             Int     // Nombre total de pièces
+  bedrooms          Int?    // Nombre de chambres
+  bathrooms         Int?    // Nombre de salles de bain
 
-enum PropertyType {
-  apartment
-  house
-  studio
-  villa
-  duplex
-  land
-  office
-  shop
-  building
-}
+  images            String[]
+  amenities         String[] // Amenity : pool | elevator | parking | gym | garden | security | water | borehole
 
-enum OfferType {
-  rent
-  sale
-  furnished
-}
+  visitType         String // PropertyVisitType : in_person | remote | both
+  visitFee          Float? // Frais éventuels pour la visite
 
-enum PropertyVisitType {
-  in_person
-  remote
-  both
-}
+  isAvailable       Boolean @default(true)
+  docTitreFoncier   String? // Document de propriété
 
-enum Amenity {
-  pool
-  elevator
-  parking
-  gym
-  garden
-  security
+  userId            String
+  userName          String
+  userCompanyName   String?
+  userCompanyLogo   String?
+  userVerified      String // AccountStatus
+  userAvatar        String?
+
+  views             Int @default(0)
+  visitsCount       Int @default(0)
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 }
 
 // FAVORIS
@@ -155,105 +97,63 @@ model Favorite {
 }
 
 
-
-
 // AGENDA
 model AvailabilityRule { // règles de disponibilité du propriétaire
-  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
 
-  ownerId        String
+  ownerId   String
+  date      DateTime? // date spécifique (optionnel)
+  dayOfWeek Int? 
 
-  //jour précis
-  date           DateTime?
+  startTime String
+  endTime   String
 
-  //répétition
-  recurrenceType RecurrenceType?
-  dayOfWeek      WeekDay?
-  dayOfMonth     Int?
-
-  // plage horaire
-  startTime      String
-  endTime        String
-
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-// Exceptions 
-model AvailabilityException {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+model AvailabilityException { // exceptions aux disponibilités
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
 
-  ownerId     String
-
-  // jour précis
-  date        DateTime?
+  ownerId   String
+  date      DateTime?
 
   // intervalle de jours
-  dateStart   DateTime?
-  dateEnd     DateTime?
-
-  // répétition possible
-  dayOfWeek   WeekDay?
-  dayOfMonth  Int?
+  dateStart DateTime?
+  dateEnd   DateTime?
 
   // plage horaire bloquée
-  startTime   String?
-  endTime     String?
+  startTime String?
+  endTime   String?
 
-  reason      String?
+  reason    String?
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 
-// Réservations de visite
-model Reservation {
+// RESERVATION
+model Reservation { // réservations de visite
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
 
-  propertyId  String   
-  ownerId     String   
-  clientId    String 
+  propertyId  String
+  ownerId     String
+  clientId    String
 
   date        DateTime
   startTime   String
   endTime     String
 
-  visitType   ReservationVisitType @default(in_person)
-  visitContext String?
+  visitType   String @default("in_person") // ReservationVisitType : in_person | remote
+  visitContext String? // contexte de la visite (zoom, whatsapp, etc.)
 
-  status      ReservationStatus @default(pending)
+  status      String @default("pending") // ReservationStatus : pending | confirmed | cancelled
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
 
-
-enum ReservationStatus {
-  pending
-  confirmed
-  cancelled
-}
-
-enum RecurrenceType {
-  weekly
-  monthly
-}
-
-enum WeekDay {
-  monday
-  tuesday
-  wednesday
-  thursday
-  friday
-  saturday
-  sunday
-}
-
-enum ReservationVisitType {
-  in_person
-  remote
-}
 
 // GEOLOCALISATION
 model Country { // pays
@@ -275,11 +175,13 @@ model City { // ville
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   name      String
   countryId String   @db.ObjectId
+
   country   Country  @relation(fields: [countryId], references: [id])
 
   districts District[]
 
   isActive  Boolean  @default(true)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -290,9 +192,11 @@ model District { // quartier
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
   name      String
   cityId    String   @db.ObjectId
+
   city      City     @relation(fields: [cityId], references: [id])
 
   isActive  Boolean  @default(true)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -303,41 +207,39 @@ model District { // quartier
 // DEPENSES
 model Expense {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  assetId     String   @db.ObjectId  //id du bien 
-  type        ExpenseType            //type de dépense
+  assetId     String   @db.ObjectId // id du bien
+
+  type        String   // ExpenseType : maintenance | repair | insurance | transport | other
   amount      Float
-  currency    String                //devise (USD, EUR, XAF)
+  currency    String   // devise (USD, EUR, XAF)
+
   date        DateTime
   description String?
-  vendor      String?               //la personne qui a fait le service
+  vendor      String?  // la personne ou entreprise qui a fait le service
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-}
-
-enum ExpenseType {
-  maintenance
-  repair
-  insurance
-  transport
-  other
 }
 
 
 // LOCATAIRES
 model Tenant {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
+
   firstName String
   lastName  String
-  email     String?   @unique
+  email     String?  @unique
   phone     String
-  assetId   String   @db.ObjectId    //id du bien
-  address   String?
-  startDate DateTime                //date de début de location
-  endDate   DateTime                //date de fin de location
 
+  assetId   String   @db.ObjectId // id du bien
+  address   String?
+
+  startDate DateTime // date de début de location
+  endDate   DateTime // date de fin de location
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
 }
+
+

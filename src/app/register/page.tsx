@@ -23,7 +23,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 
 export default function Register() {
-  const [accountType, setAccountType] = useState<'visitor' | 'owner' | 'provider'>('visitor');
+  const [accountType, setAccountType] = useState<'visitor' | 'owner' | 'provider' | ''>('');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -533,6 +533,7 @@ const submitGoogle = () => {
                       type="submit"
                       className="w-full bg-imo-primary hover:bg-imo-secondary gap-2"
                       loading={isLoading} 
+                      disabled={!accountType || isLoading}
                     >
                       {dictionary.signup?.submit || "Créer mon compte"}
                       <ArrowRight className="w-4 h-4" />

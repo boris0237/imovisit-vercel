@@ -4,6 +4,7 @@ import "./globals.css";
 import "./App.css";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CalendarProvider } from "@/contexts/CalendarContext";
+import { Toaster } from "@/components/ui/sonner";
 
 
 export const metadata: Metadata = {
@@ -27,6 +28,10 @@ export default function RootLayout({
         <AuthProvider>
           <LanguageProvider>
             <body className="antialiased">{children}</body>
+            <body className="antialiased">
+              {children}
+              <Toaster />
+            </body>
           </LanguageProvider>
         </AuthProvider>
       </CalendarProvider>

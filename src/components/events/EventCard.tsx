@@ -48,11 +48,11 @@ export function EventCard({ event }: { event: Event }) {
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full bg-imo-primary/10 flex items-center justify-center">
               <span className="text-sm font-medium text-imo-primary">
-                {event.ownerName.charAt(0)}
+              {(event.ownerName || event.userName || 'U').charAt(0)}
               </span>
             </div>
             <div className="flex items-center gap-1">
-              <span className="text-sm text-gray-600">{event.ownerName}</span>
+              <span className="text-sm text-gray-600">{event.ownerName || event.userName || 'Utilisateur'}</span>
               {event.ownerVerified && (
                 <BadgeCheck className="w-4 h-4 text-blue-500" />
               )}
