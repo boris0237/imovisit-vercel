@@ -12,7 +12,7 @@ import { KeyRound, Tag, Armchair } from "lucide-react";
 
 interface PropertyFormData {
   type?: string;
-  offerType?: string;
+  offerType?: "vente" | "meuble" | "location";
   title?: string;
   description?: string;
 }

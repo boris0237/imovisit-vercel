@@ -38,7 +38,7 @@ export interface PropertyFormData{
   next: boolean;
   prev: boolean;
   title: string;
-  offerType: 'location ' | 'meuble' | 'vente';
+  offerType: 'location' | 'meuble' | 'vente';
   description: string;
   type: string;
   priceType : "vente" | "location_mensuelle" | "locaation_journalière";

@@ -33,7 +33,7 @@ import Step2Location from '@/components/modal/steps/Step2Location';
 import Step3Features from '@/components/modal/steps/Step3Features';
 import Step4Media from '@/components/modal/steps/Step4Media';
 import Step5Success from '@/components/modal/steps/Step5Success';
-import type { PropertyData, PropertyFormData } from '@/types/index';
+import type { PropertyFormData } from '@/types/index';
 
 export default function Dashboard() {
 
@@ -97,7 +97,7 @@ export default function Dashboard() {
     updateData: '',
     next: false,
     prev: false,
-    offerType: 'vente',
+    offerType: 'location',
     bedrooms: 0,
     visitType: 'gratuit',
     isAvailable: false,
@@ -120,86 +120,89 @@ export default function Dashboard() {
     setStep(1)
   }
 
-  async function createProperty() {
-
+ async function createProperty() {
   try {
 
-    if (loading) return 
+    if (loading) return;
 
     if (!formData.title || !formData.price || !formData.city) {
-      alert("Veuillez remplir les champs obligatoires")
-      return
+      alert("Veuillez remplir les champs obligatoires");
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
 
-    // récupération du token
-    const token = localStorage.getItem("token")
+    const token = localStorage.getItem("token");
 
     if (!token) {
-      alert("Utilisateur non authentifié")
-      return
+      alert("Utilisateur non authentifié");
+      setLoading(false);
+      return;
     }
 
-    const form = new FormData()
+    console.log("TOKEN:", token);
+
+    const form = new FormData();
 
     Object.entries(formData).forEach(([key, value]) => {
 
-      // gestion images
-      if (key === "images") {
-
-        (value as File[]).forEach((file) => {
-          form.append("images", file)
-        })
-
+      if (key === "images" && Array.isArray(value)) {
+        value.forEach(file => form.append("images", file));
       }
 
-      // gestion tableaux
       else if (Array.isArray(value)) {
-
-        value.forEach(v => form.append(key, String(v)))
-
+        value.forEach(v => form.append(`${key}[]`, v));
       }
 
       else if (value !== undefined && value !== null) {
-
-        form.append(key, String(value))
-
+        form.append(key, value as any);
       }
 
-    })
+    });
 
-    const response = await fetch("/api/biens", {
+    const response = await fetch("http://localhost:3000/api/biens", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`
       },
       body: form
-    })
+    });
+
+    if (response.status === 401) {
+      localStorage.removeItem("token");
+      alert("Session expirée, reconnectez-vous");
+      return;
+    }
 
     if (!response.ok) {
-  const errorData = await response.json()
-  throw new Error(errorData.message || "Erreur serveur")
-}
+      let errorMessage = "Erreur serveur";
 
-    const data = await response.json()
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.message || errorMessage;
+      } catch {}
 
-    console.log("PROPERTY CREATED", data)
+      throw new Error(errorMessage);
+    }
 
-    resetForm()
-    setShowAddPropertyModal(false)
+    const data = await response.json();
+
+    console.log("PROPERTY CREATED", data);
+
+    resetForm();
+    setShowAddPropertyModal(false);
 
   } catch (error) {
+  console.error("Erreur création bien", error);
 
-    console.error("Erreur création bien", error)
-    alert("Erreur lors de la création du bien")
-
-  } finally {
-
-    setLoading(false)
-
+  if (error instanceof Error) {
+    alert(error.message);
+  } else {
+    alert("Erreur lors de la création du bien");
   }
-
+} finally {
+    setLoading(false);
+  }
 }
 
   return (
