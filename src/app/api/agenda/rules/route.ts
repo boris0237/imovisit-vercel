@@ -99,9 +99,21 @@ import { apiResponse } from "@/lib/api-response";
 import { authMiddleware } from "@/middlewares/auth-middleware";
 
 // Créer une disponibilité
+function toMinutes(time: string): number {
+  const [h, m] = time.split(":").map(Number);
+  return h * 60 + m;
+}
+
+function isOverlap(start1: string, end1: string, start2: string, end2: string) {
+  return (
+    toMinutes(start1) < toMinutes(end2) &&
+    toMinutes(end1) > toMinutes(start2)
+  );
+}
+
 export async function POST(req: NextRequest) {
   try {
-
+    // 🔐 auth
     const authError = authMiddleware(req);
     if (authError) return authError;
 
@@ -111,76 +123,104 @@ export async function POST(req: NextRequest) {
     if (!date || !startTime || !endTime) {
       return apiResponse({
         status: 400,
-        message: "date, startTime et endTime sont obligatoires"
+        message: "date, startTime et endTime sont obligatoires",
+      });
+    }
+
+    const dateObj = new Date(date);
+    if (isNaN(dateObj.getTime())) {
+      return apiResponse({
+        status: 400,
+        message: "Date invalide",
+      });
+    }
+
+    if (toMinutes(startTime) >= toMinutes(endTime)) {
+      return apiResponse({
+        status: 400,
+        message: "startTime doit être inférieur à endTime",
       });
     }
 
     const decodedUser = (req as any).user;
-    const dateObj = new Date(date);
+    const ownerId = decodedUser.id;
 
-    // Vérifier exception
-    const exception = await prisma.availabilityException.findFirst({
+    // 1. CHECK EXCEPTIONS 
+    const exceptions = await prisma.availabilityException.findMany({
       where: {
-        ownerId: decodedUser.id,
+        ownerId,
         OR: [
           { date: dateObj },
           {
             dateStart: { lte: dateObj },
-            dateEnd: { gte: dateObj }
-          }
-        ]
-      }
+            dateEnd: { gte: dateObj },
+          },
+        ],
+      },
     });
 
-    if (exception) {
-      return apiResponse({
-        status: 400,
-        message: "Impossible : une exception existe sur cette date"
-      });
+    for (const e of exceptions) {
+      // journée complète bloquée
+      if (!e.startTime && !e.endTime) {
+        return apiResponse({
+          status: 400,
+          message: "Impossible : journée entièrement bloquée",
+        });
+      }
+
+      // chevauchement partiel uniquement
+      if (e.startTime && e.endTime) {
+        if (isOverlap(startTime, endTime, e.startTime, e.endTime)) {
+          return apiResponse({
+            status: 400,
+            message: "Impossible : chevauchement avec une exception",
+          });
+        }
+      }
     }
 
-    // Vérifier doublon / chevauchement
-    const existingAvailability = await prisma.availabilityRule.findFirst({
+    // 2. CHECK EXISTING AVAILABILITY
+    const existingRules = await prisma.availabilityRule.findMany({
       where: {
-        ownerId: decodedUser.id,
+        ownerId,
         date: dateObj,
-        startTime: { lt: endTime },
-        endTime: { gt: startTime }
-      }
+      },
     });
 
-    if (existingAvailability) {
-      return apiResponse({
-        status: 400,
-        message: "Cette plage horaire existe déjà pour cette date"
-      });
+    for (const rule of existingRules) {
+      if (isOverlap(startTime, endTime, rule.startTime, rule.endTime)) {
+        return apiResponse({
+          status: 400,
+          message: "Cette plage chevauche une disponibilité existante",
+        });
+      }
     }
 
-    // Création
-    const rule = await prisma.availabilityRule.create({
+    // 3. CREATE 
+    const newRule = await prisma.availabilityRule.create({
       data: {
-        ownerId: decodedUser.id,
+        ownerId,
         date: dateObj,
         startTime,
-        endTime
-      }
+        endTime,
+      },
     });
 
     return apiResponse({
       status: 201,
-      message: "Disponibilité créée",
-      data: rule
+      message: "Disponibilité créée avec succès",
+      data: newRule,
     });
 
   } catch (err: any) {
-    console.log(err);
+    console.error("[CREATE AVAILABILITY ERROR]", err);
+
     return apiResponse({
       status: 500,
-      message: err.message || "Erreur serveur"
+      message: err.message || "Erreur interne du serveur",
     });
   }
 }
-
 
 // Lister les disponibilités
 export async function GET(req: NextRequest) {
