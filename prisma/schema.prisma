@@ -19,6 +19,7 @@ model User {
   avatar      String?
   companyName String?
   companyLogo String?
+  providerType String?
 
   role UserRole @default(visitor)
 
