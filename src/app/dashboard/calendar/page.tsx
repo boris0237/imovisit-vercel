@@ -625,10 +625,6 @@ export default function AgendaPage() {
                 </div>
               </CardContent>
             </Card>
-
-            {/* ========================================================
-        MODALE DE DÉTAILS AMÉLIORÉE
-        ======================================================== */}
             {selectedCell && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
                 <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-xl animate-in zoom-in-95">
@@ -636,9 +632,8 @@ export default function AgendaPage() {
                   {/* HEADER */}
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-bold text-[#1a2b4b]">
-                      {selectedCell.type === 'available' && 'Gérer le créneau'}
-                      {selectedCell.type === 'reserved' && 'Détails de la réservation'}
-                      {selectedCell.type === 'blocked' && 'Créneau bloqué'}
+                      {selectedCell.type === 'reserved' && "Détails de la réservation"}
+                      {selectedCell.type === 'blocked' && "Créneau bloqué"}
                     </h3>
                     <button
                       onClick={() => setSelectedCell(null)}
@@ -852,20 +847,13 @@ export default function AgendaPage() {
           ======================================================== */}
       {isPanelOpen && (
         <div className="fixed inset-0 z-40">
-          <div
-            className="absolute inset-0 bg-slate-900/30 backdrop-blur-sm transition-opacity"
-            onClick={() => setIsPanelOpen(false)}
-          />
-
-          <aside className="absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
-            <div className="bg-[#1a2b4b] text-white p-6 flex items-center justify-between">
-              <h3 className="text-lg font-bold">Détails de la journée</h3>
-              <button
-                onClick={() => setIsPanelOpen(false)}
-                className="h-8 w-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
+          <div className="absolute inset-0 bg-slate-900/30" onClick={() => setIsPanelOpen(false)} />
+          <aside className="absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-xl flex flex-col">
+            <div className="bg-slate-900 text-white p-6 flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Détails du jour</h3>
+              <Button onClick={() => setIsPanelOpen(false)} className="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center">
+                <X className="w-4 h-4" />
+              </Button>
             </div>
 
             <div className="p-6 overflow-auto flex-1 space-y-6">

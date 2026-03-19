@@ -48,3 +48,37 @@ export async function PATCH(req: NextRequest) {
     });
   }
 }
+
+export const createFormData = (data: Record<string, any>) => {
+  const formData = new FormData();
+
+  Object.entries(data).forEach(([key, value]) => {
+    if (value === undefined || value === null) return;
+
+    // fichier unique
+    if (value instanceof File) {
+      formData.append(key, value);
+    }
+
+    // tableau de fichiers (images)
+    else if (Array.isArray(value) && value[0] instanceof File) {
+      value.forEach((file) => {
+        formData.append(key, file);
+      });
+    }
+
+    // tableau normal
+    else if (Array.isArray(value)) {
+      value.forEach((item) => {
+        formData.append(`${key}[]`, String(item));
+      });
+    }
+
+    // valeurs simples
+    else {
+      formData.append(key, String(value));
+    }
+  });
+
+  return formData;
+};
