@@ -146,23 +146,23 @@ const offerLabels: Record<string, { label: string; className: string }> = {
     setImages(Array(5).fill(null));
     setImagePreviews(Array(5).fill(null));
     setActiveImageSlot(0);
-   setForm({
-  type: '',
-  offerType: 'rent',
-  priceType: 'monthly', 
-  title: '',
-  description: '',
-  countryId: '',
-  cityId: '',
-  districtId: '',
-  address: '',
-  surface: '',
-  rooms: '', 
-  bathrooms: '',
-  amenities: [] as string[],
-  price: '',
-  visitFee: '',
-});
+    setForm({
+      type: '',
+      offerType: 'rent',
+      priceType: 'monthly',
+      title: '',
+      description: '',
+      countryId: '',
+      cityId: '',
+      districtId: '',
+      address: '',
+      surface: '',
+      rooms: '',
+      bathrooms: '',
+      amenities: [] as string[],
+      price: '',
+      visitFee: '',
+    });
   };
 
   const fetchCountries = async () => {

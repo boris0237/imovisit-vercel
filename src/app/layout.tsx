@@ -27,7 +27,6 @@ export default function RootLayout({
       <CalendarProvider>
         <AuthProvider>
           <LanguageProvider>
-            <body className="antialiased">{children}</body>
             <body className="antialiased">
               {children}
               <Toaster />

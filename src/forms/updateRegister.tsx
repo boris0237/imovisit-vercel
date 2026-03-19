@@ -1,6 +1,5 @@
 
 "use client"
-
 import React, { useRef, useState, ChangeEvent, useEffect } from 'react';
 import { UploadCloud, X, FileText, FileImage, AlertCircle, CheckCircle2, Router } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -124,10 +123,9 @@ const LANDLORD_TYPES = [
 ];
 
 const PROVIDER_TYPES = [
-    { id: 'agency', label: 'Entreprise', icon: Business },
-    { id: 'agent', label: 'agent', icon: Agent },
+    { id: 'comapany', label: 'Entreprise', icon: Business },
+    { id: 'independent', label: 'Indépendant', icon: Agent },
 ];
-
 export default function UpdateRegister(props: { onClose?: () => void }) {
 
     const { user, refreshUser } = useAuth();
@@ -144,7 +142,7 @@ export default function UpdateRegister(props: { onClose?: () => void }) {
     const router = useRouter();
 
     const [selectedType, setSelectedType] = useState<string>('');
-    const [providerType, setProviderType] = useState<string>('agent');
+    const [providerType, setProviderType] = useState<string>('');
 
     // Champs de texte
     const [name, setName] = useState<string>(user?.name || '');
@@ -265,24 +263,23 @@ export default function UpdateRegister(props: { onClose?: () => void }) {
             const formData = new FormData();
 
             // 2. Détermination dynamique du rôle pour le Backend
-            let finalRole = selectedType;
-            if (selectedType === "provider") {
-                // Un prestataire indépendant = prospector, une agency = agency
-                finalRole = providerType === "provider" ? "agency" : "provider";
-            }
-            formData.append("role", finalRole);
+            if(selectedType)
+             formData.append("role", selectedType);
+            if(providerType)
+              formData.append("providerType", providerType);
+
 
             // 3. Ajout des champs textes
             formData.append("name", name);
 
             if (profession) formData.append("profession", profession);
-            if (companyName && (finalRole === "agency" || selectedType === "agency")) {
+            if (companyName && (selectedType === "agency" || selectedType === "agency")) {
                 formData.append("companyName", companyName);
             }
 
             // 4. Ajout de l'image (Logo ou Avatar selon le statut)
             if (logoFile) {
-                if (finalRole === "agency" || selectedType === "agency") {
+                if (selectedType === "agency" || selectedType === "agency") {
                     formData.append("companyLogo", logoFile);
                 } else {
                     formData.append("avatar", logoFile);
@@ -299,10 +296,10 @@ export default function UpdateRegister(props: { onClose?: () => void }) {
 
             // 7. Succès
             refreshUser(response.data);
-            setShowRegistrationSucces(true);
+            // setShowRegistrationSucces(true);
 
             // Si ce composant est utilisé dans un modal, on peut le fermer ici via une prop onClose
-            // if (props.onClose) props.onClose();
+            if (props.onClose) props.onClose();
 
         } catch (error: any) {
             console.error("Erreur Update Profile:", error.message);
@@ -326,12 +323,12 @@ export default function UpdateRegister(props: { onClose?: () => void }) {
                 {/* Affichage pour Provider */}
                 {user?.role === 'provider' && PROVIDER_TYPES.map((type) => {
                     const Icon = type.icon;
-                    const isSelected = selectedType === type.id;
+                    const isSelected = providerType === type.id;
 
                     return (
                         <button
                             key={type.id}
-                            onClick={() => setSelectedType(type.id)}
+                            onClick={() => setProviderType(type.id)}
                             className={`flex flex-col items-center justify-center p-6 rounded-xl border-2 transition-all duration-200 group
                 ${isSelected
                                     ? 'border-[#2b3a67] bg-[#eef2f8] shadow-sm'
@@ -339,6 +336,7 @@ export default function UpdateRegister(props: { onClose?: () => void }) {
                                 }`}
                         >
                             <div className={`mb-3 p-3 rounded-lg transition-transform group-hover:scale-110`}>
+                                {/* @ts-nocheck */}
                                 <Icon size={32} className={isSelected ? 'text-[#2b3a67]' : 'text-gray-400'} />
                             </div>
                             <span className={`text-sm font-bold ${isSelected ? 'text-[#1a2b4b]' : 'text-gray-600'}`}>
@@ -373,179 +371,12 @@ export default function UpdateRegister(props: { onClose?: () => void }) {
                 })}
             </div>
 
-            <div className="space-y-8 mb-8">
-
-                {/* ======================================================== */}
-                {/* SECTION PRESTATAIRE (PROVIDER)                         */}
-                {/* ======================================================== */}
-                {selectedType === "provider" && (
-                    <div className="space-y-8 animate-in fade-in duration-300">
-                        <div className="flex flex-col gap-3">
-                            <label className="text-sm font-bold text-gray-700">Vous êtes :</label>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div
-                                    onClick={() => setProviderType("agent")}
-                                    className={`cursor-pointer p-4 rounded-xl border-2 transition-all flex items-center gap-3 ${providerType === "agent"
-                                        ? "border-[#1a2b4b] bg-blue-50/50"
-                                        : "border-gray-200 hover:border-gray-300"
-                                        }`}
-                                >
-                                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${providerType === "agent" ? "border-[#1a2b4b]" : "border-gray-400"}`}>
-                                        {providerType === "agent" && <div className="w-2 h-2 rounded-full bg-[#1a2b4b]" />}
-                                    </div>
-                                    <span className="font-semibold text-gray-800">Un artisan / Indépendant</span>
-                                </div>
-
-                                <div
-                                    onClick={() => setProviderType("agency")}
-                                    className={`cursor-pointer p-4 rounded-xl border-2 transition-all flex items-center gap-3 ${providerType === "agency"
-                                        ? "border-[#1a2b4b] bg-blue-50/50"
-                                        : "border-gray-200 hover:border-gray-300"
-                                        }`}
-                                >
-                                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${providerType === "agency" ? "border-[#1a2b4b]" : "border-gray-400"}`}>
-                                        {providerType === "agency" && <div className="w-2 h-2 rounded-full bg-[#1a2b4b]" />}
-                                    </div>
-                                    <span className="font-semibold text-gray-800">Une Entreprise</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* ---> Si Indépendant */}
-                        {providerType === "agent" && (
-                            <div className="flex flex-col gap-2 animate-in slide-in-from-top-2">
-                                <label className="text-sm font-bold text-gray-700">Votre profession</label>
-                                <select
-                                    value={profession}
-                                    onChange={(e) => setProfession(e.target.value)}
-                                    className="w-full p-3.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1a2b4b] focus:border-transparent transition-all bg-white"
-                                >
-                                    <option value="">Sélectionnez votre métier...</option>
-                                    <option value="Plombier">Plombier</option>
-                                    <option value="Électricien">Électricien</option>
-                                    <option value="Peintre">Peintre</option>
-                                    <option value="Menuisier">Menuisier</option>
-                                    <option value="Serrurier">Serrurier</option>
-                                    <option value="Maçon">Maçon</option>
-                                    <option value="Jardinier">Jardinier / Paysagiste</option>
-                                    <option value="Autre">Autre</option>
-                                </select>
-                            </div>
-                        )}
-
-                        {/* ---> Si Entreprise */}
-                        {providerType === "agency" && (
-                            <div className="space-y-6 animate-in slide-in-from-top-2">
-                                <div className="flex flex-col gap-2">
-                                    <label className="text-sm font-bold text-gray-700">Domaine d'activité</label>
-                                    <select
-                                        value={profession}
-                                        onChange={(e) => setProfession(e.target.value)}
-                                        className="w-full p-3.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1a2b4b] focus:border-transparent transition-all bg-white"
-                                    >
-                                        <option value="">Sélectionnez un domaine...</option>
-                                        <option value="Rénovation">BTP & Rénovation</option>
-                                        <option value="Électricité">Installation Électrique</option>
-                                        <option value="Plomberie">Plomberie Sanitaire</option>
-                                        <option value="Nettoyage">Nettoyage & Entretien</option>
-                                        <option value="Sécurité">Sécurité & Domotique</option>
-                                        <option value="Autre">Autre</option>
-                                    </select>
-                                </div>
-
-                                <div className="flex flex-col gap-2">
-                                    <label className="text-sm font-bold text-gray-700">Nom de l'agency</label>
-                                    <Input
-                                        type="text"
-                                        placeholder="Ex: Multiservices SARL"
-                                        value={companyName}
-                                        onChange={(e) => setCompanyName(e.target.value)}
-                                        className="w-full p-3.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1a2b4b] focus:border-transparent transition-all"
-                                    />
-                                </div>
-
-                                <div className="flex flex-col gap-2">
-                                    <label className="text-sm font-bold text-gray-700">Logo de l'agency</label>
-                                    <input type="file" ref={fileInputRef} onChange={handleLogoChange} accept="image/*" className="hidden" />
-                                    <div
-                                        onClick={handleContainerClick}
-                                        className="border-2 border-dashed border-gray-200 rounded-2xl p-10 flex flex-col items-center justify-center bg-gray-50/50 hover:bg-gray-50 transition-colors cursor-pointer group"
-                                    >
-                                        <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center mb-4 group-hover:bg-gray-300 transition-colors overflow-hidden">
-                                            {previewUrl ? (
-                                                <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
-                                            ) : (
-                                                <svg width="54" height="54" viewBox="0 0 54 54" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <rect width="54" height="54" fill="url(#pattern0_1332_11183)" />
-                                                    <defs>
-                                                        <pattern id="pattern0_1332_11183" patternContentUnits="objectBoundingBox" width="1" height="1">
-                                                            <use href="#image0_1332_11183" transform="scale(0.00195312)" />
-                                                        </pattern>
-                                                        <image id="image0_1332_11183" width="512" height="512" href="data:image/png;base64,..." />
-                                                    </defs>
-                                                </svg>
-                                            )}
-                                        </div>
-                                        <p className="text-sm font-bold mb-1">{logoFile ? logoFile.name : "Cliquer pour ajouter votre logo"}</p>
-                                        <p className="text-xs text-gray-400">Format recommandé : PNG, JPG (max 2MB)</p>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                )}
-
-                {/* ======================================================== */}
-                {/* SECTION AGENCE                                           */}
-                {/* ======================================================== */}
-                {selectedType === "agency" && (
-                    <div className="space-y-8 animate-in fade-in duration-300">
-                        <div className="flex flex-col gap-2">
-                            <label className="text-sm font-bold text-gray-700">Nom de l'agence</label>
-                            <Input
-                                type="text"
-                                placeholder="Ex: Imovisit SARL"
-                                className="w-full p-3.5 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2b3a67] focus:border-transparent transition-all"
-                                value={companyName} // Utilisation de companyName au lieu de name (bonne pratique)
-                                onChange={(e) => setCompanyName(e.target.value)}
-                            />
-                        </div>
-
-                        <div className="flex flex-col gap-2">
-                            <label className="text-sm font-bold text-gray-700">Logo de l'agence</label>
-                            <input type="file" ref={fileInputRef} onChange={handleLogoChange} accept="image/*" className="hidden" />
-                            <div
-                                onClick={handleContainerClick}
-                                className="border-2 border-dashed border-gray-200 rounded-2xl p-10 flex flex-col items-center justify-center bg-gray-50/50 hover:bg-gray-50 transition-colors cursor-pointer group"
-                            >
-                                <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center mb-4 group-hover:bg-gray-300 transition-colors overflow-hidden">
-                                    {previewUrl ? (
-                                        <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
-                                    ) : (
-                                        <svg width="54" height="54" viewBox="0 0 54 54" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <rect width="54" height="54" fill="url(#pattern0_1332_11183)" />
-                                            <defs>
-                                                <pattern id="pattern0_1332_11183" patternContentUnits="objectBoundingBox" width="1" height="1">
-                                                    <use href="#image0_1332_11183" transform="scale(0.00195312)" />
-                                                </pattern>
-                                                <image id="image0_1332_11183" width="512" height="512" href="data:image/png;base64,..." />
-                                            </defs>
-                                        </svg>
-                                    )}
-                                </div>
-                                <p className="text-sm font-bold mb-1">{logoFile ? logoFile.name : "Cliquer pour ajouter votre logo"}</p>
-                                <p className="text-xs text-gray-400">Format recommandé : PNG, JPG (max 2MB)</p>
-                                <p className="text-[10px] text-gray-300 mt-1 italic">Ce logo sera visible sur votre profil et vos annonces</p>
-                            </div>
-                        </div>
-                    </div>
-                )}
-            </div>
+      
 
             {/* ======================================================== */}
             {/* BOUTON VALIDATION ET MODALS                              */}
             {/* ======================================================== */}
-            <button onClick={onSubmit} className="w-full bg-[#1a2b4b] hover:bg-[#121d33] text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg active:scale-[0.98]">
+            <button onClick={onSubmit} disabled={!selectedType && !providerType} className="w-full bg-[#1a2b4b] hover:bg-[#121d33] text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg active:scale-[0.98]">
                 Finaliser l'inscription
                 <CheckCircle2 size={18} />
             </button>
