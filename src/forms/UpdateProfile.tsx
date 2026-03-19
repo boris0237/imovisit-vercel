@@ -1,34 +1,16 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext'; // Vérifiez bien le chemin (contexts ou context)
 import { userService } from '@/services/userService';
-import { ROLE_ALLOWED_FIELDS } from '@/types/constant'; // Ajustez le chemin de votre constante
-import { toast } from 'sonner';
+import { ROLE_ALLOWED_FIELDS } from '@/types/constant';
+import { useDictionary } from '@/hooks/useDictionary';
 import { Loader2, UploadCloud, CheckCircle2 } from 'lucide-react';
 
-// Dictionnaire pour afficher de jolis labels au lieu des clés techniques
-const FIELD_LABELS: Record<string, string> = {
-    name: "Nom complet",
-    age: "Âge",
-    phone: "Téléphone",
-    city: "Ville",
-    country: "Pays",
-    profession: "Profession",
-    avatar: "Photo de profil",
-    services: "Services proposés",
-    docCNI: "Document d'identité (CNI)",
-    docDiplome: "Diplôme",
-    docContribuable: "Carte de contribuable",
-    docRCCM: "Extrait RCCM",
-    docJust: "Justificatif de domicile",
-    companyName: "Nom de l'entreprise",
-    companyLogo: "Logo de l'entreprise",
-    role: "Rôle",
-    typeCompte: "Type de compte"
-};
+// 👉 N'oubliez pas d'ajuster le chemin vers votre composant InternationalPhoneInput
+import InternationalPhoneInput from '@/components/ui/InternationalPhoneInput';
+import Toast from '@/components/ui/toast';
 
-// Liste des champs qui doivent être traités comme des fichiers
 const FILE_FIELDS = [
     "avatar", "docCNI", "docDiplome", "docContribuable",
     "docRCCM", "docJust", "companyLogo"
@@ -37,12 +19,35 @@ const FILE_FIELDS = [
 export default function UpdateProfile() {
     const { user, refreshUser } = useAuth();
 
-    // États pour les champs textes/nombres et les champs fichiers
     const [formValues, setFormValues] = useState<Record<string, any>>({});
     const [fileValues, setFileValues] = useState<Record<string, File | null>>({});
     const [isLoading, setIsLoading] = useState(false);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
+    const [showToast, setShowToast] = useState(false);
+    const { dictionary } = useDictionary();
 
-    // Initialiser le formulaire avec les données existantes de l'utilisateur
+    
+const FIELD_LABELS: Record<string, string> = {
+    name: dictionary.updateProfil?.name || "Nom complet",
+    age: dictionary.updateProfil?.year || "Âge",
+    phone: dictionary.updateProfil?.phone || "Téléphone",
+    city: dictionary.updateProfil?.city || "Ville",
+    country: dictionary.updateProfil?.country || "Pays",
+    profession: dictionary.updateProfil?.job || "Profession",
+    avatar: dictionary.updateProfil?.avatar || "Photo de profil",
+    services: dictionary.updateProfil?.services || "Services proposés",
+    docCNI: dictionary.updateProfil?.docCNI || "Document d'identité (CNI)",
+    docDiplome: dictionary.updateProfil?.docDiplome || "Diplôme",
+    docContribuable: dictionary.updateProfil?.docContribuablle || "Carte de contribuable",
+    docRCCM: dictionary.updateProfil?.docRCCM || "Extrait RCCM",
+    docJust: dictionary.updateProfil?.dosJust || "Justificatif de domicile",
+    companyName: dictionary.updateProfil?.companyName || "Nom de l'entreprise",
+    companyLogo: dictionary.updateProfil?.companyLogo || "Logo de l'entreprise",
+    role: dictionary.updateProfil?.role || "Rôle",
+    typeCompte: dictionary.updateProfil?.typeCompte || "Type de compte"
+};
+
     useEffect(() => {
         if (user) {
             const initialValues: Record<string, any> = {};
@@ -57,10 +62,9 @@ export default function UpdateProfile() {
         }
     }, [user]);
 
-    // Si l'utilisateur n'est pas encore chargé
     if (!user) return null;
 
-    // Récupérer les champs autorisés (sans les doublons éventuels)
+    // Suppression des doublons potentiels dans votre array constant
     const allowedFields = Array.from(new Set(ROLE_ALLOWED_FIELDS[user.role as keyof typeof ROLE_ALLOWED_FIELDS] || []));
 
     const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -68,6 +72,14 @@ export default function UpdateProfile() {
         setFormValues(prev => ({
             ...prev,
             [name]: type === 'number' ? Number(value) : value
+        }));
+    };
+
+    // Nouvelle fonction spécifique pour le téléphone
+    const handlePhoneChange = (value: string) => {
+        setFormValues(prev => ({
+            ...prev,
+            phone: value
         }));
     };
 
@@ -81,44 +93,43 @@ export default function UpdateProfile() {
         setIsLoading(true);
 
         try {
-            // 1. On crée manuellement le FormData (comme dans votre premier code)
             const formData = new FormData();
 
-            // 2. Ajout des fichiers S'ILS SONT PRÉSENTS
+            // Ajout des fichiers
             Object.entries(fileValues).forEach(([key, file]) => {
                 if (file) {
-                    formData.append(key, file); // Ici, le navigateur gère le binaire correctement
+                    formData.append(key, file);
                 }
             });
 
-            // 3. Ajout des champs textes (Le "secret" qui faisait marcher votre ancien code)
+            // Ajout des champs textes (inclut le téléphone formaté)
             Object.entries(formValues).forEach(([key, value]) => {
-                // On ignore les chaînes vides et les valeurs nulles
                 if (value !== null && value !== undefined && value !== "") {
-                    // On force la conversion en String, exactement comme vous le faisiez
                     formData.append(key, String(value));
                 }
             });
 
-            // (Optionnel) Pour le débogage : voir ce qu'on envoie vraiment
-            console.log("--- Contenu du FormData envoyé ---");
-            formData.forEach((value, key) => {
-                console.log(`${key}:`, value);
-            });
-
-            // 4. Appel au service en lui passant DIRECTEMENT le FormData
-            // (Notre userService ne le modifiera pas, car il détectera que c'est déjà un FormData)
             const response = await userService.updateProfile(formData);
 
-            console.log("Réponse du service :", response);
-
-            // 5. Mise à jour du contexte local
             refreshUser(response.data);
-            toast.success(response.message || "Profil mis à jour avec succès !");
+            if (response.status === 200) {
+                setSuccessMessage(response.message || "Profil mis à jour avec succès !");
+                setShowToast(true);
+                setTimeout(() => {
+                    setShowToast(false);
+                    setSuccessMessage("");
+                    setError("");
+                }, 3000);
+
+            } else {
+                setError(response.message || "Erreur lors de la mise à jour du profil.");
+                setShowToast(true);
+            }
 
         } catch (error: any) {
             console.error("Erreur catchée :", error);
-            toast.error(error.message || "Erreur lors de la mise à jour du profil.");
+            setError(error.message || "Erreur lors de la mise à jour du profil.");
+            setShowToast(true);
         } finally {
             setIsLoading(false);
         }
@@ -126,13 +137,23 @@ export default function UpdateProfile() {
 
     return (
         <form onSubmit={handleSubmit} className="space-y-6">
+            {showToast && successMessage && !error && (
+                <Toast isOpen={showToast} onClose={() => setShowToast(false)} type="success">
+                    {successMessage}
+                </Toast>
+            )}
+            {showToast && !successMessage && error && (
+                <Toast isOpen={showToast} onClose={() => setShowToast(false)} type="error">
+                    {error}
+                </Toast>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                 {allowedFields.map((field) => {
                     const isFile = FILE_FIELDS.includes(field);
                     const label = FIELD_LABELS[field] || field;
 
-                    // RENDU DES CHAMPS FICHIERS (Documents, Avatar, Logo)
+                    // 1. RENDU DES CHAMPS FICHIERS
                     if (isFile) {
                         return (
                             <div key={field} className="col-span-1 md:col-span-2">
@@ -142,7 +163,7 @@ export default function UpdateProfile() {
                                 <div className="relative border-2 border-dashed border-gray-300 rounded-xl p-4 hover:bg-slate-50 transition-colors flex items-center justify-center">
                                     <input
                                         type="file"
-                                        accept="image/*,.pdf" // Ajustez les extensions si besoin
+                                        accept={field.includes('doc') ? ".pdf,image/*" : "image/*"}
                                         onChange={(e) => handleFileChange(e, field)}
                                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                                     />
@@ -173,7 +194,23 @@ export default function UpdateProfile() {
                         );
                     }
 
-                    // RENDU DES CHAMPS TEXTES ET NOMBRES
+                    // 2. RENDU SPÉCIFIQUE POUR LE TÉLÉPHONE
+                    if (field === 'phone') {
+                        return (
+                            <div key={field} className="col-span-1">
+                                <label className="block text-sm font-bold text-gray-700 mb-2">
+                                    {label}
+                                </label>
+                                <InternationalPhoneInput
+                                    value={formValues[field] || ''}
+                                    onChange={handlePhoneChange}
+                                // Ajoutez ici les autres props nécessaires à votre composant (ex: defaultCountry="CM")
+                                />
+                            </div>
+                        );
+                    }
+
+                    // 3. RENDU DES AUTRES CHAMPS TEXTES ET NOMBRES
                     return (
                         <div key={field} className="col-span-1">
                             <label className="block text-sm font-bold text-gray-700 mb-2">
@@ -184,7 +221,7 @@ export default function UpdateProfile() {
                                 name={field}
                                 value={formValues[field] || ''}
                                 onChange={handleTextChange}
-                                disabled={field === 'role' || field === 'typeCompte'} // Empêche l'édition de ces champs critiques
+                                disabled={ field === 'typeCompte'} // Empêche la modification de ces champs si présents
                                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1a2b4b] disabled:opacity-50 disabled:cursor-not-allowed"
                                 placeholder={`Votre ${label.toLowerCase()}`}
                             />

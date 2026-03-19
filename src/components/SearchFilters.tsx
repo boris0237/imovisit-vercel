@@ -1,26 +1,32 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Search, Filter, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Slider } from '@/components/ui/slider';
-import { cities, neighborhoods, propertyTypes, offerTypes } from '@/data/mock';
+import { propertyTypes, offerTypes } from '@/data/mock';
 import type { FilterOptions } from '@/types';
 import { useDictionary } from '@/hooks/useDictionary';
 
 interface SearchFiltersProps {
   filters: FilterOptions;
   onFilterChange: (filters: FilterOptions) => void;
+  cities: { id: string; name: string }[];
+  neighborhoods: { id: string; name: string }[];
 }
 
-export function SearchFilters({ filters, onFilterChange }: SearchFiltersProps) {
+export function SearchFilters({ filters, onFilterChange, cities, neighborhoods }: SearchFiltersProps) {
   const [localFilters, setLocalFilters] = useState<FilterOptions>(filters);
   const [priceRange, setPriceRange] = useState<[number, number]>([
     filters.minPrice || 0,
     filters.maxPrice || 2000000,
   ]);
+
+  useEffect(() => {
+    setLocalFilters(filters);
+    setPriceRange([filters.minPrice || 0, filters.maxPrice || 2000000]);
+  }, [filters]);
 
   const handleApplyFilters = () => {
     onFilterChange({
@@ -36,7 +42,7 @@ export function SearchFilters({ filters, onFilterChange }: SearchFiltersProps) {
     onFilterChange({});
   };
 
-  const availableNeighborhoods = localFilters.city ? neighborhoods[localFilters.city] || [] : [];
+  const availableNeighborhoods = neighborhoods;
   const {dictionary} = useDictionary()
   const FilterContent = () => (
     <div className="space-y-6">
@@ -44,9 +50,14 @@ export function SearchFilters({ filters, onFilterChange }: SearchFiltersProps) {
       <div className="space-y-2">
         <Label>{dictionary.searchFilter?.city || "City"}</Label>
         <Select
-          value={localFilters.city}
+          value={localFilters.cityId}
           onValueChange={(value) =>
-            setLocalFilters({ ...localFilters, city: value, neighborhood: undefined })
+            setLocalFilters({
+              ...localFilters,
+              cityId: value || undefined,
+              city: cities.find((city) => city.id === value)?.name,
+              neighborhood: undefined,
+            })
           }
         >
           <SelectTrigger>
@@ -54,8 +65,8 @@ export function SearchFilters({ filters, onFilterChange }: SearchFiltersProps) {
           </SelectTrigger>
           <SelectContent>
             {cities.map((city) => (
-              <SelectItem key={city} value={city}>
-                {city}
+              <SelectItem key={city.id} value={city.id}>
+                {city.name}
               </SelectItem>
             ))}
           </SelectContent>
@@ -63,7 +74,7 @@ export function SearchFilters({ filters, onFilterChange }: SearchFiltersProps) {
       </div>
 
       {/* Neighborhood */}
-      {localFilters.city && (
+      {localFilters.cityId && (
         <div className="space-y-2">
           <Label>{dictionary.searchFilter?.neighborhood || "Neighborhood"}</Label>
           <Select
@@ -77,8 +88,8 @@ export function SearchFilters({ filters, onFilterChange }: SearchFiltersProps) {
             </SelectTrigger>
             <SelectContent>
               {availableNeighborhoods.map((neighborhood) => (
-                <SelectItem key={neighborhood} value={neighborhood}>
-                  {neighborhood}
+                <SelectItem key={neighborhood.id} value={neighborhood.name}>
+                  {neighborhood.name}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -186,33 +197,13 @@ export function SearchFilters({ filters, onFilterChange }: SearchFiltersProps) {
           <Input
             placeholder="Rechercher par mot-clé..."
             className="pl-10"
-            value={localFilters.city || ''}
-            onChange={(e) => setLocalFilters({ ...localFilters, city: e.target.value })}
+            value={localFilters.search || ''}
+            onChange={(e) => setLocalFilters({ ...localFilters, search: e.target.value })}
           />
         </div>
-        
-        {/* Mobile Filters */}
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="outline" className="md:hidden">
-              <Filter className="w-4 h-4" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left" className="w-[320px]">
-            <SheetHeader>
-              <SheetTitle>Filtres</SheetTitle>
-            </SheetHeader>
-            <div className="mt-6">
-              <FilterContent />
-            </div>
-          </SheetContent>
-        </Sheet>
       </div>
 
-      {/* Desktop Filters */}
-      <div className="hidden md:block">
-        <FilterContent />
-      </div>
+      <FilterContent />
     </div>
   );
 }

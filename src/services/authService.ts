@@ -12,7 +12,7 @@ export const authService = {
       method: 'POST',
       body: JSON.stringify(credentials),
     });
-    return response.data.user;
+    return response.data;
   },
   logout: async () => {
     const response = await fetchApi('/api/users/logout', {
