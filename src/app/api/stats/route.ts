@@ -3,7 +3,7 @@ import { NextRequest } from "next/server";
 import { apiResponse } from "@/lib/api-response";
 import { authMiddleware } from "@/middlewares/auth-middleware";
 import { roleMiddleware } from "@/middlewares/role-middleware";
-import { UserRole } from "@prisma/client";
+import { USER_ROLE_ENUM } from "@/types/enums";
 
 
 export async function GET(req: NextRequest) {
@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
         // Vérification
         const authError = authMiddleware(req);
         if (authError) return authError;
-        const roleError = roleMiddleware([UserRole.admin])(req as any)
+        const roleError = roleMiddleware([USER_ROLE_ENUM.admin])(req as any)
         if (roleError) return roleError
 
         // Tous les biens

@@ -44,9 +44,9 @@ interface CalendarContextType {
   setViewMode: (mode: ViewMode) => void;
   nextPeriod: () => void;      // Avancer d'un mois/semaine
   prevPeriod: () => void;      // Reculer d'un mois/semaine
-  refreshData: () => Promise<void>; 
+  refreshData: () => Promise<void>;
   blockSlot: (date: string, startTime: string, endTime: string) => Promise<void>; // Action pour bloquer un créneau
-  
+
   // --- OUTILS ---
   getSlotStatus: (date: string, time: string) => 'AVAILABLE' | 'BLOCKED' | 'RESERVED' | 'PAST';
 }
@@ -96,7 +96,7 @@ export function CalendarProvider({ children, propertyId }: { children: ReactNode
       // TODO: Connecter avec agendaService
       // const resData = await agendaService.getReservations({ propertyId, month: currentDate.getMonth() });
       // setReservations(resData.data.reservations);
-      
+
       // Simulation pour l'instant :
       setTimeout(() => setIsLoading(false), 500);
     } catch (error) {
@@ -108,32 +108,58 @@ export function CalendarProvider({ children, propertyId }: { children: ReactNode
   // Recharger les données si le mois ou la propriété change
   useEffect(() => {
     refreshData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentDate.getMonth(), propertyId]); 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentDate.getMonth(), propertyId]);
 
   // --- ACTIONS MÉTIER ---
-  const blockSlot = async (date: string, startTime: string, endTime: string) => {
-    // 1. Mise à jour Optimiste (On met à jour l'UI tout de suite)
+  const blockSlot = async (date: string, startTime: string, endTime: string, reason: string = "Rendez-vous / Occupé") => {
+    // 1. MISE À JOUR OPTIMISTE (L'UI réagit instantanément)
     const tempException: Exception = {
-      id: Math.random().toString(),
+      id: `temp-${Date.now()}`, // ID temporaire unique
       date,
       startTime,
       endTime,
-      isAvailable: true
+      isAvailable: false // 🚨 C'EST ICI LA CORRECTION : false pour bloquer la case !
     };
+
+    // On met à jour l'écran tout de suite
     setExceptions(prev => [...prev, tempException]);
 
-    // 2. Appel API réel
+    // 2. APPEL API RÉEL EN ARRIÈRE-PLAN
     try {
-      // await agendaService.createException({ date, startTime, endTime });
+      /* * Exemple avec un fetch classique (à adapter si tu utilises Axios ou agendaService)
+       */
+      const response = await fetch('/api/agenda/exception', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'credentials': "include",
+          // 'Authorization': `Bearer ${ton_token}` // À ajouter si ton fetch ne le fait pas automatiquement
+        },
+        body: JSON.stringify({
+          date: date,
+          startTime: startTime,
+          endTime: endTime,
+          reason: "indisponible"
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error("Erreur lors de la création de l'exception");
+      }
+
       toast.success("Créneau bloqué avec succès");
-      console.log("Créneau bloqué avec succès");
-      refreshData();
+      console.log("Créneau bloqué avec succès côté backend");
+
+      // Optionnel : Recharger les données pour remplacer le `temp-id` par le vrai ID de la BDD
+      // refreshData(); 
+
     } catch (error) {
-      // En cas d'erreur, on annule la mise à jour optimiste
+      // 3. ROLLBACK (Annulation)
+      // Si le backend renvoie une erreur (ex: le créneau était déjà bloqué), on retire la case rouge
       setExceptions(prev => prev.filter(exc => exc.id !== tempException.id));
       toast.error("Impossible de bloquer ce créneau");
-      console.log("Impossible de bloquer ce créneau");
+      console.error(error);
     }
   };
 
@@ -141,21 +167,21 @@ export function CalendarProvider({ children, propertyId }: { children: ReactNode
   const getSlotStatus = (dateString: string, timeString: string) => {
     // 1. Est-ce que la date est passée ?
     const slotDate = new Date(`${dateString}T${timeString}`);
-    if (slotDate < new Date()) return 'PAST';
+    if (slotDate < new Date()) return 'BLOCKED';
 
     // 2. Est-ce réservé ?
-    const isReserved = reservations.some(res => 
-      res.date === dateString && 
-      timeString >= res.startTime && 
+    const isReserved = reservations.some(res =>
+      res.date === dateString &&
+      timeString >= res.startTime &&
       timeString < res.endTime &&
       res.status !== 'cancelled'
     );
     if (isReserved) return 'RESERVED';
 
     // 3. Est-ce bloqué par une exception spécifique ?
-    const isBlocked = exceptions.some(exc => 
-      exc.date === dateString && 
-      !exc.isAvailable &&
+    const isBlocked = exceptions.some(exc =>
+      exc.date === dateString &&
+      exc.isAvailable === true &&
       (!exc.startTime || (timeString >= exc.startTime && timeString < exc.endTime!))
     );
     if (isBlocked) return 'BLOCKED';
