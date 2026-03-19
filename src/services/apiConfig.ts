@@ -31,6 +31,13 @@ export async function fetchApi(endpoint: string, options: RequestInit = {}) {
   if (!isFormData && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
+  // Ajouter le token si disponible (fallback localStorage)
+  if (!headers.has("Authorization") && typeof window !== "undefined") {
+    const token = localStorage.getItem("token");
+    if (token) {
+      headers.set("Authorization", `Bearer ${token}`);
+    }
+  }
 
   // 3. Exécuter la requête
   // Note : Les cookies HttpOnly (comme notre jwt) sont envoyés automatiquement 

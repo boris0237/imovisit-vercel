@@ -16,9 +16,9 @@ export async function handlePropertyFormData(
 ): Promise<PropertyFormDataResult> {
   const data: Record<string, any> = {};
   const images: string[] = [];
+  const amenities: string[] = [];
 
-  for (const key of Array.from(formData.keys())) {
-    const value = formData.get(key);
+  for (const [key, value] of Array.from(formData.entries())) {
 
     if (value instanceof File && value.size > 0) {
       if (value.size > MAX_SIZE) {
@@ -44,6 +44,10 @@ export async function handlePropertyFormData(
       }
     }
     else if (typeof value === "string" && value.trim() !== "") {
+      if (key.toLowerCase() === "amenities") {
+        amenities.push(value);
+        continue;
+      }
 
       // Conversion Boolean
       if (value === "true") {
@@ -67,6 +71,7 @@ export async function handlePropertyFormData(
 
   return {
     ...data,
-    images,
+    amenities,
+    ...(images.length > 0 ? { images } : {}),
   };
 }

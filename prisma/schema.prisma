@@ -110,6 +110,7 @@ model Property {
 enum PriceType {
   monthly
   daily
+  yearly
   sale
 }
 
@@ -138,12 +139,17 @@ enum PropertyVisitType {
 }
 
 enum Amenity {
+  water
+  electricity
+  wifi
   pool
   elevator
   parking
   gym
   garden
   security
+  borehole
+  cleaning
 }
 
 // FAVORIS
@@ -155,32 +161,48 @@ model Favorite {
 }
 
 
-// AGENDA
-model AvailabilityRule {//dispo tels jours
-  id             String   @id @default(auto()) @map("_id") @db.ObjectId
-  ownerId        String   
-  propertyId     String
 
-  recurrenceType RecurrenceType
+
+// AGENDA
+model AvailabilityRule { // règles de disponibilité du propriétaire
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+
+  ownerId        String
+
+  //jour précis
+  date           DateTime?
+
+  //répétition
+  recurrenceType RecurrenceType?
   dayOfWeek      WeekDay?
   dayOfMonth     Int?
 
-  startTime      String   
-  endTime        String   
+  // plage horaire
+  startTime      String
+  endTime        String
 
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 }
 
-model AvailabilityException { //pas dispo tels jours
+// Exceptions 
+model AvailabilityException {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  ownerId     String
-  propertyId  String
 
-  date        DateTime?   // jour précis
+  ownerId     String
+
+  // jour précis
+  date        DateTime?
+
+  // intervalle de jours
+  dateStart   DateTime?
+  dateEnd     DateTime?
+
+  // répétition possible
   dayOfWeek   WeekDay?
   dayOfMonth  Int?
 
+  // plage horaire bloquée
   startTime   String?
   endTime     String?
 
@@ -190,26 +212,28 @@ model AvailabilityException { //pas dispo tels jours
   updatedAt   DateTime @updatedAt
 }
 
-model Reservation { //exception tels jours
+
+// Réservations de visite
+model Reservation {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
 
-  propertyId  String
-  ownerId     String
-  clientId    String   
+  propertyId  String   
+  ownerId     String   
+  clientId    String 
 
   date        DateTime
   startTime   String
   endTime     String
-  visitType ReservationVisitType @default(in_person)
-  visitContext String?
 
+  visitType   ReservationVisitType @default(in_person)
+  visitContext String?
 
   status      ReservationStatus @default(pending)
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-
 }
+
 
 enum ReservationStatus {
   pending
@@ -236,7 +260,6 @@ enum ReservationVisitType {
   in_person
   remote
 }
-
 
 // GEOLOCALISATION
 model Country { // pays

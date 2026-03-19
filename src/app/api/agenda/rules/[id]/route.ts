@@ -102,7 +102,7 @@ interface Params {
   params: { id: string };
 }
 
-// --- GET ONE ---
+// GET ONE
 export async function GET(req: NextRequest, { params }: Params) {
   try {
     const authError = authMiddleware(req);
@@ -115,13 +115,12 @@ export async function GET(req: NextRequest, { params }: Params) {
     if (!rule) return apiResponse({ status: 404, message: "Règle introuvable" });
 
     return apiResponse({ status: 200, message: "Règle récupérée", data: rule });
-
   } catch (err: any) {
     return apiResponse({ status: 500, message: err.message });
   }
 }
 
-// --- PATCH ---
+// PATCH 
 export async function PATCH(req: NextRequest, { params }: Params) {
   try {
     const authError = authMiddleware(req);
@@ -129,21 +128,28 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
     const body = await req.json();
 
+    // Filtrer les champs autorisés pour éviter les erreurs Prisma
+    const allowedFields = ["recurrenceType", "dayOfWeek", "dayOfMonth", "startTime", "endTime"];
+    const dataToUpdate: any = {};
+    allowedFields.forEach(field => {
+      if (body[field] !== undefined) dataToUpdate[field] = body[field];
+    });
+
     const updated = await prisma.availabilityRule.update({
       where: { id: params.id },
-      data: {
-        ...body
-      }
+      data: dataToUpdate
     });
 
     return apiResponse({ status: 200, message: "Règle mise à jour", data: updated });
-
   } catch (err: any) {
+    if (err.code === "P2025") {
+      return apiResponse({ status: 404, message: "Règle introuvable" });
+    }
     return apiResponse({ status: 500, message: err.message });
   }
 }
 
-// --- DELETE ---
+// DELETE 
 export async function DELETE(req: NextRequest, { params }: Params) {
   try {
     const authError = authMiddleware(req);
@@ -152,8 +158,10 @@ export async function DELETE(req: NextRequest, { params }: Params) {
     await prisma.availabilityRule.delete({ where: { id: params.id } });
 
     return apiResponse({ status: 200, message: "Règle supprimée" });
-
   } catch (err: any) {
+    if (err.code === "P2025") {
+      return apiResponse({ status: 404, message: "Règle introuvable" });
+    }
     return apiResponse({ status: 500, message: err.message });
   }
 }

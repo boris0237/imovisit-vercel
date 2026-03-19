@@ -13,11 +13,12 @@ interface PropertyCardProps {
 }
 
 export function PropertyCard({ property, showActions = true }: PropertyCardProps) {
-  const formatPrice = (price: number, type: string) => {
-    if (type === 'sale') {
-      return `${price.toLocaleString()} FCFA`;
-    }
-    return `${price.toLocaleString()} F/mois`;
+  const formatPrice = (price: number, priceType?: string, offerType?: string) => {
+    const formatted = price?.toLocaleString() ?? '0';
+    if (offerType === 'sale' || priceType === 'sale') return `${formatted} FCFA`;
+    if (priceType === 'daily') return `${formatted} F/jour`;
+    if (priceType === 'yearly') return `${formatted} F/an`;
+    return `${formatted} F/mois`;
   };
 
   const getOfferTypeLabel = (offerType: string) => {
@@ -84,7 +85,7 @@ export function PropertyCard({ property, showActions = true }: PropertyCardProps
         {/* Price overlay */}
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
           <p className="text-white font-bold text-lg">
-            {formatPrice(property.price, property.offerType)}
+            {formatPrice(property.price, property.priceType, property.offerType)}
           </p>
         </div>
       </div>
@@ -104,10 +105,10 @@ export function PropertyCard({ property, showActions = true }: PropertyCardProps
 
         {/* Features */}
         <div className="flex items-center gap-4 mt-3 text-sm text-gray-600">
-          {property.bedrooms !== undefined && (
+          {(property.bedrooms !== undefined || property.rooms !== undefined) && (
             <div className="flex items-center gap-1">
               <Bed className="w-4 h-4" />
-              <span>{property.bedrooms}</span>
+              <span>{property.bedrooms ?? property.rooms}</span>
             </div>
           )}
           {property.bathrooms !== undefined && (
@@ -127,12 +128,12 @@ export function PropertyCard({ property, showActions = true }: PropertyCardProps
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full bg-imo-primary/10 flex items-center justify-center">
               <span className="text-sm font-medium text-imo-primary">
-                {property.ownerName.charAt(0)}
+                {(property.ownerName || property.userName || 'U').charAt(0)}
               </span>
             </div>
             <div className="flex items-center gap-1">
-              <span className="text-sm text-gray-600">{property.ownerName}</span>
-              {property.ownerVerified && (
+              <span className="text-sm text-gray-600">{property.ownerName || property.userName || 'Utilisateur'}</span>
+              {(property.ownerVerified ?? property.userVerified) && (
                 <BadgeCheck className="w-4 h-4 text-blue-500" />
               )}
             </div>

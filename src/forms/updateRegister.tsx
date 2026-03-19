@@ -1,7 +1,7 @@
 
 "use client"
 
-import React, { useRef, useState, ChangeEvent } from 'react';
+import React, { useRef, useState, ChangeEvent, useEffect } from 'react';
 import { UploadCloud, X, FileText, FileImage, AlertCircle, CheckCircle2, Router } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
@@ -129,8 +129,18 @@ const PROVIDER_TYPES = [
 ];
 
 export default function UpdateRegister(props: { onClose?: () => void }) {
-    // --- ÉTATS ---
+
     const { user, refreshUser } = useAuth();
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    useEffect(() => {
+        if (user) {
+            setIsLoading(true)
+            console.log("Utilisateur connecté depuis le updateRegister :", user);
+        } else {
+        }
+    }, [user]);
+    // --- ÉTATS ---
+
     const router = useRouter();
 
     const [selectedType, setSelectedType] = useState<string>('');
@@ -150,7 +160,6 @@ export default function UpdateRegister(props: { onClose?: () => void }) {
     const fileIdentityInputRef = useRef<HTMLInputElement>(null);
 
     // UI States
-    const [isLoading, setIsLoading] = useState<boolean>(false);
     const [showRegistrationSucces, setShowRegistrationSucces] = useState(false);
     const [showError, setShowError] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string>('');
@@ -251,7 +260,7 @@ export default function UpdateRegister(props: { onClose?: () => void }) {
             return;
         }
 
-        setIsLoading(true);
+        setIsLoading(false);
         try {
             const formData = new FormData();
 
@@ -339,8 +348,7 @@ export default function UpdateRegister(props: { onClose?: () => void }) {
                     );
                 })}
 
-                {/* Affichage pour Agence / Landlord */}
-                {user?.role === 'agency' && LANDLORD_TYPES.map((type) => {
+                {user?.role === 'owner' && LANDLORD_TYPES.map((type) => {
                     const Icon = type.icon;
                     const isSelected = selectedType === type.id;
 

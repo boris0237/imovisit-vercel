@@ -55,7 +55,14 @@ export default function CalendarPage() {
 
   // --- 1. GÉNÉRATION DES HEURES (ex: de 08:00 à 18:00) ---
   const hours = useMemo(() => {
-    return Array.from({ length: 11 }, (_, i) => `${String(i + 8).padStart(2, '0')}:00`);
+    const start = 8;
+    const end = 18;
+
+    return Array.from({ length: (end - start) * 2 + 1 }, (_, i) => {
+      const hour = start + Math.floor(i / 2);
+      const minutes = i % 2 === 0 ? "00" : "30";
+      return `${String(hour).padStart(2, "0")}:${minutes}`;
+    });
   }, []);
 
   // --- 2. GÉNÉRATION DES JOURS DE LA SEMAINE (Vue Semaine) ---
@@ -346,17 +353,17 @@ export default function CalendarPage() {
                         <div className="text-sm font-semibold text-slate-500 py-3 pl-2 flex items-start">
                           {hour}
                         </div>
-                        
+
                         {weekDays.map((day) => {
                           // --- LOGIQUE DYNAMIQUE ---
                           const status = getSlotStatus(day.fullDate, hour);
                           const res = reservations.find(r => r.date === day.fullDate && r.startTime === hour);
-                          
+
                           // 1. Si bloqué (journée complète ou exception)
                           if (day.blocked || status === 'BLOCKED') {
                             return (
                               <div key={`${day.fullDate}-${hour}`} className="px-2">
-                                <button 
+                                <button
                                   onClick={() => setSelectedCell({ date: day.fullDate, hour, type: 'blocked' })}
                                   className="h-12 w-full rounded-lg border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-500 text-[11px] flex items-center justify-center gap-2 transition-colors cursor-pointer"
                                 >
@@ -372,13 +379,12 @@ export default function CalendarPage() {
                             const isPending = res.status === 'pending';
                             return (
                               <div key={`${day.fullDate}-${hour}`} className="px-2">
-                                <button 
+                                <button
                                   onClick={() => setSelectedCell({ date: day.fullDate, hour, type: 'reserved', reservation: res })}
-                                  className={`h-12 w-full rounded-lg border text-[11px] px-3 py-1 flex flex-col justify-center text-left transition-colors cursor-pointer ${
-                                    isPending 
-                                      ? 'border-orange-200 bg-orange-50 hover:bg-orange-100 text-orange-600' 
+                                  className={`h-12 w-full rounded-lg border text-[11px] px-3 py-1 flex flex-col justify-center text-left transition-colors cursor-pointer ${isPending
+                                      ? 'border-orange-200 bg-orange-50 hover:bg-orange-100 text-orange-600'
                                       : 'border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-600'
-                                  }`}
+                                    }`}
                                 >
                                   <div className="flex items-center gap-1.5 font-bold mb-0.5">
                                     <Clock className="w-3 h-3" />
@@ -395,7 +401,7 @@ export default function CalendarPage() {
                           // 3. Si Disponible (Par défaut)
                           return (
                             <div key={`${day.fullDate}-${hour}`} className="px-2">
-                              <button 
+                              <button
                                 onClick={() => setSelectedCell({ date: day.fullDate, hour, type: 'available' })}
                                 className="h-12 w-full rounded-lg border border-dashed border-emerald-300 bg-emerald-50/30 hover:bg-emerald-50/80 text-emerald-500 flex items-center justify-center transition-colors"
                               >
@@ -434,14 +440,18 @@ export default function CalendarPage() {
                   {selectedCell.type === 'available' && (
                     <div className="space-y-3">
                       <p className="text-sm text-slate-600 mb-4">Ce créneau est actuellement disponible. Souhaitez-vous le bloquer exceptionnellement ?</p>
-                      <Button 
+                      <Button
                         onClick={() => {
                           const [h, m] = selectedCell.hour.split(':');
                           const endHour = `${String(parseInt(h) + 1).padStart(2, '0')}:${m}`;
                           // On appelle la fonction de notre contexte
-                           blockSlot(selectedCell.date, selectedCell.hour, endHour);
-                          setSelectedCell(null);
-                        }} 
+                          blockSlot(selectedCell.date, selectedCell.hour, endHour);
+                          setSelectedCell({
+                            date: selectedCell.date,
+                            hour: selectedCell.hour,
+                            type: 'blocked'
+                          });
+                        }}
                         className="w-full bg-rose-500 hover:bg-rose-600 text-white font-bold"
                       >
                         Bloquer ce créneau
