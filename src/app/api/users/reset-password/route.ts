@@ -53,8 +53,8 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { apiResponse } from "@/lib/api-response";
 import { NextRequest } from "next/server";
-import { AuthProvider } from "@prisma/client";
 import { validatePassword } from "@/utils/validate-password";
+import { AUTH_PROVIDER_ENUM } from "@/types/enums";
 
 const JWT_SECRET = process.env.JWT_SECRET!;
 
@@ -105,7 +105,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Si compte Google impossible de modifier le mot de passe
-    if (user.authProvider !== AuthProvider.local) {
+    if (user.authProvider !== AUTH_PROVIDER_ENUM.local) {
       return apiResponse({
         status: 403,
         message:

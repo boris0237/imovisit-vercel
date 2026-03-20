@@ -98,8 +98,8 @@ const providerSections: NavSection[] = [
     title: 'Menu principal',
     titleKey: 'menuPrincipal',
     items: [
-      { icon: Calendar, label: 'Calendrier', labelKey: 'calendar', href: '/dashboard/calendar' },
       { icon: LayoutGrid, label: "Vue d'ensemble", labelKey: 'overview', href: '/dashboard' },
+      { icon: Calendar, label: 'Calendrier', labelKey: 'calendar', href: '/dashboard/calendar' },
       { icon: ClipboardList, label: 'Rendez-vous', labelKey: 'appointments', href: '/dashboard/visits' },
       { icon: MessageSquare, label: 'Messages', labelKey: 'messages', href: '/dashboard/messages' },
       { icon: Heart, label: 'Favoris', labelKey: 'favorites', href: '/dashboard/favorites' },

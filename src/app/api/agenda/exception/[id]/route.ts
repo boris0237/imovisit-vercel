@@ -47,6 +47,12 @@
  *               date:
  *                 type: string
  *                 format: date-time
+ *               dateStart:
+ *                 type: string
+ *                 format: date-time
+ *               dateEnd:
+ *                 type: string
+ *                 format: date-time
  *               dayOfWeek:
  *                 type: string
  *                 enum: [monday, tuesday, wednesday, thursday, friday, saturday, sunday]
@@ -115,7 +121,6 @@ export async function GET(req: NextRequest, { params }: Params) {
         }
 
         return apiResponse({ status: 200, message: "Exception récupérée", data: exception });
-
     } catch (error: any) {
         return apiResponse({ status: 500, message: error.message });
     }
@@ -123,26 +128,131 @@ export async function GET(req: NextRequest, { params }: Params) {
 
 // UPDATE
 export async function PATCH(req: NextRequest, { params }: Params) {
-    try {
-        const authError = authMiddleware(req);
-        if (authError) return authError;
+  try {
+    const authError = authMiddleware(req);
+    if (authError) return authError;
 
-        const body = await req.json();
+    const body = await req.json();
+    const { date, dateStart, dateEnd, startTime, endTime } = body;
 
-        const updated = await prisma.availabilityException.update({
-            where: { id: params.id },
-            data: {
-                ...body,
-                date: body.date ? new Date(body.date) : undefined
-            }
+    const decodedUser = (req as any).user;
+
+    const day = date ? new Date(date) : null;
+    const start = dateStart ? new Date(dateStart) : null;
+    const end = dateEnd ? new Date(dateEnd) : null;
+
+    // CAS 1 : intervalle
+    if (start && end) {
+
+      // vérifier chevauchement avec autre intervalle
+      const intervalExist = await prisma.availabilityException.findFirst({
+        where: {
+          ownerId: decodedUser.id,
+          id: { not: params.id },
+          dateStart: { not: null },
+          AND: [
+            { dateStart: { lte: end } },
+            { dateEnd: { gte: start } }
+          ]
+        }
+      });
+
+      if (intervalExist) {
+        return apiResponse({
+          status: 400,
+          message: "Un intervalle existe déjà dans cette période"
         });
+      }
 
-        return apiResponse({ status: 200, message: "Exception mise à jour", data: updated });
+      // vérifier jour précis dans cet intervalle
+      const dayInside = await prisma.availabilityException.findFirst({
+        where: {
+          ownerId: decodedUser.id,
+          id: { not: params.id },
+          date: {
+            gte: start,
+            lte: end
+          }
+        }
+      });
 
-    } catch (error: any) {
-        console.log(error.message);
-        return apiResponse({ status: 500, message: error.message });
+      if (dayInside) {
+        return apiResponse({
+          status: 400,
+          message: "Un jour précis existe déjà dans cet intervalle"
+        });
+      }
+
     }
+
+    // CAS 2 : jour précis
+    if (day && startTime && endTime) {
+
+      // vérifier si un intervalle couvre ce jour
+      const intervalCover = await prisma.availabilityException.findFirst({
+        where: {
+          ownerId: decodedUser.id,
+          id: { not: params.id },
+          dateStart: { lte: day },
+          dateEnd: { gte: day }
+        }
+      });
+
+      if (intervalCover) {
+        return apiResponse({
+          status: 400,
+          message: "Ce jour est déjà bloqué par un intervalle"
+        });
+      }
+
+      // vérifier chevauchement horaire
+      const hourConflict = await prisma.availabilityException.findFirst({
+        where: {
+          ownerId: decodedUser.id,
+          id: { not: params.id },
+          date: day,
+          AND: [
+            { startTime: { lt: endTime } },
+            { endTime: { gt: startTime } }
+          ]
+        }
+      });
+
+      if (hourConflict) {
+        return apiResponse({
+          status: 400,
+          message: "Une exception horaire existe déjà"
+        });
+      }
+
+    }
+
+    // Conversion des dates
+    const dataToUpdate: any = {
+      ...body,
+      date: date ? day : undefined,
+      dateStart: dateStart ? start : undefined,
+      dateEnd: dateEnd ? end : undefined
+    };
+
+    const updated = await prisma.availabilityException.update({
+      where: { id: params.id },
+      data: dataToUpdate
+    });
+
+    return apiResponse({
+      status: 200,
+      message: "Exception mise à jour",
+      data: updated
+    });
+
+  } catch (error: any) {
+    console.log(error.message);
+    return apiResponse({
+      status: 500,
+      message: error.message
+    });
+  }
 }
 
 // DELETE
@@ -155,9 +265,8 @@ export async function DELETE(req: NextRequest, { params }: Params) {
             where: { id: params.id }
         });
 
-        return apiResponse({status:200, message:"Exception supprimée"});
-
-    } catch (error:any) {
-          return apiResponse({ status: 500, message: error.message });
+        return apiResponse({ status: 200, message: "Exception supprimée" });
+    } catch (error: any) {
+        return apiResponse({ status: 500, message: error.message });
     }
 }

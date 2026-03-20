@@ -5,7 +5,8 @@ import { prisma } from "@/services/db";
 import { apiResponse } from "@/lib/api-response";
 import { authMiddleware } from "@/middlewares/auth-middleware";
 import { handlePropertyFormData } from "@/utils/handle-property-formData";
-import { UserRole } from "@prisma/client";
+import { USER_ROLE_ENUM } from "@/types/enums";
+
 
 // -- Voir un Bien --
 
@@ -45,7 +46,22 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
             return apiResponse({ status: 404, message: "Bien non trouvé" });
         }
 
-        return apiResponse({ status: 200, message: "Détail du bien", data: property });
+        const owner = property.userId
+          ? await prisma.user.findUnique({
+              where: { id: property.userId },
+              select: { createdAt: true },
+            })
+          : null;
+
+        const rest = property as any;
+        return apiResponse({
+          status: 200,
+          message: "Détail du bien",
+          data: {
+            ...rest,
+            userCreatedAt: owner?.createdAt || null,
+          }
+        });
     } catch (err: any) {
         return apiResponse({ status: 500, message: err.message || "Erreur lors de la récupération du bien" });
     }
@@ -115,7 +131,7 @@ export async function PATCH(
         if (!property) return apiResponse({ status: 404, message: "Bien non trouvé" });
 
         // Seul le créateur ou admin peut modifier
-        if (property.userId !== user.id && user.role !== UserRole.admin) {
+        if (property.userId !== user.id && user.role !== USER_ROLE_ENUM.admin) {
             return apiResponse({ status: 403, message: "Non autorisé à modifier ce bien" });
         }
 
@@ -171,7 +187,7 @@ export async function DELETE(
     if (!property) return apiResponse({ status: 404, message: "Bien non trouvé" });
 
     // Seul le créateur ou admin peut supprimer
-    if (property.userId !== user.id && user.role !== UserRole.admin) {
+    if (property.userId !== user.id && user.role !== USER_ROLE_ENUM.admin) {
       return apiResponse({ status: 403, message: "Non autorisé à supprimer ce bien" });
     }
 

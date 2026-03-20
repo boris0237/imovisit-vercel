@@ -1,25 +1,22 @@
 "use client"
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import {
   MapPin,
   Bed,
   Bath,
   Maximize,
   Calendar,
-  Phone,
   Share2,
   Heart,
   BadgeCheck,
   Check,
   Home,
-  Car,
   Eye,
   Clock,
   ShieldCheck,
-  Star,
-  CalendarCheck,
   ChevronRight,
   Video,
 } from 'lucide-react'
@@ -32,11 +29,14 @@ import { Input } from '@/components/ui/input'
 import { amenitiesList } from '@/data/mock'
 import { useDictionary } from '@/hooks/useDictionary'
 import { fetchApi } from '@/services/apiConfig'
+import { agendaService } from '@/services/agendaService'
+import { toast } from 'sonner'
 
 export default function PropertyDetail() {
   const {dictionary} = useDictionary()
   const params = useParams()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [selectedImage, setSelectedImage] = useState(0)
   const [isFavorite, setIsFavorite] = useState(false)
   const [property, setProperty] = useState<any | null>(null)
@@ -44,11 +44,47 @@ export default function PropertyDetail() {
   const [loading, setLoading] = useState(true)
   const [favoriteLoading, setFavoriteLoading] = useState(false)
   const hasViewedRef = useRef<string | null>(null)
+  const [visitType, setVisitType] = useState<'in_person' | 'remote'>('in_person')
+  const [selectedDate, setSelectedDate] = useState('')
+  const [availableSlots, setAvailableSlots] = useState<string[]>([])
+  const [slotsLoading, setSlotsLoading] = useState(false)
+  const [selectedSlot, setSelectedSlot] = useState<string | null>(null)
+  const [bookingLoading, setBookingLoading] = useState(false)
+  const initialReservationApplied = useRef(false)
+  const initialSlotApplied = useRef(false)
+
+  const calculateEndTime = (startTime: string, minutes = 30) => {
+    const [h, m] = startTime.split(':').map(Number)
+    const date = new Date()
+    date.setHours(h, m + minutes, 0, 0)
+    return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+  }
 
   const propertyId = useMemo(() => {
     if (!params?.id) return '';
     return Array.isArray(params.id) ? params.id[0] : params.id;
   }, [params]);
+
+  const reservationQuery = useMemo(() => {
+    return {
+      date: searchParams.get('date') || '',
+      time: searchParams.get('time') || '',
+      visitType: searchParams.get('visitType') || '',
+    }
+  }, [searchParams])
+
+  useEffect(() => {
+    if (initialReservationApplied.current) return
+    if (reservationQuery.date) {
+      setSelectedDate(reservationQuery.date)
+    }
+    if (reservationQuery.visitType === 'in_person' || reservationQuery.visitType === 'remote') {
+      setVisitType(reservationQuery.visitType)
+    }
+    if (reservationQuery.date || reservationQuery.visitType || reservationQuery.time) {
+      initialReservationApplied.current = true
+    }
+  }, [reservationQuery])
 
   useEffect(() => {
     if (!propertyId) return;
@@ -117,6 +153,47 @@ export default function PropertyDetail() {
     };
     fetchSimilar();
   }, [property]);
+
+  useEffect(() => {
+    if (!property?.visitType) return;
+    if (property.visitType === 'both') {
+      setVisitType('in_person');
+      return;
+    }
+    setVisitType(property.visitType === 'remote' ? 'remote' : 'in_person');
+  }, [property?.visitType]);
+
+  useEffect(() => {
+    const loadSlots = async () => {
+      if (!selectedDate || !property?.id) {
+        setAvailableSlots([]);
+        return;
+      }
+      setSlotsLoading(true);
+      try {
+        const res = await agendaService.getAvailableHours({
+          propertyId: property.id,
+          date: selectedDate,
+        });
+        setAvailableSlots(res?.data?.availableHours || res?.data || []);
+        setSelectedSlot(null);
+      } catch {
+        setAvailableSlots([]);
+      } finally {
+        setSlotsLoading(false);
+      }
+    };
+    loadSlots();
+  }, [selectedDate, property?.id]);
+
+  useEffect(() => {
+    if (initialSlotApplied.current) return
+    if (!reservationQuery.time) return
+    if (availableSlots.includes(reservationQuery.time)) {
+      setSelectedSlot(reservationQuery.time)
+      initialSlotApplied.current = true
+    }
+  }, [availableSlots, reservationQuery.time])
 
   if (!property) {
     return (
@@ -278,14 +355,16 @@ export default function PropertyDetail() {
                       <span>{property.views} {dictionary.propertyPage?.sp3 || "vues"}</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <CalendarCheck className="w-4 h-4" />
-                      <span>{property.visitsCount} {dictionary.propertyPage?.sp4 || "visites réservées"}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
                       <Clock className="w-4 h-4" />
                       <span>
                         {dictionary.propertyPage?.sp5 || "Publié le"}{' '}
-                        {property.createdAt ? new Date(property.createdAt).toLocaleDateString('fr-FR') : '--'}
+                        {property.createdAt
+                          ? new Date(property.createdAt).toLocaleDateString('fr-FR', {
+                              day: '2-digit',
+                              month: 'long',
+                              year: 'numeric',
+                            })
+                          : '--'}
                       </span>
                     </div>
                   </div>
@@ -316,21 +395,41 @@ export default function PropertyDetail() {
                         </div>
                       </div>
                     )}
-                    <div className="flex items-center gap-3 rounded-xl border border-slate-200 p-3">
-                      <Car className="w-4 h-4 text-slate-700" />
-                      <div className="text-xs">
-                        <p className="text-slate-500">{dictionary.propertyPage?.p4 || "Parking"}</p>
-                        <p className="font-semibold text-slate-900">
-                          {property.amenities.includes('parking') ? '2 places' : 'Non inclus'}
-                        </p>
-                      </div>
-                    </div>
                   </div>
 
+                  {(property.commission || property.depositMonths || property.advanceMonths) && (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      {property.commission && (
+                        <div className="flex items-center gap-3 rounded-xl border border-slate-200 p-3">
+                          <div className="text-xs">
+                            <p className="text-slate-500">Commission</p>
+                            <p className="font-semibold text-slate-900">
+                              {Number(property.commission).toLocaleString('fr-FR')} FCFA
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                      {property.depositMonths && (
+                        <div className="flex items-center gap-3 rounded-xl border border-slate-200 p-3">
+                          <div className="text-xs">
+                            <p className="text-slate-500">Mois de caution</p>
+                            <p className="font-semibold text-slate-900">{property.depositMonths}</p>
+                          </div>
+                        </div>
+                      )}
+                      {property.advanceMonths && (
+                        <div className="flex items-center gap-3 rounded-xl border border-slate-200 p-3">
+                          <div className="text-xs">
+                            <p className="text-slate-500">Mois d'avance</p>
+                            <p className="font-semibold text-slate-900">{property.advanceMonths}</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   <div className="space-y-3 text-sm text-slate-600 leading-relaxed">
-                    <p>
-                      {dictionary.propertyPage?.p5 || "Magnifique appartement rénové situé dans un quartier résidentiel calme. Proche de toutes commodités, transports en commun et écoles."}
-                    </p>
+                    <p>{property.description}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -376,14 +475,15 @@ export default function PropertyDetail() {
                             {dictionary.propertyPage?.badge2 || "Agence immobilière"}
                           </Badge>
                         </div>
-                        <p className="text-xs text-slate-500">
-                          {dictionary.propertyPage?.p6 || "Membre depuis Juin 2021"} 
+                        <p className="text-xs text-slate-500 mt-1">
+                          {dictionary.propertyPage?.p6 || "Membre depuis"}{' '}
+                          {property.userCreatedAt
+                            ? new Date(property.userCreatedAt).toLocaleDateString('fr-FR', {
+                                month: 'long',
+                                year: 'numeric',
+                              })
+                            : '--'}
                         </p>
-                        <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
-                          <Star className="w-3.5 h-3.5 text-amber-400 fill-current" />
-                          <span>4.8</span>
-                          <span>({dictionary.propertyPage?.sp6 || "24 avis"})</span>
-                        </div>
                       </div>
                     </div>
                     
@@ -410,14 +510,15 @@ export default function PropertyDetail() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {similarProperties.map((item) => (
-                        <Card key={item.id} className="border-slate-200 overflow-hidden">
-                          <CardContent className="p-0">
-                            <div className="relative">
-                              <img
-                                src={item.images?.[0] || '/placeholder-property.jpg'}
-                                alt={item.title}
-                                className="w-full h-44 object-cover"
-                              />
+                        <Link key={item.id} href={`/property/${item.id}`} className="block">
+                          <Card className="border-slate-200 overflow-hidden hover:shadow-md transition-shadow">
+                            <CardContent className="p-0">
+                              <div className="relative">
+                                <img
+                                  src={item.images?.[0] || '/placeholder-property.jpg'}
+                                  alt={item.title}
+                                  className="w-full h-44 object-cover"
+                                />
                               <div className="absolute top-3 left-3 flex items-center gap-2">
                                 <Badge className="bg-slate-900 text-white border-0">
                                   {getOfferTypeLabel(item.offerType)}
@@ -476,15 +577,12 @@ export default function PropertyDetail() {
                                     <Eye className="w-4 h-4" />
                                     <span>{item.views}</span>
                                   </div>
-                                  <div className="flex items-center gap-1">
-                                    <CalendarCheck className="w-4 h-4" />
-                                    <span>{item.visitsCount}</span>
-                                  </div>
                                 </div>
                               </div>
                             </div>
-                          </CardContent>
-                        </Card>
+                            </CardContent>
+                          </Card>
+                        </Link>
                       ))}
                   </div>
 
@@ -515,11 +613,21 @@ export default function PropertyDetail() {
                   <div>
                     <p className="text-xs text-slate-500 mb-2">{dictionary.propertyPage?.p7 || "Type de visite"}</p>
                     <div className="grid grid-cols-2 gap-2">
-                      <Button variant="outline" className="h-12 flex-col gap-1 text-xs">
+                      <Button
+                        variant={visitType === 'in_person' ? 'default' : 'outline'}
+                        className="h-12 flex-col gap-1 text-xs"
+                        disabled={property.visitType === 'remote'}
+                        onClick={() => setVisitType('in_person')}
+                      >
                         <MapPin className="w-4 h-4" />
                         {dictionary.propertyPage?.btn4 || "En présentiel"}
                       </Button>
-                      <Button variant="outline" className="h-12 flex-col gap-1 text-xs">
+                      <Button
+                        variant={visitType === 'remote' ? 'default' : 'outline'}
+                        className="h-12 flex-col gap-1 text-xs"
+                        disabled={property.visitType === 'in_person'}
+                        onClick={() => setVisitType('remote')}
+                      >
                         <Video className="w-4 h-4" />
                         {dictionary.propertyPage?.btn5 || "À distance"}
                       </Button>
@@ -529,29 +637,105 @@ export default function PropertyDetail() {
                   <div className="rounded-xl bg-slate-50 border border-slate-200 p-3 text-xs text-slate-600">
                     <div className="flex items-center gap-2">
                       <BadgeCheck className="w-4 h-4 text-emerald-500" />
-                      <span>{dictionary.propertyPage?.sp10 || "Vous recevrez l'adresse exacte quelques heures avant la visite."}</span>
+                      <span>Vous recevrez l'adresse exacte après la reservation de votre visite.</span>
                     </div>
                   </div> 
 
                   <div>
                     <p className="text-xs text-slate-500 mb-2">{dictionary.propertyPage?.p8 || "Date souhaitée"}</p>
-                    <Input type="date" className="bg-white border-slate-200" />
+                    <div className="relative">
+                      <Input
+                        type="date"
+                        className="bg-white border-slate-200 pr-10"
+                        value={selectedDate}
+                        onChange={(e) => setSelectedDate(e.target.value)}
+                      />
+                      <Calendar className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    </div>
                   </div>
 
                   <div>
                     <p className="text-xs text-slate-500 mb-2">{dictionary.propertyPage?.p9 || "Créneau horaire"}</p>
-                    <div className="grid grid-cols-2 gap-2">
-                      {['9h00', '10h30', '14h00', '15h30', '16h30'].map((slot) => (
-                        <Button key={slot} variant="outline" className="h-9 text-xs">
-                          {slot}
-                        </Button>
-                      ))}
-                    </div>
+                    {slotsLoading ? (
+                      <div className="text-xs text-slate-400">Chargement des créneaux...</div>
+                    ) : availableSlots.length === 0 ? (
+                      <div className="text-xs text-slate-400">Aucun créneau disponible</div>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-2">
+                        {availableSlots.map((slot) => (
+                          <Button
+                            key={slot}
+                            variant={selectedSlot === slot ? 'default' : 'outline'}
+                            className="h-9 text-xs"
+                            onClick={() => setSelectedSlot(slot)}
+                          >
+                            {slot}
+                          </Button>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
-                  <Button className="w-full bg-slate-900 hover:bg-slate-800 gap-2">
+                  <Button
+                    type="button"
+                    className="w-full bg-slate-900 hover:bg-slate-800 gap-2"
+                    loading={bookingLoading}
+                    onClick={async () => {
+                      if (!selectedDate) {
+                        toast.error('Sélectionnez une date.')
+                        return
+                      }
+                      if (slotsLoading) {
+                        toast.error('Chargement des créneaux en cours.')
+                        return
+                      }
+                      if (!selectedSlot) {
+                        toast.error('Sélectionnez un créneau.')
+                        return
+                      }
+                      if (!property?.id || !selectedDate || !selectedSlot) return
+                      if (typeof window !== 'undefined') {
+                        const token = localStorage.getItem('token')
+                        if (!token) {
+                          const qs = new URLSearchParams()
+                          qs.set('date', selectedDate)
+                          qs.set('time', selectedSlot)
+                          qs.set('visitType', visitType)
+                          const redirect = `/property/${property.id}?${qs.toString()}`
+                          router.push(`/login?redirect=${encodeURIComponent(redirect)}`)
+                          return
+                        }
+                      }
+                      try {
+                        setBookingLoading(true)
+                        const endTime = calculateEndTime(selectedSlot, 30)
+                        await agendaService.createReservation({
+                          propertyId: property.id,
+                          date: selectedDate,
+                          startTime: selectedSlot,
+                          endTime,
+                          visitType,
+                        })
+                        toast.success('Votre visite a été réservée.')
+                        router.push('/dashboard/visits')
+                      } catch (error: any) {
+                        if (error?.status === 401) {
+                          const qs = new URLSearchParams()
+                          qs.set('date', selectedDate)
+                          qs.set('time', selectedSlot)
+                          qs.set('visitType', visitType)
+                          const redirect = `/property/${property.id}?${qs.toString()}`
+                          router.push(`/login?redirect=${encodeURIComponent(redirect)}`)
+                          return
+                        }
+                        toast.error(error?.message || 'Erreur lors de la réservation.')
+                      } finally {
+                        setBookingLoading(false)
+                      }
+                    }}
+                  >
                     <Calendar className="w-4 h-4" />
-                    {dictionary.propertyPage?.btn6 || "Réserver la visite"}
+                    {bookingLoading ? 'Réservation...' : (dictionary.propertyPage?.btn6 || "Réserver la visite")}
                   </Button>
                 </CardContent>
               </Card>

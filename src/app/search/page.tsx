@@ -29,6 +29,7 @@ function SearchContent() {
   const [total, setTotal] = useState(0)
   const [cities, setCities] = useState<{ id: string; name: string }[]>([])
   const [neighborhoods, setNeighborhoods] = useState<{ id: string; name: string }[]>([])
+  const [filterCityId, setFilterCityId] = useState<string | undefined>(undefined)
 
   const fetchCities = async () => {
     try {
@@ -91,14 +92,21 @@ function SearchContent() {
         const found = cities.find((city) => city.name.toLowerCase() === cityMatch.toLowerCase());
         if (found) {
           setFilters((prev) => ({ ...prev, cityId: found.id, city: found.name }));
+          setFilterCityId(found.id);
         }
       }
     }
   }, [cities, filters.city, searchParams]);
 
   useEffect(() => {
-    fetchNeighborhoods(filters.cityId);
+    if (filters.cityId) {
+      setFilterCityId(filters.cityId);
+    }
   }, [filters.cityId]);
+
+  useEffect(() => {
+    fetchNeighborhoods(filterCityId);
+  }, [filterCityId]);
 
   useEffect(() => {
     fetchProperties();
@@ -158,15 +166,16 @@ function SearchContent() {
                     <SheetTitle>{dictionary.searchPage?.filterButton || "Filtres"}</SheetTitle>
                   </SheetHeader>
                   <div className="mt-6">
-                  <SearchFilters
-                    filters={filters}
-                    onFilterChange={(next) => {
-                      setFilters(next);
-                      setPage(1);
-                    }}
-                    cities={cities}
-                    neighborhoods={neighborhoods}
-                  />
+                    <SearchFilters
+                      filters={filters}
+                      onFilterChange={(next) => {
+                        setFilters(next);
+                        setPage(1);
+                      }}
+                      cities={cities}
+                      neighborhoods={neighborhoods}
+                      onCityChange={(cityId) => setFilterCityId(cityId)}
+                    />
                   </div>
                 </SheetContent>
               </Sheet>
@@ -187,6 +196,7 @@ function SearchContent() {
                   }}
                   cities={cities}
                   neighborhoods={neighborhoods}
+                  onCityChange={(cityId) => setFilterCityId(cityId)}
                 />
               </div>
             </aside>
