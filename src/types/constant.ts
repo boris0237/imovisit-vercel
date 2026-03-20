@@ -16,6 +16,7 @@ export const ROLE_ALLOWED_FIELDS = {
     "profession",
     "avatar",
     "country",
+    "providerType",
   ],
 
   owner: [
@@ -36,6 +37,7 @@ export const ROLE_ALLOWED_FIELDS = {
     "companyLogo",
     "country",
     'role',
+    "providerType",
   ],
 
   property_manager: [
@@ -53,6 +55,7 @@ export const ROLE_ALLOWED_FIELDS = {
     "country",
     "services",
     "docCNI",
+    "providerType",
   ],
 
   prospector: [
@@ -66,6 +69,7 @@ export const ROLE_ALLOWED_FIELDS = {
     "services",
     "docJust",
     "docCNI",
+    "providerType",
   ],
 
   agency: [
@@ -78,7 +82,8 @@ export const ROLE_ALLOWED_FIELDS = {
     "docRCCM",
     "docContribuable",
     "companyName",
-    "companyLogo"
+    "companyLogo",
+    "providerType",
   ],
 
   agent: [
@@ -91,6 +96,37 @@ export const ROLE_ALLOWED_FIELDS = {
     "country",
     "services",
     "docCNI",
+    "providerType",
+  ],
+
+  provider: [
+    "name",
+    "age",
+    "phone",
+    "avatar",
+    "profession",
+    "city",
+    "country",
+    "services",
+    "docJust",
+    "docCNI",
+    "providerType",
+    "companyName",
+    "companyLogo",
+  ],
+
+  free_agent: [
+    "name",
+    "age",
+    "phone",
+    "avatar",
+    "profession",
+    "city",
+    "country",
+    "services",
+    "docJust",
+    "docCNI",
+    "providerType",
   ],
 
   admin: [
@@ -111,8 +147,8 @@ export const ROLE_ALLOWED_FIELDS = {
     "companyLogo",
     "typeCompte",
     "role",
+    "providerType",
   ]
 } as const;
-
 
 

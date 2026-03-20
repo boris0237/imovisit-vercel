@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import Link from 'next/link'
 import { Eye, EyeOff, Mail, Lock, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { useDictionary } from '@/hooks/useDictionary';
@@ -19,6 +19,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export default function Login() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -54,6 +55,12 @@ export default function Login() {
   const { dictionary } = useDictionary();
   const currentYear = new Date().getFullYear();
   const { withGoogle, googleLoading, error, userData, resetError } = useGoogleAuth();
+  const redirectPath = useMemo(() => {
+    const value = searchParams.get('redirect');
+    if (!value) return '';
+    if (!value.startsWith('/') || value.startsWith('//')) return '';
+    return value;
+  }, [searchParams]);
 
   useEffect(() => {
     const loadGoogleScript = () => {
@@ -102,27 +109,31 @@ export default function Login() {
         
         // Redirection après un court délai
         setTimeout(() => {   
-        if (loggedInUser.role === 'owner' || loggedInUser.role === 'OWNER') {
-          router.push('/dashboard'); // router.push est plus fluide que window.location.href
-        } else {
-          // Gestion précise des erreurs via le statut HTTP
-          switch (status) {
-            case 400:
-              setErrors({ email: data.message || "Email requis" });
-              break;
-            case 401:
-              setErrors({ general: data.message || "Authentification invalide" });
-              break;
-            // ... à l'intérieur de handleBackendLogin, dans le switch(status)
-            case 404:
-              setErrors({ general: data.message || "Compte non trouvé" });
-              break;
-            default:
-              setErrors({
-                general: data.message || dictionary?.login?.errorGeneric || "Une erreur est survenue."
-              });
+          if (redirectPath) {
+            router.push(redirectPath);
+            return;
           }
-        }
+          if (loggedInUser.role === 'owner' || loggedInUser.role === 'OWNER') {
+            router.push('/dashboard'); // router.push est plus fluide que window.location.href
+          } else {
+            // Gestion précise des erreurs via le statut HTTP
+            switch (status) {
+              case 400:
+                setErrors({ email: data.message || "Email requis" });
+                break;
+              case 401:
+                setErrors({ general: data.message || "Authentification invalide" });
+                break;
+              // ... à l'intérieur de handleBackendLogin, dans le switch(status)
+              case 404:
+                setErrors({ general: data.message || "Compte non trouvé" });
+                break;
+              default:
+                setErrors({
+                  general: data.message || dictionary?.login?.errorGeneric || "Une erreur est survenue."
+                });
+            }
+          }
         }, 2000);
       } else {
         }
@@ -192,10 +203,14 @@ export default function Login() {
         // Redirection après un court délai
 
         setTimeout(() => {
+          if (redirectPath) {
+            router.push(redirectPath);
+            return;
+          }
           if (loggedInUser?.role !== 'visitor' && loggedInUser?.role !== undefined) {
-            window.location.href = '/dashboard'; 
+            router.push('/dashboard');
           } else {
-            window.location.href = '/';
+            router.push('/');
           }
         }, 2000);
         router.refresh(); // Rafraîchir l'état de session

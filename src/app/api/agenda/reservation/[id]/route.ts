@@ -245,7 +245,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     const conflict = await prisma.reservation.findFirst({
       where: {
         id: { not: params.id },
-        propertyId: existing.propertyId,
+        ownerId: existing.ownerId,
         date: newDate,
         status: { in: ["pending", "confirmed"] },
         ...timeFilter

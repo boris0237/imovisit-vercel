@@ -239,7 +239,8 @@ export async function POST(req: NextRequest) {
         startTime,
         endTime,
         visitType: visitType ?? "in_person",
-        visitContext: visitContext ?? null
+        visitContext: visitContext ?? null,
+        status: "confirmed"
       }
     });
 
@@ -257,6 +258,8 @@ export async function GET(req: NextRequest) {
   try {
     const authError = authMiddleware(req);
     if (authError) return authError;
+
+    const decodedUser = (req as any).user;
 
     const { searchParams } = new URL(req.url);
 
@@ -277,6 +280,11 @@ export async function GET(req: NextRequest) {
     if (status) filters.status = status;
     if (date) filters.date = new Date(date);
 
+    // Par défaut, un utilisateur ne voit que ses RDV (côté propriétaire)
+    if (decodedUser?.role !== "admin") {
+      filters.ownerId = decodedUser?.id;
+    }
+
     const [reservations, total] = await Promise.all([
       prisma.reservation.findMany({
         where: filters,
@@ -287,10 +295,36 @@ export async function GET(req: NextRequest) {
       prisma.reservation.count({ where: filters })
     ]);
 
+    const propertyIds = Array.from(new Set(reservations.map((r) => r.propertyId)));
+    const clientIds = Array.from(new Set(reservations.map((r) => r.clientId)));
+
+    const [properties, clients] = await Promise.all([
+      propertyIds.length
+        ? prisma.property.findMany({
+            where: { id: { in: propertyIds } },
+            select: { id: true, title: true, city: true, neighborhood: true, images: true, visitFee: true }
+          })
+        : Promise.resolve([]),
+      clientIds.length
+        ? prisma.user.findMany({
+            where: { id: { in: clientIds } },
+            select: { id: true, name: true, email: true, phone: true }
+          })
+        : Promise.resolve([])
+    ]);
+
+    const propertyMap = new Map(properties.map((p) => [p.id, p]));
+    const clientMap = new Map(clients.map((c) => [c.id, c]));
+    const enrichedReservations = reservations.map((r) => ({
+      ...r,
+      property: propertyMap.get(r.propertyId) || null,
+      client: clientMap.get(r.clientId) || null
+    }));
+
     return apiResponse({ 
       status: 200, 
       message: "Liste des réservations", 
-      data: { reservations, total, page, limit } 
+      data: { reservations: enrichedReservations, total, page, limit } 
     });
 
   } catch (err: any) {

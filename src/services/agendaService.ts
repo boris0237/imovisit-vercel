@@ -9,6 +9,16 @@ export interface CreateReservationData {
   endTime: string; // Ex: "14:30"
   visitType: 'in_person' | 'remote';
 }
+export interface UpdateReservationData {
+  date?: string;
+  startTime?: string;
+  endTime?: string;
+  visitType?: 'in_person' | 'remote';
+  visitContext?: string | null;
+  status?: 'pending' | 'confirmed' | 'cancelled' | 'done' | 'missed';
+  cancelReason?: string | null;
+  cancelledBy?: string | null;
+}
 
 export interface GetAvailableHoursParams {
   propertyId: string;
@@ -162,6 +172,14 @@ export const agendaService = {
   createReservation: async (data: CreateReservationData) => {
     const response = await fetchApi('/api/agenda/reservation', {
       method: 'POST',
+      body: JSON.stringify(data),
+    });
+    return response;
+  },
+
+  updateReservation: async (id: string, data: UpdateReservationData) => {
+    const response = await fetchApi(`/api/agenda/reservation/${id}`, {
+      method: 'PATCH',
       body: JSON.stringify(data),
     });
     return response;

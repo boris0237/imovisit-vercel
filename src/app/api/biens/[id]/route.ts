@@ -46,7 +46,22 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
             return apiResponse({ status: 404, message: "Bien non trouvé" });
         }
 
-        return apiResponse({ status: 200, message: "Détail du bien", data: property });
+        const owner = property.userId
+          ? await prisma.user.findUnique({
+              where: { id: property.userId },
+              select: { createdAt: true },
+            })
+          : null;
+
+        const rest = property as any;
+        return apiResponse({
+          status: 200,
+          message: "Détail du bien",
+          data: {
+            ...rest,
+            userCreatedAt: owner?.createdAt || null,
+          }
+        });
     } catch (err: any) {
         return apiResponse({ status: 500, message: err.message || "Erreur lors de la récupération du bien" });
     }

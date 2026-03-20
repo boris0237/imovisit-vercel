@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Slider } from '@/components/ui/slider';
 import { propertyTypes, offerTypes } from '@/data/mock';
 import type { FilterOptions } from '@/types';
 import { useDictionary } from '@/hooks/useDictionary';
@@ -14,9 +13,10 @@ interface SearchFiltersProps {
   onFilterChange: (filters: FilterOptions) => void;
   cities: { id: string; name: string }[];
   neighborhoods: { id: string; name: string }[];
+  onCityChange?: (cityId?: string) => void;
 }
 
-export function SearchFilters({ filters, onFilterChange, cities, neighborhoods }: SearchFiltersProps) {
+export function SearchFilters({ filters, onFilterChange, cities, neighborhoods, onCityChange }: SearchFiltersProps) {
   const [localFilters, setLocalFilters] = useState<FilterOptions>(filters);
   const [priceRange, setPriceRange] = useState<[number, number]>([
     filters.minPrice || 0,
@@ -27,6 +27,12 @@ export function SearchFilters({ filters, onFilterChange, cities, neighborhoods }
     setLocalFilters(filters);
     setPriceRange([filters.minPrice || 0, filters.maxPrice || 2000000]);
   }, [filters]);
+
+  useEffect(() => {
+    if (onCityChange) {
+      onCityChange(localFilters.cityId);
+    }
+  }, [localFilters.cityId, onCityChange]);
 
   const handleApplyFilters = () => {
     onFilterChange({
@@ -150,11 +156,9 @@ export function SearchFilters({ filters, onFilterChange, cities, neighborhoods }
             <SelectValue placeholder="Toutes" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="1">1 {dictionary.searchFilter?.room || "room"}</SelectItem>
-            <SelectItem value="2">2 {dictionary.searchFilter?.rooms || "rooms"}</SelectItem>
-            <SelectItem value="3">3 {dictionary.searchFilter?.rooms || "rooms"}</SelectItem>
-            <SelectItem value="4">4 {dictionary.searchFilter?.rooms || "rooms"}</SelectItem>
-            <SelectItem value="5">5+ {dictionary.searchFilter?.rooms || "rooms"}</SelectItem>
+            <SelectItem value="1">1</SelectItem>
+            <SelectItem value="2">2</SelectItem>
+            <SelectItem value="3">3</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -162,15 +166,21 @@ export function SearchFilters({ filters, onFilterChange, cities, neighborhoods }
       {/* Price Range */}
       <div className="space-y-4">
         <Label>{dictionary.searchFilter?.minPrice || "Min Price"}</Label>
-        <Slider
-          value={priceRange}
-          onValueChange={(value) => setPriceRange(value as [number, number])}
-          max={2000000}
-          step={50000}
-        />
-        <div className="flex items-center justify-between text-sm text-gray-600">
-          <span>{priceRange[0].toLocaleString()} FCFA</span>
-          <span>{priceRange[1].toLocaleString()} FCFA</span>
+        <div className="grid grid-cols-2 gap-3">
+          <Input
+            type="number"
+            min={0}
+            placeholder="Prix min"
+            value={priceRange[0]}
+            onChange={(e) => setPriceRange([Number(e.target.value || 0), priceRange[1]])}
+          />
+          <Input
+            type="number"
+            min={0}
+            placeholder="Prix max"
+            value={priceRange[1]}
+            onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value || 0)])}
+          />
         </div>
       </div>
 

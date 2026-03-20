@@ -19,7 +19,8 @@ export interface Reservation {
   endTime: string;
   status: 'pending' | 'confirmed' | 'cancelled';
   visitType: 'in_person' | 'remote';
-  client?: { name: string };
+  client?: { name: string; email?: string; phone?: string };
+  property?: { title?: string; city?: string; neighborhood?: string; images?: string[]; visitFee?: number | null };
 }
 
 export interface Exception {
@@ -114,7 +115,7 @@ export function AgendaProvider({ children, propertyId, ownerId }: { children: Re
 
       // 1. Lancement des requêtes API en parallèle
       const [resResponse, rulesResponse, excResponse] = await Promise.all([
-        agendaService.getReservations({ propertyId, limit: 100 }),
+        agendaService.getReservations({ ownerId, propertyId, limit: 100 }),
         agendaService.getAvailabilities({ ownerId, limit: 100 }),
 
         // ⚠️ Ici on utilise directement fetchApi car tu n'as pas de fonction 'getAllExceptions' 
@@ -305,8 +306,8 @@ const getSlotStatus = (dateString: string, timeString: string): 'AVAILABLE' | 'B
   // 5. LOGIQUE FINALE
   // ========================================================
   // Si une règle de disponibilité existe pour ce créneau → AVAILABLE
-  // Sinon → BLOCKED (par défaut tout est bloqué sauf si explicitement disponible)
-  return isAvailable ? 'BLOCKED' : 'AVAILABLE'
+  // Sinon → AVAILABLE (par défaut tout est disponible, sauf exceptions)
+  return isAvailable ? 'AVAILABLE' : 'AVAILABLE'
 }
 
   const value = {

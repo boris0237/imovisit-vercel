@@ -309,6 +309,9 @@ export const amenitiesList = [
   { id: 'terrace', name: 'Terrasse', icon: 'Sun' },
   { id: 'cleaning', name: 'Ménage', icon: 'Sparkles' },
   { id: 'fenced', name: 'Clôturé', icon: 'Fence' },
+  { id: 'concierge', name: 'Conciergerie', icon: 'Bell' },
+  { id: 'generator', name: 'Groupe électrogène', icon: 'BatteryCharging' },
+  { id: 'surveillance', name: 'Vidéo surveillance', icon: 'Cctv' },
 ];
 
 export const events = [

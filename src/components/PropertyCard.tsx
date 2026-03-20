@@ -50,6 +50,7 @@ export function PropertyCard({ property, showActions = true }: PropertyCardProps
   };
 
   return (
+    <Link href={`/property/${property.id}`} className="block">
     <Card className="overflow-hidden group hover:shadow-lg transition-shadow">
       {/* Image */}
       <div className="relative aspect-[4/3] overflow-hidden">
@@ -92,11 +93,9 @@ export function PropertyCard({ property, showActions = true }: PropertyCardProps
 
       {/* Content */}
       <CardContent className="p-4">
-        <Link href={`/property/${property.id}`}>
-          <h3 className="font-semibold text-lg text-imo-primary hover:text-imo-secondary transition-colors line-clamp-1">
-            {property.title}
-          </h3>
-        </Link>
+        <h3 className="font-semibold text-lg text-imo-primary hover:text-imo-secondary transition-colors line-clamp-1">
+          {property.title}
+        </h3>
 
         <div className="flex items-center gap-1 text-gray-500 text-sm mt-1">
           <MapPin className="w-4 h-4" />
@@ -143,13 +142,10 @@ export function PropertyCard({ property, showActions = true }: PropertyCardProps
               <Eye className="w-3 h-3" />
               {property.views}
             </span>
-            <span className="flex items-center gap-1">
-              <Calendar className="w-3 h-3" />
-              {property.visitsCount}
-            </span>
           </div>
         </div>
       </CardContent>
     </Card>
+    </Link>
   );
 }

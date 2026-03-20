@@ -172,6 +172,7 @@ export async function GET(req: NextRequest) {
 
     const endOfDay = new Date(targetDate);
     endOfDay.setHours(23, 59, 59, 999);
+    const targetDateStr = targetDate.toISOString().split("T")[0];
 
     // 1. PROPERTY
     const property = await prisma.property.findUnique({
@@ -252,7 +253,7 @@ export async function GET(req: NextRequest) {
     // 5. RESERVATIONS 
     const reservations = await prisma.reservation.findMany({
       where: {
-        propertyId,
+        ownerId,
         date: { gte: startOfDay, lte: endOfDay },
         status: { in: ["pending", "confirmed"] },
       },
@@ -261,9 +262,9 @@ export async function GET(req: NextRequest) {
     const reservedSet = new Set<string>();
 
     for (const r of reservations) {
-      generateSlots(r.startTime, r.endTime).forEach((s) =>
-        reservedSet.add(s)
-      );
+      const resDateStr = new Date(r.date).toISOString().split("T")[0];
+      if (resDateStr !== targetDateStr) continue;
+      generateSlots(r.startTime, r.endTime).forEach((s) => reservedSet.add(s));
     }
 
     // 6. FILTER

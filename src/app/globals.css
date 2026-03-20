@@ -118,6 +118,12 @@ html {
   background: rgba(26, 43, 74, 0.2);
 }
 
+/* Custom date input icon handling */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 0;
+  cursor: pointer;
+}
+
 #root {
   max-width: 1280px;
   margin: 0 auto;

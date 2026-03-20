@@ -7,7 +7,9 @@ import {
   ChevronRight,
   Clock,
   Plus,
+  Phone,
   X,
+  User,
   Users,
   Video,
   Check,
@@ -53,7 +55,7 @@ export default function AgendaPage() {
   // 2. ÉTATS LOCAUX
   // ========================================================
   const [isPanelOpen, setIsPanelOpen] = useState(false)
-  const [availabilityModal, setAvailabilityModal] = useState(true)
+  const [availabilityModal, setAvailabilityModal] = useState(false)
   const [selectedCell, setSelectedCell] = useState<{
     date: string
     hour: string
@@ -222,7 +224,7 @@ export default function AgendaPage() {
   // 7. RÉSERVATIONS DU JOUR SÉLECTIONNÉ
   // ========================================================
   const dayVisits = useMemo(() => {
-    const targetDate = selectedDate || currentDate
+    const targetDate = viewMode === 'day' ? currentDate : (selectedDate || currentDate)
     const targetDateStr = formatDateStr(targetDate)
 
     return reservations
@@ -235,11 +237,13 @@ export default function AgendaPage() {
         id: res.id,
         time: res.startTime,
         name: res.client?.name || 'Client',
-        property: `Bien ID: ${res.propertyId.slice(-4)}`,
+        property: res.property?.title
+          ? `${res.property.title}${res.property.neighborhood || res.property.city ? ` - ${[res.property.neighborhood, res.property.city].filter(Boolean).join(', ')}` : ''}`
+          : `Bien ID: ${res.propertyId.slice(-4)}`,
         type: res.visitType === 'in_person' ? 'Présentiel' : 'Distance',
         status: res.status,
       }))
-  }, [currentDate, selectedDate, reservations])
+  }, [currentDate, selectedDate, reservations, viewMode])
 
   // ========================================================
   // 8. TITRE DYNAMIQUE DE L'EN-TÊTE
@@ -302,18 +306,18 @@ export default function AgendaPage() {
         )
       })
 
-      if (!exception) return
+      if (exception) {
+        // Supprimer l'exception via l'API
+        await fetch(`/api/agenda/exception/${exception.id}`, {
+          method: 'DELETE',
+          credentials: 'include'
+        })
+      } else {
+        // Si aucun blocage explicite, on crée une disponibilité
+        await createAvailability(selectedCell.date, selectedCell.hour, selectedCell.endHour)
+      }
 
-      // Supprimer l'exception via l'API
-      await fetch(`/api/agenda/exception/${exception.id}`, {
-        method: 'DELETE',
-        credentials: 'include'
-      })
-
-      // Recharger les données
       await refreshData()
-
-      // Fermer la modale
       setSelectedCell(null)
 
     } catch (error) {
@@ -409,7 +413,10 @@ export default function AgendaPage() {
                   <Calendar className="w-10 h-10" />
                 </div>
                 <p className="text-lg font-semibold text-slate-400">Aucune visite prévue ce jour</p>
-                <button className="mt-2 text-[#1a2b4b] font-bold hover:underline">
+                <button
+                  className="mt-2 text-[#1a2b4b] font-bold hover:underline"
+                  onClick={() => setAvailabilityModal(true)}
+                >
                   Définir les disponibilités
                 </button>
               </div>
@@ -419,12 +426,12 @@ export default function AgendaPage() {
                   {dayVisits.length} visite{dayVisits.length > 1 ? 's' : ''} prévue{dayVisits.length > 1 ? 's' : ''}
                 </h3>
 
-                {dayVisits.map((visit) => (
-                  <Card
-                    key={visit.id}
-                    className="border border-slate-200 shadow-sm hover:shadow-md transition-shadow bg-white"
-                  >
-                    <CardContent className="p-6 flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
+              {dayVisits.map((visit) => (
+                <Card
+                  key={visit.id}
+                  className="border border-slate-200 shadow-sm hover:shadow-md transition-shadow bg-white"
+                >
+                  <CardContent className="p-6 flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
                       <div className="flex flex-col gap-3 min-w-[140px]">
                         <div className="flex items-center gap-2 text-[#1a2b4b] font-extrabold text-2xl">
                           <Clock className="w-6 h-6 text-slate-400" />
@@ -466,7 +473,20 @@ export default function AgendaPage() {
                       </div>
 
                       <div className="flex flex-row md:flex-col gap-2 w-full md:w-auto mt-4 md:mt-0">
-                        <Button className="w-full md:w-auto bg-[#1a2b4b] hover:bg-[#121d33] text-white">
+                        <Button
+                          className="w-full md:w-auto bg-[#1a2b4b] hover:bg-[#121d33] text-white"
+                          onClick={() => {
+                            const res = reservations.find(r => r.id === visit.id)
+                            const endHour = calculateEndHour(visit.time)
+                            setSelectedCell({
+                              date: formatDateStr(viewMode === 'day' ? currentDate : (selectedDate || currentDate)),
+                              hour: visit.time,
+                              endHour,
+                              type: 'reserved',
+                              reservation: res
+                            })
+                          }}
+                        >
                           Voir détails
                         </Button>
                         <Button variant="outline" className="w-full md:w-auto text-slate-600 border-slate-200">
@@ -625,126 +645,6 @@ export default function AgendaPage() {
                 </div>
               </CardContent>
             </Card>
-            {selectedCell && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-                <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-xl animate-in zoom-in-95">
-
-                  {/* HEADER */}
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-bold text-[#1a2b4b]">
-                      {selectedCell.type === 'reserved' && "Détails de la réservation"}
-                      {selectedCell.type === 'blocked' && "Créneau bloqué"}
-                    </h3>
-                    <button
-                      onClick={() => setSelectedCell(null)}
-                      className="text-gray-400 hover:text-gray-600 transition-colors"
-                    >
-                      <X size={20} />
-                    </button>
-                  </div>
-
-                  {/* INFO DATE/HEURE */}
-                  <div className="mb-6 p-4 bg-slate-50 rounded-xl border border-slate-100">
-                    <p className="text-sm font-semibold text-slate-500 mb-1">Date et heure</p>
-                    <p className="text-[#1a2b4b] font-bold text-lg">
-                      Le {new Date(selectedCell.date).toLocaleDateString('fr-FR')} à {selectedCell.hour}{' '}
-                      jusqu&apos;à {selectedCell.endHour}
-                    </p>
-                  </div>
-
-                  {/* CONTENU DYNAMIQUE SELON LE TYPE */}
-
-                  {/* 🟢 DISPONIBLE */}
-                  {selectedCell.type === 'available' && (
-                    <div className="space-y-3">
-                      <p className="text-sm text-slate-600 mb-4">
-                        Ce créneau est actuellement disponible. Souhaitez-vous le bloquer exceptionnellement ?
-                      </p>
-                      <Button
-                        onClick={async () => {
-                          await handleBlockSlot()
-                          // 🔥 La modale reste ouverte mais change de type grâce au setSelectedCell dans handleBlockSlot
-                        }}
-                        className="w-full bg-rose-500 hover:bg-rose-600 text-white font-bold"
-                      >
-                        Bloquer ce créneau
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => setSelectedCell(null)}
-                        className="w-full"
-                      >
-                        Annuler
-                      </Button>
-                    </div>
-                  )}
-
-                  {/* 🟠 RÉSERVÉ */}
-                  {selectedCell.type === 'reserved' && selectedCell.reservation && (
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-2">
-                        <Badge
-                          className={
-                            selectedCell.reservation.status === 'pending'
-                              ? 'bg-orange-100 text-orange-700'
-                              : 'bg-emerald-100 text-emerald-700'
-                          }
-                        >
-                          {selectedCell.reservation.status === 'pending'
-                            ? 'En attente de confirmation'
-                            : 'Confirmé'}
-                        </Badge>
-                      </div>
-
-                      <div className="text-sm text-slate-600 space-y-2">
-                        <p>
-                          <strong className="text-slate-900">Client:</strong>{' '}
-                          {selectedCell.reservation.client?.name || 'N/A'}
-                        </p>
-                        <p>
-                          <strong className="text-slate-900">Bien:</strong>{' '}
-                          {selectedCell.reservation.propertyId}
-                        </p>
-                        <p>
-                          <strong className="text-slate-900">Type:</strong>{' '}
-                          {selectedCell.reservation.visitType === 'in_person' ? 'Présentiel' : 'À distance'}
-                        </p>
-                      </div>
-
-                      <Button className="w-full bg-[#1a2b4b] hover:bg-[#121d33]">
-                        Voir le dossier complet
-                      </Button>
-                    </div>
-                  )}
-
-                  {/* 🔴 BLOQUÉ */}
-                  {selectedCell.type === 'blocked' && (
-                    <div className="space-y-3">
-                      <p className="text-sm text-slate-600 mb-4">
-                        Vous avez défini ce créneau comme indisponible.
-                      </p>
-                      <Button
-                        onClick={async () => {
-                          await handleUnblockSlot()
-                          // 🔥 La modale se ferme automatiquement après déblocage
-                        }}
-                        variant="outline"
-                        className="w-full border-emerald-500 text-emerald-600 hover:bg-emerald-50 font-semibold"
-                      >
-                        Rendre disponible
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => setSelectedCell(null)}
-                        className="w-full"
-                      >
-                        Annuler
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
           </div>
         )}
 
@@ -961,6 +861,159 @@ export default function AgendaPage() {
       )}
 
       <MyAvalability isOpen={availabilityModal} ownerId={user?.id} onClose={() => setAvailabilityModal(!availabilityModal)}/>
+
+      {selectedCell && (
+        <div className="fixed inset-0 z-40">
+          <div className="absolute inset-0 bg-slate-900/30" onClick={() => setSelectedCell(null)} />
+          <aside className="absolute right-0 top-0 h-full w-full max-w-md bg-white shadow-xl flex flex-col">
+            <div className="bg-slate-900 text-white p-6 flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Détails de la visite</h3>
+              <button onClick={() => setSelectedCell(null)} className="h-8 w-8 rounded-full bg-white/10 flex items-center justify-center">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-auto flex-1 space-y-6">
+              {selectedCell.type === 'reserved' && selectedCell.reservation ? (
+                <>
+                  <div className="flex items-center gap-4 bg-amber-50 border border-amber-100 rounded-xl p-4 text-amber-700">
+                    <div className="h-10 w-10 rounded-lg bg-amber-100 flex items-center justify-center">
+                      <Check className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="font-semibold">
+                        {selectedCell.reservation.status === 'pending' ? 'En attente' : 'Confirmé'}
+                      </p>
+                      <p className="text-xs">ID: #{selectedCell.reservation.id.slice(-5).toUpperCase()}</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-xs uppercase text-slate-400">Visiteur</p>
+                    <div className="flex items-center gap-3">
+                      <div className="h-14 w-14 rounded-full bg-slate-100 flex items-center justify-center text-xl font-semibold text-slate-600">
+                        {(selectedCell.reservation.client?.name || 'C').charAt(0)}
+                      </div>
+                      <div>
+                        <p className="font-semibold text-slate-900">{selectedCell.reservation.client?.name || 'Client'}</p>
+                        <div className="flex flex-col gap-1 text-sm text-slate-500">
+                          {selectedCell.reservation.client?.phone && (
+                            <span className="flex items-center gap-2">
+                              <Phone className="w-4 h-4" /> {selectedCell.reservation.client.phone}
+                            </span>
+                          )}
+                          {selectedCell.reservation.client?.email && (
+                            <span className="flex items-center gap-2">
+                              <User className="w-4 h-4" /> {selectedCell.reservation.client.email}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-xs uppercase text-slate-400">Bien concerné</p>
+                    <div className="flex items-center gap-3 bg-slate-50 rounded-xl p-4">
+                      <img
+                        src={selectedCell.reservation.property?.images?.[0] || "/placeholder-property.jpg"}
+                        alt="Bien"
+                        className="w-16 h-16 rounded-xl object-cover"
+                      />
+                      <div>
+                        <p className="font-semibold text-slate-900">
+                          {selectedCell.reservation.property?.title || 'Bien'}
+                        </p>
+                        <p className="text-sm text-slate-500">
+                          {[selectedCell.reservation.property?.neighborhood, selectedCell.reservation.property?.city]
+                            .filter(Boolean)
+                            .join(', ') || '—'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <p className="text-xs uppercase text-slate-400">Détails de la visite</p>
+                    <div className="flex items-center justify-between border-b border-slate-200 pb-3 text-sm">
+                      <span className="text-slate-500">Date</span>
+                      <span className="text-slate-900 font-semibold">
+                        {new Date(selectedCell.date).toLocaleDateString('fr-FR', {
+                          weekday: 'long',
+                          day: 'numeric',
+                          month: 'long',
+                          year: 'numeric'
+                        })}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between border-b border-slate-200 pb-3 text-sm">
+                      <span className="text-slate-500">Heure</span>
+                      <span className="text-slate-900 font-semibold">{selectedCell.hour}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-slate-500">Type</span>
+                      <span className="text-slate-900 font-semibold">
+                        {selectedCell.reservation.visitType === 'in_person' ? 'Présentiel' : 'À distance'}
+                      </span>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="space-y-4">
+                  <div className="mb-2">
+                    <p className="text-sm font-semibold text-slate-500 mb-1">Date et heure</p>
+                    <p className="text-[#1a2b4b] font-bold text-lg">
+                      Le {new Date(selectedCell.date).toLocaleDateString('fr-FR')} à {selectedCell.hour}{' '}
+                      jusqu&apos;à {selectedCell.endHour}
+                    </p>
+                  </div>
+
+                  {selectedCell.type === 'available' && (
+                    <>
+                      <p className="text-sm text-slate-600">
+                        Ce créneau est actuellement disponible. Souhaitez-vous le bloquer exceptionnellement ?
+                      </p>
+                      <Button
+                        onClick={async () => {
+                          await handleBlockSlot()
+                        }}
+                        className="w-full bg-rose-500 hover:bg-rose-600 text-white font-bold"
+                      >
+                        Bloquer ce créneau
+                      </Button>
+                    </>
+                  )}
+
+                  {selectedCell.type === 'blocked' && (
+                    <>
+                      <p className="text-sm text-slate-600">
+                        Vous avez défini ce créneau comme indisponible.
+                      </p>
+                      <Button
+                        onClick={async () => {
+                          await handleUnblockSlot()
+                        }}
+                        variant="outline"
+                        className="w-full border-emerald-500 text-emerald-600 hover:bg-emerald-50 font-semibold"
+                      >
+                        Rendre disponible
+                      </Button>
+                    </>
+                  )}
+
+                  <Button
+                    variant="outline"
+                    onClick={() => setSelectedCell(null)}
+                    className="w-full"
+                  >
+                    Annuler
+                  </Button>
+                </div>
+              )}
+            </div>
+          </aside>
+        </div>
+      )}
     </div>
   )
 }

@@ -65,6 +65,9 @@ model Property {
   rooms             Int     // Nombre total de pièces
   bedrooms          Int?    // Nombre de chambres
   bathrooms         Int?    // Nombre de salles de bain
+  commission        Float?
+  depositMonths     Int?
+  advanceMonths     Int?
 
   images            String[]
   amenities         String[] // Amenity : pool | elevator | parking | gym | garden | security | water | borehole
@@ -149,7 +152,9 @@ model Reservation { // réservations de visite
   visitType   String @default("in_person") // ReservationVisitType : in_person | remote
   visitContext String? // contexte de la visite (zoom, whatsapp, etc.)
 
-  status      String @default("pending") // ReservationStatus : pending | confirmed | cancelled
+  status      String @default("pending") // ReservationStatus : pending | confirmed | cancelled | done | missed
+  cancelReason String?
+  cancelledBy  String?
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -242,5 +247,3 @@ model Tenant {
   updatedAt DateTime @updatedAt
 
 }
-
-

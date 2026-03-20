@@ -13,6 +13,8 @@ import {
   Tag,
   Sofa,
   Eye,
+  Users,
+  Video,
   Edit,
   X,
   Check,
@@ -31,6 +33,7 @@ import {
 } from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import LanguageDropdown from '@/components/LanguageDropdown';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useDictionary } from '@/hooks/useDictionary';
@@ -72,7 +75,7 @@ export default function Dashboard() {
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     type: '',
-    offerType: 'rent',
+    offerType: '',
     priceType: 'monthly',
     title: '',
     description: '',
@@ -86,6 +89,10 @@ export default function Dashboard() {
     amenities: [] as string[],
     price: '',
     visitFee: '',
+    commission: '',
+    depositMonths: '',
+    advanceMonths: '',
+    visitType: 'both',
   });
 
 const stats = [
@@ -97,13 +104,16 @@ const stats = [
 
 const typeLabels: Record<string, string> = {
   apartment: 'Appartement',
-  villa: 'Villa',
-  studio: 'Studio',
+  building: 'Immeuble',
   duplex: 'Duplex',
-  office: 'Bureau',
-  land: 'Terrain',
+  event_hall: 'Salle de fête',
   house: 'Maison',
+  land: 'Terrain',
+  office: 'Bureau',
+  room: 'Chambre',
   shop: 'Boutique',
+  studio: 'Studio',
+  villa: 'Villa',
 };
 
 const offerLabels: Record<string, { label: string; className: string }> = {
@@ -128,6 +138,10 @@ const offerLabels: Record<string, { label: string; className: string }> = {
     { label: 'Gardien', value: 'security' },
     { label: 'Piscine', value: 'pool' },
     { label: 'Service nettoyage', value: 'cleaning' },
+    { label: 'Conciergerie', value: 'concierge' },
+    { label: 'Groupe électrogène', value: 'generator' },
+    { label: 'Vidéo surveillance', value: 'surveillance' },
+    { label: 'Jardin', value: 'garden' },
   ];
 
   const canNext = useMemo(() => {
@@ -141,6 +155,19 @@ const offerLabels: Record<string, { label: string; className: string }> = {
     return true;
   }, [step, form, images, imagePreviews]);
 
+  const sortedCountries = useMemo(
+    () => [...countries].sort((a, b) => a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' })),
+    [countries]
+  );
+  const sortedCities = useMemo(
+    () => [...cities].sort((a, b) => a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' })),
+    [cities]
+  );
+  const sortedDistricts = useMemo(
+    () => [...districts].sort((a, b) => a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' })),
+    [districts]
+  );
+
   const resetForm = () => {
     setStep(1);
     setImages(Array(5).fill(null));
@@ -148,7 +175,7 @@ const offerLabels: Record<string, { label: string; className: string }> = {
     setActiveImageSlot(0);
     setForm({
       type: '',
-      offerType: 'rent',
+      offerType: '',
       priceType: 'monthly',
       title: '',
       description: '',
@@ -162,6 +189,10 @@ const offerLabels: Record<string, { label: string; className: string }> = {
       amenities: [] as string[],
       price: '',
       visitFee: '',
+      commission: '',
+      depositMonths: '',
+      advanceMonths: '',
+      visitType: 'both',
     });
   };
 
@@ -200,7 +231,6 @@ const offerLabels: Record<string, { label: string; className: string }> = {
     } else {
       setCities([]);
     }
-    setForm((prev) => ({ ...prev, cityId: '', districtId: '' }));
   }, [form.countryId]);
 
   useEffect(() => {
@@ -209,7 +239,6 @@ const offerLabels: Record<string, { label: string; className: string }> = {
     } else {
       setDistricts([]);
     }
-    setForm((prev) => ({ ...prev, districtId: '' }));
   }, [form.cityId]);
 
   useEffect(() => {
@@ -284,8 +313,11 @@ const offerLabels: Record<string, { label: string; className: string }> = {
       formData.append('surface', form.surface);
       formData.append('rooms', form.rooms);
       formData.append('bathrooms', form.bathrooms);
-      formData.append('visitType', 'both');
+      formData.append('visitType', form.visitType);
       if (form.visitFee) formData.append('visitFee', form.visitFee);
+      if (form.commission) formData.append('commission', form.commission);
+      if (form.depositMonths) formData.append('depositMonths', form.depositMonths);
+      if (form.advanceMonths) formData.append('advanceMonths', form.advanceMonths);
 
       form.amenities.forEach((amenity) => {
         formData.append('amenities', amenity);
@@ -334,7 +366,7 @@ const offerLabels: Record<string, { label: string; className: string }> = {
       params.set('page', String(page));
       params.set('limit', String(limit));
       if (searchQuery) params.set('search', searchQuery);
-      if (typeFilter !== 'all') params.set('type', typeFilter);
+      if (typeFilter !== 'all') params.set('offerType', typeFilter);
       if (statusFilter !== 'all') params.set('status', statusFilter);
 
       const res = await fetchApi(`/api/biens?${params.toString()}`);
@@ -388,6 +420,10 @@ const offerLabels: Record<string, { label: string; className: string }> = {
       amenities: property.amenities || [],
       price: property.price?.toString() || '',
       visitFee: property.visitFee?.toString() || '',
+      commission: property.commission?.toString() || '',
+      depositMonths: property.depositMonths?.toString() || '',
+      advanceMonths: property.advanceMonths?.toString() || '',
+      visitType: property.visitType || 'both',
     });
 
     // Pré-remplissage ville/quartier
@@ -497,14 +533,13 @@ const offerLabels: Record<string, { label: string; className: string }> = {
                 }}
               >
                 <SelectTrigger className="w-44 bg-white border-slate-200">
-                  <SelectValue placeholder={dictionary.dashboard?.type1 || "Tous les types"} />
+                  <SelectValue placeholder="Tous les types d'offre" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">{dictionary.dashboard?.type1 || "Tous les types"}</SelectItem>
-                  <SelectItem value="apartment">{dictionary.dashboard?.type2 || "Appartement"}</SelectItem>
-                  <SelectItem value="villa">{dictionary.dashboard?.type3 || "Villa"}</SelectItem>
-                  <SelectItem value="studio">{dictionary.dashboard?.type4 || "Studio"}</SelectItem>
-                  <SelectItem value="office">{dictionary.dashboard?.type5 || "Bureau"}</SelectItem>
+                  <SelectItem value="all">Tous les types d'offre</SelectItem>
+                  <SelectItem value="rent">Location</SelectItem>
+                  <SelectItem value="sale">Vente</SelectItem>
+                  <SelectItem value="furnished">Meublé</SelectItem>
                 </SelectContent>
               </Select>
               <Select
@@ -536,7 +571,8 @@ const offerLabels: Record<string, { label: string; className: string }> = {
             {properties.map((property) => {
               const offer = offerLabels[property.offerType] ?? offerLabels.rent;
               return (
-                <Card key={property.id} className="border-slate-200 overflow-hidden">
+                <Link key={property.id} href={`/property/${property.id}`} className="block">
+                  <Card className="border-slate-200 overflow-hidden hover:shadow-md transition-shadow">
                   <div className="relative">
                     <img
                       src={property.images[0]}
@@ -550,7 +586,16 @@ const offerLabels: Record<string, { label: string; className: string }> = {
                       </Badge>
                     </div>
                     <div className="absolute top-3 right-3 flex items-center gap-2">
-                      <Button size="icon" variant="secondary" className="h-8 w-8 bg-white/90 hover:bg-white" onClick={() => openEditModal(property)}>
+                      <Button
+                        size="icon"
+                        variant="secondary"
+                        className="h-8 w-8 bg-white/90 hover:bg-white"
+                        onClick={(event) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          openEditModal(property);
+                        }}
+                      >
                         <Edit className="w-4 h-4 text-slate-700" />
                       </Button>
                     </div>
@@ -571,7 +616,7 @@ const offerLabels: Record<string, { label: string; className: string }> = {
                     <div className="flex items-center justify-between text-xs text-slate-600">
                       <div className="flex items-center gap-1">
                         <BedDouble className="w-4 h-4" />
-                        <span>{property.bedrooms ?? 1}</span>
+                        <span>{property.rooms ?? property.bedrooms ?? 1}</span>
                       </div>
                       <div className="flex items-center gap-1">
                         <Bath className="w-4 h-4" />
@@ -609,7 +654,8 @@ const offerLabels: Record<string, { label: string; className: string }> = {
                       </div>
                     </div>
                   </CardContent>
-                </Card>
+                  </Card>
+                </Link>
               )
             })}
           </div>
@@ -703,11 +749,16 @@ const offerLabels: Record<string, { label: string; className: string }> = {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="apartment">Appartement</SelectItem>
-                    <SelectItem value="villa">Villa</SelectItem>
-                    <SelectItem value="studio">Studio</SelectItem>
+                    <SelectItem value="shop">Boutique</SelectItem>
+                    <SelectItem value="room">Chambre</SelectItem>
                     <SelectItem value="duplex">Duplex</SelectItem>
+                    <SelectItem value="building">Immeuble</SelectItem>
+                    <SelectItem value="house">Maison</SelectItem>
                     <SelectItem value="office">Bureau</SelectItem>
+                    <SelectItem value="event_hall">Salle de fête</SelectItem>
+                    <SelectItem value="studio">Studio</SelectItem>
                     <SelectItem value="land">Terrain</SelectItem>
+                    <SelectItem value="villa">Villa</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -763,12 +814,22 @@ const offerLabels: Record<string, { label: string; className: string }> = {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div>
                 <label className="text-sm font-medium text-slate-700">Pays *</label>
-                <Select value={form.countryId} onValueChange={(value) => setForm((prev) => ({ ...prev, countryId: value }))}>
+                <Select
+                  value={form.countryId}
+                  onValueChange={(value) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      countryId: value,
+                      cityId: '',
+                      districtId: '',
+                    }))
+                  }
+                >
                   <SelectTrigger className="mt-2 bg-white border-slate-200">
                     <SelectValue placeholder="Sélectionner" />
                   </SelectTrigger>
                   <SelectContent>
-                    {countries.map((country) => (
+                    {sortedCountries.map((country) => (
                       <SelectItem key={country.id} value={country.id}>
                         {country.name}
                       </SelectItem>
@@ -778,12 +839,21 @@ const offerLabels: Record<string, { label: string; className: string }> = {
               </div>
               <div>
                 <label className="text-sm font-medium text-slate-700">Ville *</label>
-                <Select value={form.cityId} onValueChange={(value) => setForm((prev) => ({ ...prev, cityId: value }))}>
+                <Select
+                  value={form.cityId}
+                  onValueChange={(value) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      cityId: value,
+                      districtId: '',
+                    }))
+                  }
+                >
                   <SelectTrigger className="mt-2 bg-white border-slate-200">
                     <SelectValue placeholder="Sélectionner" />
                   </SelectTrigger>
                   <SelectContent>
-                    {cities.map((city) => (
+                    {sortedCities.map((city) => (
                       <SelectItem key={city.id} value={city.id}>
                         {city.name}
                       </SelectItem>
@@ -800,24 +870,26 @@ const offerLabels: Record<string, { label: string; className: string }> = {
                   <SelectValue placeholder="D'abord sélectionner une ville" />
                 </SelectTrigger>
                 <SelectContent>
-                  {districts.map((district) => (
+                  {sortedDistricts.map((district) => (
                     <SelectItem key={district.id} value={district.id}>
                       {district.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-slate-400 mt-2">Ce titre apparaîtra dans les résultats de recherche</p>
             </div>
 
             <div>
               <label className="text-sm font-medium text-slate-700">Adresse exacte *</label>
               <Input
                 className="mt-2"
-                placeholder="Rue, numéro, immeuble, étage..."
+                placeholder="Décrivez l'emplacement exacte du bien"
                 value={form.address}
                 onChange={(e) => setForm((prev) => ({ ...prev, address: e.target.value }))}
               />
+              <p className="text-xs text-slate-400 mt-2">
+                Cette adresse ne sera pas affichée, elle sera envoyée au visiteur après la réservation.
+              </p>
             </div>
           </div>
         )}
@@ -841,18 +913,14 @@ const offerLabels: Record<string, { label: string; className: string }> = {
               </div>
               <div>
                 <label className="text-sm font-medium text-slate-700">Nombre de pièces *</label>
-                <Select value={form.rooms} onValueChange={(value) => setForm((prev) => ({ ...prev, rooms: value }))}>
-                  <SelectTrigger className="mt-2 bg-white border-slate-200">
-                    <SelectValue placeholder="3 pièces" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {[1, 2, 3, 4, 5, 6].map((n) => (
-                      <SelectItem key={n} value={`${n}`}>
-                        {n} pièces
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Input
+                  type="number"
+                  min={0}
+                  className="mt-2"
+                  placeholder="3"
+                  value={form.rooms}
+                  onChange={(e) => setForm((prev) => ({ ...prev, rooms: e.target.value }))}
+                />
               </div>
               <div>
                 <label className="text-sm font-medium text-slate-700">Salle de bain *</label>
@@ -905,6 +973,29 @@ const offerLabels: Record<string, { label: string; className: string }> = {
             </div>
 
             <div>
+              <label className="text-sm font-medium text-slate-700">Type de visite *</label>
+              <div className="mt-2 grid grid-cols-3 gap-3">
+                {[
+                  { value: 'in_person', label: 'En présentiel', icon: MapPin },
+                  { value: 'remote', label: 'À distance', icon: Video },
+                  { value: 'both', label: 'Les deux', icon: Users },
+                ].map((visit) => (
+                  <button
+                    key={visit.value}
+                    className={`border rounded-xl p-4 text-center ${
+                      form.visitType === visit.value ? 'border-slate-900 bg-slate-100' : 'border-slate-200'
+                    }`}
+                    onClick={() => setForm((prev) => ({ ...prev, visitType: visit.value }))}
+                    type="button"
+                  >
+                    <visit.icon className="w-5 h-5 mx-auto text-slate-700" />
+                    <p className="text-sm font-medium mt-2">{visit.label}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
               <label className="text-sm font-medium text-slate-700">Photos du bien * (1 à 5 photos)</label>
               <input
                 id="property-images"
@@ -948,7 +1039,6 @@ const offerLabels: Record<string, { label: string; className: string }> = {
                   value={form.price}
                   onChange={(e) => setForm((prev) => ({ ...prev, price: e.target.value }))}
                 />
-                <p className="text-xs text-slate-400 mt-2">prix total pour la vente</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-slate-700">Frais de visite</label>
@@ -958,9 +1048,6 @@ const offerLabels: Record<string, { label: string; className: string }> = {
                   value={form.visitFee}
                   onChange={(e) => setForm((prev) => ({ ...prev, visitFee: e.target.value }))}
                 />
-                <p className="text-xs text-slate-400 mt-2">
-                  Les frais de visite sont payés par le visiteur avant confirmation
-                </p>
               </div>
             </div>
 
@@ -982,6 +1069,46 @@ const offerLabels: Record<string, { label: string; className: string }> = {
                 </Select>
               </div>
             )}
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div>
+                <label className="text-sm font-medium text-slate-700">Commission</label>
+                <Input
+                  type="number"
+                  min={0}
+                  className="mt-2"
+                  placeholder="0"
+                  value={form.commission}
+                  onChange={(e) => setForm((prev) => ({ ...prev, commission: e.target.value }))}
+                />
+              </div>
+              {(form.offerType === 'rent' || form.offerType === 'furnished') && (
+                <>
+                  <div>
+                    <label className="text-sm font-medium text-slate-700">Mois de caution</label>
+                    <Input
+                      type="number"
+                      min={0}
+                      className="mt-2"
+                      placeholder="0"
+                      value={form.depositMonths}
+                      onChange={(e) => setForm((prev) => ({ ...prev, depositMonths: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-slate-700">Mois d'avance</label>
+                    <Input
+                      type="number"
+                      min={0}
+                      className="mt-2"
+                      placeholder="0"
+                      value={form.advanceMonths}
+                      onChange={(e) => setForm((prev) => ({ ...prev, advanceMonths: e.target.value }))}
+                    />
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         )}
 
@@ -1019,10 +1146,14 @@ const offerLabels: Record<string, { label: string; className: string }> = {
 
         <div className="mt-8 flex items-center justify-between">
           <Button variant="ghost" onClick={() => {
+            if (step > 1) {
+              setStep(step - 1);
+              return;
+            }
             setIsCreateOpen(false);
             resetForm();
           }}>
-            Annuler
+            Précédent
           </Button>
           {step < 5 && (
             <Button

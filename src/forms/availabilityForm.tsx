@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { X, Clock, Ban, Calendar, AlertCircle, Trash2, Edit2 } from "lucide-react";
 import { agendaService } from "@/services/agendaService";
+import { fetchApi } from "@/services/apiConfig";
 import { toast } from "sonner";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -12,9 +13,11 @@ type DayOfWeek = "monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "s
 interface AvailabilitySlot {
   id?: string;
   day: DayOfWeek;
+  date?: string;
   startTime: string;
   endTime: string;
   visitDuration: number; // en minutes
+  replicateAllDays?: boolean;
 }
 
 interface ExceptionData {
@@ -50,16 +53,21 @@ const EXCEPTION_REASONS = [
 // ─── Formulaire d'ajout de créneau ───────────────────────────────────────────
 
 function AddSlotForm({
-  onAdd,
+  onSave,
   onCancel,
+  initial,
+  submitLabel = "Ajouter le créneau",
 }: {
-  onAdd: (slot: AvailabilitySlot) => void;
+  onSave: (slot: AvailabilitySlot) => void;
   onCancel: () => void;
+  initial?: AvailabilitySlot;
+  submitLabel?: string;
 }) {
-  const [selectedDay, setSelectedDay] = useState<DayOfWeek>("monday");
-  const [startTime, setStartTime] = useState("09:00");
-  const [endTime, setEndTime] = useState("12:00");
-  const [visitDuration, setVisitDuration] = useState(30);
+  const [selectedDay, setSelectedDay] = useState<DayOfWeek>(initial?.day || "monday");
+  const [startTime, setStartTime] = useState(initial?.startTime || "09:00");
+  const [endTime, setEndTime] = useState(initial?.endTime || "12:00");
+  const [visitDuration, setVisitDuration] = useState(initial?.visitDuration || 30);
+  const [replicateAllDays, setReplicateAllDays] = useState<boolean>(initial?.replicateAllDays || false);
 
   const handleSubmit = () => {
     // Validation
@@ -68,104 +76,135 @@ function AddSlotForm({
       return;
     }
 
-    onAdd({
+    onSave({
+      id: initial?.id,
       day: selectedDay,
+      date: initial?.date,
       startTime,
       endTime,
       visitDuration,
+      replicateAllDays,
     });
   };
 
   return (
-    <div className="bg-slate-100 rounded-xl p-6 space-y-5 border-2 border-slate-200">
-      {/* Info message */}
-      <div className="flex items-start gap-3 bg-blue-50 border border-blue-100 rounded-lg p-4">
-        <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-        <p className="text-sm text-blue-900">
-          Vous n&apos;avez encore aucun créneau défini pour ce jour. Ajoutez votre première plage horaire pour commencer à recevoir des demandes de visite.
-        </p>
-      </div>
-
-      {/* Jour de la semaine */}
-      <div className="space-y-2">
-        <label className="block text-sm font-bold text-slate-700">Jour de la semaine</label>
-        <select
-          value={selectedDay}
-          onChange={(e) => setSelectedDay(e.target.value as DayOfWeek)}
-          className="w-full px-4 py-3 rounded-lg border-2 border-slate-200 bg-white text-slate-900 font-medium focus:outline-none focus:border-[#1a2b4b] focus:ring-2 focus:ring-[#1a2b4b]/20"
-        >
-          {DAYS_MAP.map((day) => (
-            <option key={day.value} value={day.value}>
-              {day.label}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Heures */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <label className="block text-sm font-bold text-slate-700">Heure de début</label>
-          <div className="relative">
-            <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-            <input
-              type="time"
-              value={startTime}
-              onChange={(e) => setStartTime(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 rounded-lg border-2 border-slate-200 bg-white text-slate-900 font-medium focus:outline-none focus:border-[#1a2b4b] focus:ring-2 focus:ring-[#1a2b4b]/20"
-            />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
+        {/* Header */}
+        <div className="bg-[#1a2b4b] text-white p-6 flex items-start justify-between">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <Clock className="w-5 h-5" />
+              <h3 className="text-lg font-bold">{initial?.id ? "Modifier un créneau" : "Ajouter un créneau"}</h3>
+            </div>
+            <p className="text-sm text-blue-100">Définir une plage horaire disponible</p>
           </div>
+          <button
+            onClick={onCancel}
+            className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
 
-        <div className="space-y-2">
-          <label className="block text-sm font-bold text-slate-700">Heure de fin</label>
-          <div className="relative">
-            <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-            <input
-              type="time"
-              value={endTime}
-              onChange={(e) => setEndTime(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 rounded-lg border-2 border-slate-200 bg-white text-slate-900 font-medium focus:outline-none focus:border-[#1a2b4b] focus:ring-2 focus:ring-[#1a2b4b]/20"
-            />
+        {/* Body */}
+        <div className="p-6 space-y-5">
+          {/* Info message */}
+          <div className="flex items-start gap-3 bg-blue-50 border border-blue-100 rounded-lg p-4">
+            <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+            <p className="text-sm text-blue-900">
+              Vous n&apos;avez encore aucun créneau défini pour ce jour. Ajoutez votre première plage horaire pour commencer à recevoir des demandes de visite.
+            </p>
           </div>
-        </div>
-      </div>
 
-      {/* Durée d'une visite */}
-      <div className="space-y-2">
-        <label className="block text-sm font-bold text-slate-700">Durée d&apos;une visite</label>
-        <div className="grid grid-cols-3 gap-2">
-          {DURATION_OPTIONS.map((duration) => (
-            <button
-              key={duration}
-              type="button"
-              onClick={() => setVisitDuration(duration)}
-              className={`py-3 px-4 rounded-lg font-semibold text-sm transition-all border-2 ${
-                visitDuration === duration
-                  ? "bg-[#1a2b4b] border-[#1a2b4b] text-white shadow-md"
-                  : "bg-white border-slate-200 text-slate-700 hover:border-slate-300"
-              }`}
+          {/* Jour de la semaine */}
+          <div className="space-y-2">
+            <label className="block text-sm font-bold text-slate-700">Jour de la semaine</label>
+            <select
+              value={selectedDay}
+              onChange={(e) => setSelectedDay(e.target.value as DayOfWeek)}
+              className="w-full px-4 py-3 rounded-lg border-2 border-slate-200 bg-white text-slate-900 font-medium focus:outline-none focus:border-[#1a2b4b] focus:ring-2 focus:ring-[#1a2b4b]/20"
             >
-              {duration} minutes
-            </button>
-          ))}
-        </div>
-      </div>
+              {DAYS_MAP.map((day) => (
+                <option key={day.value} value={day.value}>
+                  {day.label}
+                </option>
+              ))}
+            </select>
+          </div>
 
-      {/* Actions */}
-      <div className="flex justify-end gap-3 pt-2">
-        <button
-          onClick={onCancel}
-          className="px-5 py-2.5 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-200/70 transition-colors"
-        >
-          Annuler
-        </button>
-        <button
-          onClick={handleSubmit}
-          className="px-6 py-2.5 rounded-lg text-sm font-bold bg-[#1a2b4b] text-white hover:bg-[#0f1a2e] transition-all shadow-sm hover:shadow"
-        >
-          Ajouter le créneau
-        </button>
+          {/* Heures */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="block text-sm font-bold text-slate-700">Heure de début</label>
+              <div className="relative">
+                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <input
+                  type="time"
+                  value={startTime}
+                  onChange={(e) => setStartTime(e.target.value)}
+                  className="w-full pl-11 pr-4 py-3 rounded-lg border-2 border-slate-200 bg-white text-slate-900 font-medium focus:outline-none focus:border-[#1a2b4b] focus:ring-2 focus:ring-[#1a2b4b]/20"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-sm font-bold text-slate-700">Heure de fin</label>
+              <div className="relative">
+                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <input
+                  type="time"
+                  value={endTime}
+                  onChange={(e) => setEndTime(e.target.value)}
+                  className="w-full pl-11 pr-4 py-3 rounded-lg border-2 border-slate-200 bg-white text-slate-900 font-medium focus:outline-none focus:border-[#1a2b4b] focus:ring-2 focus:ring-[#1a2b4b]/20"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Durée d'une visite */}
+          <div className="space-y-2">
+            <label className="block text-sm font-bold text-slate-700">Durée d&apos;une visite</label>
+            <select
+              value={visitDuration}
+              onChange={(e) => setVisitDuration(Number(e.target.value))}
+              className="w-full px-4 py-3 rounded-lg border-2 border-slate-200 bg-white text-slate-900 font-medium focus:outline-none focus:border-[#1a2b4b] focus:ring-2 focus:ring-[#1a2b4b]/20"
+            >
+              {DURATION_OPTIONS.map((duration) => (
+                <option key={duration} value={duration}>
+                  {duration} minutes
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Répliquer */}
+          <label className="flex items-center gap-3 text-sm font-semibold text-slate-700 bg-white border-2 border-slate-200 rounded-lg px-4 py-3">
+            <input
+              type="checkbox"
+              checked={replicateAllDays}
+              onChange={(e) => setReplicateAllDays(e.target.checked)}
+              className="h-4 w-4 rounded border-slate-300 text-[#1a2b4b] focus:ring-[#1a2b4b]"
+            />
+            Répliquer pour tous les jours
+          </label>
+        </div>
+
+        {/* Footer */}
+        <div className="p-5 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
+          <button
+            onClick={onCancel}
+            className="px-5 py-2.5 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-200/70 transition-colors"
+          >
+            Annuler
+          </button>
+          <button
+            onClick={handleSubmit}
+            className="px-6 py-2.5 rounded-lg text-sm font-bold bg-[#1a2b4b] text-white hover:bg-[#0f1a2e] transition-all shadow-sm hover:shadow"
+          >
+            {submitLabel}
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -174,17 +213,21 @@ function AddSlotForm({
 // ─── Formulaire d'exception ──────────────────────────────────────────────────
 
 function AddExceptionForm({
-  onAdd,
+  onSave,
   onCancel,
+  initial,
+  submitLabel = "Bloquer cette période",
 }: {
-  onAdd: (exception: ExceptionData) => void;
+  onSave: (exception: ExceptionData) => void;
   onCancel: () => void;
+  initial?: ExceptionData;
+  submitLabel?: string;
 }) {
-  const [exceptionType, setExceptionType] = useState<"full_day" | "specific_slots">("full_day");
-  const [selectedDate, setSelectedDate] = useState("");
-  const [startTime, setStartTime] = useState("09:00");
-  const [endTime, setEndTime] = useState("12:00");
-  const [reason, setReason] = useState("conges");
+  const [exceptionType, setExceptionType] = useState<"full_day" | "specific_slots">(initial?.type || "full_day");
+  const [selectedDate, setSelectedDate] = useState(initial?.date || "");
+  const [startTime, setStartTime] = useState(initial?.startTime || "09:00");
+  const [endTime, setEndTime] = useState(initial?.endTime || "12:00");
+  const [reason, setReason] = useState(initial?.reason || "conges");
 
   const handleSubmit = () => {
     if (!selectedDate) {
@@ -197,7 +240,8 @@ function AddExceptionForm({
       return;
     }
 
-    onAdd({
+    onSave({
+      id: initial?.id,
       date: selectedDate,
       type: exceptionType,
       startTime: exceptionType === "specific_slots" ? startTime : undefined,
@@ -382,7 +426,7 @@ function AddExceptionForm({
             onClick={handleSubmit}
             className="px-6 py-2.5 rounded-lg text-sm font-bold bg-rose-500 text-white hover:bg-rose-600 transition-all shadow-sm hover:shadow"
           >
-            Bloquer cette période
+            {submitLabel}
           </button>
         </div>
       </div>
@@ -406,7 +450,64 @@ export default function AvailabilityFormModal({
   const [exceptions, setExceptions] = useState<ExceptionData[]>([]);
   const [showSlotForm, setShowSlotForm] = useState(false);
   const [showExceptionForm, setShowExceptionForm] = useState(false);
+  const [editingSlot, setEditingSlot] = useState<AvailabilitySlot | null>(null);
+  const [editingException, setEditingException] = useState<ExceptionData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const loadData = async () => {
+      if (!ownerId || !isOpen) return;
+      setIsLoading(true);
+      try {
+        const [rulesResponse, excResponse] = await Promise.all([
+          agendaService.getAvailabilities({ ownerId, limit: 100 }),
+          fetchApi(`/api/agenda/exception?ownerId=${ownerId}&limit=100`, { method: "GET" }),
+        ]);
+
+        // Disponibilités
+        const rules = rulesResponse?.data?.rules || [];
+        const dayMap: DayOfWeek[] = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+        const mappedSlots: AvailabilitySlot[] = rules.map((rule: any) => {
+          const dateObj = new Date(rule.date);
+          const day = dayMap[dateObj.getDay()] || "monday";
+          return {
+            id: rule.id,
+            day,
+            date: dateObj.toISOString().split("T")[0],
+            startTime: rule.startTime,
+            endTime: rule.endTime,
+            visitDuration: 30,
+          };
+        });
+        setSlots(mappedSlots);
+
+        // Exceptions
+        const exceptionsList = excResponse?.data?.exceptions || excResponse?.data || [];
+        const mappedExceptions: ExceptionData[] = (Array.isArray(exceptionsList) ? exceptionsList : []).map((exc: any) => {
+          const baseDate = exc.date || exc.dateStart || "";
+          const dateStr =
+            typeof baseDate === "string"
+              ? baseDate.split("T")[0]
+              : new Date(baseDate).toISOString().split("T")[0];
+          return {
+            id: exc.id,
+            date: dateStr,
+            type: exc.startTime || exc.endTime ? "specific_slots" : "full_day",
+            startTime: exc.startTime,
+            endTime: exc.endTime,
+            reason: exc.reason,
+          };
+        });
+        setExceptions(mappedExceptions);
+      } catch (error) {
+        console.error("Erreur chargement disponibilités:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, [ownerId, isOpen]);
 
   // Grouper les créneaux par jour
   const groupedSlots = slots.reduce((acc, slot) => {
@@ -416,72 +517,140 @@ export default function AvailabilityFormModal({
     return acc;
   }, {} as Record<string, AvailabilitySlot[]>);
 
-  // Ajouter un créneau
-  const handleAddSlot = (newSlot: AvailabilitySlot) => {
-    setSlots((prev) => [...prev, { ...newSlot, id: Date.now().toString() }]);
-    setShowSlotForm(false);
-    toast.success("Créneau ajouté !");
+  const resolveDateForDay = (day: DayOfWeek) => {
+    const today = new Date();
+    const dayIndex = DAYS_MAP.findIndex((d) => d.value === day);
+    const currentIndex = today.getDay();
+    const daysUntilTarget = (dayIndex - currentIndex + 7) % 7 || 7;
+    const targetDate = new Date(today);
+    targetDate.setDate(today.getDate() + daysUntilTarget);
+    return targetDate.toISOString().split("T")[0];
+  };
+
+  // Ajouter ou modifier un créneau (dynamique)
+  const handleSaveSlot = async (newSlot: AvailabilitySlot) => {
+    try {
+      setIsLoading(true);
+      const dateStr = newSlot.date || resolveDateForDay(newSlot.day);
+
+      if (newSlot.id) {
+        await agendaService.updateAvailability(newSlot.id, {
+          date: dateStr,
+          startTime: newSlot.startTime,
+          endTime: newSlot.endTime,
+        });
+        setSlots((prev) =>
+          prev.map((slot) =>
+            slot.id === newSlot.id
+              ? { ...slot, ...newSlot, date: dateStr }
+              : slot
+          )
+        );
+        toast.success("Disponibilité mise à jour !");
+      } else {
+        const daysToCreate = newSlot.replicateAllDays
+          ? DAYS_MAP.map((d) => d.value)
+          : [newSlot.day];
+
+        const createdSlots: AvailabilitySlot[] = [];
+
+        for (const day of daysToCreate) {
+          const dayDate = resolveDateForDay(day);
+          const res = await agendaService.createAvailability({
+            date: dayDate,
+            startTime: newSlot.startTime,
+            endTime: newSlot.endTime,
+          });
+          const created = res?.data;
+          createdSlots.push({
+            ...newSlot,
+            id: created?.id || `temp-${Date.now()}-${day}`,
+            day,
+            date: dayDate,
+            replicateAllDays: false,
+          });
+        }
+
+        setSlots((prev) => [...prev, ...createdSlots]);
+        toast.success(
+          newSlot.replicateAllDays ? "Créneaux ajoutés pour tous les jours !" : "Créneau ajouté !"
+        );
+      }
+    } catch (error: any) {
+      toast.error(error?.message || "Erreur lors de l'enregistrement du créneau");
+    } finally {
+      setIsLoading(false);
+      setEditingSlot(null);
+      setShowSlotForm(false);
+    }
   };
 
   // Supprimer un créneau
-  const handleRemoveSlot = (id: string) => {
+  const handleRemoveSlot = async (id: string) => {
     setSlots((prev) => prev.filter((s) => s.id !== id));
+    if (id && !id.startsWith("temp-")) {
+      try {
+        await agendaService.deleteAvailability(id);
+      } catch (error) {
+        console.error("Erreur suppression disponibilité:", error);
+      }
+    }
     toast.success("Créneau supprimé");
   };
 
-  // Ajouter une exception
-  const handleAddException = (newException: ExceptionData) => {
-    setExceptions((prev) => [...prev, { ...newException, id: Date.now().toString() }]);
-    setShowExceptionForm(false);
-    toast.success("Exception ajoutée !");
+  // Ajouter ou modifier une exception (dynamique)
+  const handleSaveException = async (newException: ExceptionData) => {
+    try {
+      setIsLoading(true);
+      if (newException.id && !newException.id.startsWith("temp-")) {
+        await agendaService.updateException(newException.id, {
+          date: newException.date,
+          startTime: newException.type === "specific_slots" ? newException.startTime : undefined,
+          endTime: newException.type === "specific_slots" ? newException.endTime : undefined,
+          reason: newException.reason || "Indisponible",
+        });
+        setExceptions((prev) =>
+          prev.map((exc) => (exc.id === newException.id ? { ...exc, ...newException } : exc))
+        );
+        toast.success("Exception mise à jour !");
+      } else {
+        const res = await agendaService.createException({
+          date: newException.date,
+          startTime: newException.type === "specific_slots" ? newException.startTime : undefined,
+          endTime: newException.type === "specific_slots" ? newException.endTime : undefined,
+          reason: newException.reason || "Indisponible",
+        });
+        const created = res?.data;
+        setExceptions((prev) => [
+          ...prev,
+          { ...newException, id: created?.id || `temp-${Date.now()}` },
+        ]);
+        toast.success("Exception ajoutée !");
+      }
+    } catch (error: any) {
+      toast.error(error?.message || "Erreur lors de l'enregistrement de l'exception");
+    } finally {
+      setIsLoading(false);
+      setEditingException(null);
+      setShowExceptionForm(false);
+    }
   };
 
   // Supprimer une exception
-  const handleRemoveException = (id: string) => {
+  const handleRemoveException = async (id: string) => {
     setExceptions((prev) => prev.filter((e) => e.id !== id));
+    if (id && !id.startsWith("temp-")) {
+      try {
+        await agendaService.deleteException(id);
+      } catch (error) {
+        console.error("Erreur suppression exception:", error);
+      }
+    }
     toast.success("Exception supprimée");
   };
 
-  // Enregistrer toutes les disponibilités
-  const handleSave = async () => {
-    setIsLoading(true);
-
-    try {
-      // 1. Enregistrer tous les créneaux de disponibilité
-      for (const slot of slots) {
-        // Convertir le jour en date (ex: prochain lundi)
-        const today = new Date();
-        const dayIndex = DAYS_MAP.findIndex((d) => d.value === slot.day);
-        const daysUntilTarget = (dayIndex - today.getDay() + 7) % 7 || 7;
-        const targetDate = new Date(today);
-        targetDate.setDate(today.getDate() + daysUntilTarget);
-        const dateStr = targetDate.toISOString().split("T")[0];
-
-        await agendaService.createAvailability({
-          date: dateStr,
-          startTime: slot.startTime,
-          endTime: slot.endTime,
-        });
-      }
-
-      // 2. Enregistrer toutes les exceptions
-      for (const exception of exceptions) {
-        await agendaService.createException({
-          date: exception.date,
-          startTime: exception.type === "specific_slots" ? exception.startTime : undefined,
-          endTime: exception.type === "specific_slots" ? exception.endTime : undefined,
-          reason: exception.reason || "Indisponible",
-        });
-      }
-
-      toast.success("Disponibilités enregistrées avec succès !");
-      onClose?.();
-    } catch (error: any) {
-      console.error("Erreur lors de l'enregistrement:", error);
-      toast.error(error.message || "Erreur lors de l'enregistrement");
-    } finally {
-      setIsLoading(false);
-    }
+  const handleSave = () => {
+    onClose?.();
   };
 
   return (
@@ -529,7 +698,19 @@ export default function AvailabilityFormModal({
                     <div key={day} className="bg-white border-2 border-slate-200 rounded-xl p-4">
                       <div className="flex items-center justify-between mb-3">
                         <h4 className="font-bold text-slate-900">{day}</h4>
-                        <button className="text-sm font-semibold text-[#1a2b4b] hover:underline">
+                        <button
+                          className="text-sm font-semibold text-[#1a2b4b] hover:underline"
+                          onClick={() => {
+                            const dayValue = DAYS_MAP.find((d) => d.label === day)?.value || "monday";
+                            setEditingSlot({
+                              day: dayValue,
+                              startTime: "09:00",
+                              endTime: "12:00",
+                              visitDuration: 30,
+                            });
+                            setShowSlotForm(true);
+                          }}
+                        >
                           + Ajouter
                         </button>
                       </div>
@@ -549,8 +730,17 @@ export default function AvailabilityFormModal({
                               {slot.endTime}
                             </div>
                             <button
+                              onClick={() => {
+                                setEditingSlot(slot);
+                                setShowSlotForm(true);
+                              }}
+                              className="ml-auto p-1.5 text-slate-500 hover:bg-slate-200 rounded-md transition-colors"
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </button>
+                            <button
                               onClick={() => handleRemoveSlot(slot.id!)}
-                              className="ml-auto p-1.5 text-rose-500 hover:bg-rose-50 rounded-md transition-colors"
+                              className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-md transition-colors"
                             >
                               <X className="w-4 h-4" />
                             </button>
@@ -564,7 +754,15 @@ export default function AvailabilityFormModal({
 
               {/* Formulaire d'ajout ou bouton */}
               {showSlotForm ? (
-                <AddSlotForm onAdd={handleAddSlot} onCancel={() => setShowSlotForm(false)} />
+                <AddSlotForm
+                  onSave={handleSaveSlot}
+                  onCancel={() => {
+                    setShowSlotForm(false);
+                    setEditingSlot(null);
+                  }}
+                  initial={editingSlot || undefined}
+                  submitLabel={editingSlot ? "Mettre à jour" : "Ajouter le créneau"}
+                />
               ) : (
                 <button
                   onClick={() => setShowSlotForm(true)}
@@ -606,7 +804,13 @@ export default function AvailabilityFormModal({
                       {exc.reason && ` · ${exc.reason}`}
                     </div>
                   </div>
-                  <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors">
+                  <button
+                    onClick={() => {
+                      setEditingException(exc);
+                      setShowExceptionForm(true);
+                    }}
+                    className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
+                  >
                     <Edit2 className="w-4 h-4" />
                   </button>
                   <button
@@ -620,7 +824,10 @@ export default function AvailabilityFormModal({
 
               {/* Bouton d'ajout */}
               <button
-                onClick={() => setShowExceptionForm(true)}
+                onClick={() => {
+                  setEditingException(null);
+                  setShowExceptionForm(true);
+                }}
                 className="w-full py-4 border-2 border-dashed border-rose-200 rounded-xl text-rose-600 font-semibold hover:border-rose-400 hover:bg-rose-50 transition-all"
               >
                 + Ajouter une exception
@@ -638,10 +845,10 @@ export default function AvailabilityFormModal({
             </button>
             <button
               onClick={handleSave}
-              disabled={isLoading || (slots.length === 0 && exceptions.length === 0)}
+              disabled={isLoading}
               className="px-6 py-2.5 rounded-lg bg-[#1a2b4b] text-white font-bold hover:bg-[#0f1a2e] transition-all shadow-sm hover:shadow disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? "Enregistrement..." : "Enregistrer les modifications"}
+              {isLoading ? "Enregistrement..." : "Fermer"}
             </button>
           </div>
         </div>
@@ -649,7 +856,15 @@ export default function AvailabilityFormModal({
 
       {/* Modale d'exception */}
       {showExceptionForm && (
-        <AddExceptionForm onAdd={handleAddException} onCancel={() => setShowExceptionForm(false)} />
+        <AddExceptionForm
+          onSave={handleSaveException}
+          onCancel={() => {
+            setShowExceptionForm(false);
+            setEditingException(null);
+          }}
+          initial={editingException || undefined}
+          submitLabel={editingException ? "Mettre à jour" : "Bloquer cette période"}
+        />
       )}
     </>
   );
