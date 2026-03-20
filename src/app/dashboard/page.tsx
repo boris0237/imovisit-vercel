@@ -153,21 +153,21 @@ export default function DashboardOverviewPage() {
 
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const { user } = useAuth();
-  
-    useEffect(() => {
-      if (user) {
-        const createdAt = new Date(user.createdAt).getTime();
-        const updatedAt = new Date(user.updatedAt).getTime();
-        console.log(user)
-  
-        // Si updatedAt est égal à createdAt, le profil n'a jamais été mis à jour
-        // On ajoute une marge de 1000ms car parfois la DB enregistre avec un micro-décalage
-        if (createdAt==updatedAt) {
-          setShowUpdateModal(true);
-          console.log('role', user.role)
-        }
+
+  useEffect(() => {
+    if (user) {
+      const createdAt = new Date(user.createdAt).getTime();
+      const updatedAt = new Date(user.updatedAt).getTime();
+      console.log(user)
+
+      // Si updatedAt est égal à createdAt, le profil n'a jamais été mis à jour
+      // On ajoute une marge de 1000ms car parfois la DB enregistre avec un micro-décalage
+      if (createdAt == updatedAt) {
+        setShowUpdateModal(true);
+        console.log('role', user.role)
       }
-    }, [user]);
+    }
+  }, [user]);
   return (
     <>
       <header className="bg-slate-50 border-b border-slate-200">
@@ -360,17 +360,17 @@ export default function DashboardOverviewPage() {
         </div>
       </div>
 
-      <Modal 
-        isOpen={showUpdateModal} 
+      <Modal
+        isOpen={showUpdateModal}
         onClose={() => setShowUpdateModal(false)}
         title="Finalisez votre profil pour une meilleure expérience"
-        size="full"  
-        rounded={false}     
+        size="full"
+        rounded={false}
         locked={false}
-        showBlur={true} 
-        closeOnClickOutside={false}         
+        showBlur={true}
+        closeOnClickOutside={false}
       >
-        <UpdateProfileForm onClose={() => setShowUpdateModal(false)} /> 
+        <UpdateProfileForm onClose={() => setShowUpdateModal(false)} />
       </Modal>
     </>
   )

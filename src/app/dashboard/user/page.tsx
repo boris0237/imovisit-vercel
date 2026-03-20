@@ -149,6 +149,7 @@ const offerLabels: Record<string, { label: string; className: string }> = {
     setForm({
       type: '',
       offerType: 'rent',
+      priceType: 'monthly',
       title: '',
       description: '',
       countryId: '',
@@ -158,7 +159,7 @@ const offerLabels: Record<string, { label: string; className: string }> = {
       surface: '',
       rooms: '',
       bathrooms: '',
-      amenities: [],
+      amenities: [] as string[],
       price: '',
       visitFee: '',
     });

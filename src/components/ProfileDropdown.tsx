@@ -54,8 +54,8 @@ export default function ProfileDropdown({ onOpenUpdateProfile, isOpen, setIsOpen
     const initials = user?.name
         ? user.name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)
         : "??";
-    const name = user?.name || dictionary?.defaultName || "utilisateur";
-    const role = user?.role || dictionary?.defaultRole || "pas de rôle";
+    const name = user?.name || dictionary.profil?.defaultName || "utilisateur";
+    const role = user?.role || dictionary.profil?.defaultRole || "pas de rôle";
 
 
     return (

@@ -1,4 +1,4 @@
-export interface Property {
+export interface PropertyData {
   id: string;
   title: string;
   description: string;
@@ -14,7 +14,7 @@ export interface Property {
   rooms: number;
   bedrooms?: number;
   bathrooms?: number;
-  images: string[];
+  images: File[];
   amenities: string[];
   visitType: 'in-person' | 'remote' | 'both';
   visitFee: number;
@@ -26,6 +26,32 @@ export interface Property {
   createdAt: string;
   views: number;
   visitsCount: number;
+}
+
+export interface PropertyFormData{
+  country: any;
+  district: any;
+  address: any;
+  price: any;
+  data: string;
+  updateData: string;
+  next: boolean;
+  prev: boolean;
+  title: string;
+  offerType: 'location' | 'meuble' | 'vente';
+  description: string;
+  type: string;
+  priceType : "vente" | "location_mensuelle" | "locaation_journalière";
+  city: string;
+  neighborhood: string;
+  bedrooms: number;
+  visitType: "gratuit" | "payant";
+  isAvailable: boolean;
+  surface: number;
+  rooms: number;
+  bathrooms: number;
+  amenities: string[];
+  images: File[];
 }
 
 export interface User {
@@ -71,4 +97,28 @@ export interface Amenity {
   id: string;
   name: string;
   icon: string;
+}
+
+export interface StepProps {
+  data: PropertyFormData
+  updateField: (field: keyof PropertyFormData, value: any) => void
+  next: () => void
+  prev: () => void
+}
+
+
+// =============================
+// Props spécifiques Step 4
+// =============================
+export interface StepPricingProps extends StepProps {
+  onSubmit: () => void
+}
+
+
+// =============================
+// Props écran de confirmation
+// =============================
+export interface Step5Succes {
+  data: PropertyFormData
+  onFinish: () => void
 }

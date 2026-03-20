@@ -3,10 +3,16 @@
     "development"
   ],
   "hints": {
-    "axe/aria": [
+    "axe/forms": [
       "default",
       {
-        "aria-valid-attr-value": "off"
+        "label": "off"
+      }
+    ],
+    "axe/name-role-value": [
+      "default",
+      {
+        "button-name": "off"
       }
     ]
   }

@@ -1,88 +1,3 @@
-// src/app/api/biens/route.ts
-
-/**
- * @swagger
- * /api/biens:
- *   post:
- *     tags:
- *       - Biens
- *     summary: Création d'un nouveau bien immobilier
- *     description: Permet à un utilisateur authentifié (admin, agent, owner...) de créer un bien immobilier.
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         multipart/form-data:
- *           schema:
- *             type: object
- *             required:
- *               - title
- *               - description
- *               - price
- *               - priceType
- *               - type
- *               - offerType
- *               - city
- *               - neighborhood
- *               - images
- *             properties:
- *               title:
- *                 type: string
- *                 example: "Villa moderne à Bastos"
- *               description:
- *                 type: string
- *                 example: "Très belle villa avec piscine"
- *               price:
- *                 type: number
- *                 example: 250000000
- *               priceType:
- *                 type: string
- *                 enum: [VENTE, LOCATION_MENSUELLE, LOCATION_JOURNALIERE]
- *                 example: VENTE
- *               type:
- *                 type: string
- *                 enum: [APARTMENT, HOUSE, STUDIO, VILLA]
- *                 example: VILLA
- *               offerType:
- *                 type: string
- *                 enum: [VENTE, LOCATION, FURNISHED]
- *                 example: VENTE
- *               city:
- *                 type: string
- *                 example: "Yaounde"
- *               neighborhood:
- *                 type: string
- *                 example: "Bastos"
- *               rooms:
- *                 type: integer
- *                 example: 4
- *               bedrooms:
- *                 type: integer
- *                 example: 3
- *               bathrooms:
- *                 type: integer
- *                 example: 2
- *               surface:
- *                 type: number
- *                 example: 250
- *               images:
- *                 type: array
- *                 items:
- *                   type: string
- *                   format: binary
- *     responses:
- *       201:
- *         description: Bien créé avec succès
- *       400:
- *         description: Champ obligatoire manquant
- *       401:
- *         description: Non autorisé
- *       500:
- *         description: Erreur serveur
- */
-
-
 /**
  * @swagger
  * /api/biens:
@@ -90,75 +5,132 @@
  *     tags:
  *       - Biens
  *     summary: Recherche et filtrage des biens
- *     description: Permet de filtrer les biens par ville, quartier, type, offre, prix, nombre de pièces et recherche texte.
+ *     description: |
+ *       Permet de filtrer les biens immobiliers avec plusieurs critères dynamiques.
+ *       
+ *       🔐 Gestion des accès :
+ *       - Un utilisateur normal ne voit QUE ses propres biens
+ *       - Un admin peut voir tous les biens
+ *       - Un admin peut filtrer par userId pour voir les biens d’un utilisateur spécifique
+ *       
+ *       🔎 Filtres disponibles :
+ *       - recherche texte (titre + description)
+ *       - localisation (ville, quartier)
+ *       - type de bien et type d’offre
+ *       - nombre de pièces
+ *       - disponibilité
+ *       - plage de prix
+ *       - utilisateur propriétaire (admin uniquement)
+ *
  *     security:
  *       - bearerAuth: []
+ *
  *     parameters:
  *       - in: query
  *         name: search
  *         schema:
  *           type: string
+ *         description: Recherche dans le titre et la description
  *         example: villa
+ *
  *       - in: query
  *         name: city
  *         schema:
  *           type: string
  *         example: Yaounde
+ *
  *       - in: query
  *         name: neighborhood
  *         schema:
  *           type: string
  *         example: Bastos
+ *
  *       - in: query
  *         name: type
  *         schema:
  *           type: string
  *           enum: [APARTMENT, HOUSE, STUDIO, VILLA]
  *         example: VILLA
+ *
  *       - in: query
  *         name: offerType
  *         schema:
  *           type: string
  *           enum: [VENTE, LOCATION, FURNISHED]
  *         example: VENTE
+ *
  *       - in: query
  *         name: status
  *         schema:
  *           type: string
  *           enum: [available, unavailable]
+ *         description: Filtrer selon disponibilité
  *         example: available
+ *
  *       - in: query
  *         name: rooms
  *         schema:
  *           type: integer
  *         example: 4
+ *
  *       - in: query
  *         name: minPrice
  *         schema:
  *           type: number
  *         example: 1000000
+ *
  *       - in: query
  *         name: maxPrice
  *         schema:
  *           type: number
  *         example: 5000000
+ *
+ *       - in: query
+ *         name: userId
+ *         schema:
+ *           type: string
+ *         description: |
+ *           Filtrer les biens par propriétaire.
+ *           ⚠️ Accessible uniquement aux administrateurs.
+ *         example: "65f1a2c4e12ab34d56789abc"
+ *
  *       - in: query
  *         name: page
  *         schema:
  *           type: integer
  *         example: 1
+ *
  *       - in: query
  *         name: limit
  *         schema:
  *           type: integer
  *         example: 10
+ *
  *     responses:
  *       200:
  *         description: Résultats de recherche
- *       400:
- *         description: Paramètres invalides
+ *         content:
+ *           application/json:
+ *             examples:
+ *               success:
+ *                 summary: Résultat avec données
+ *                 value:
+ *                   properties: []
+ *                   total: 25
+ *                   page: 1
+ *                   limit: 10
+ *
+ *       403:
+ *         description: Accès refusé (user essaie d'accéder aux biens d’un autre)
+ *         content:
+ *           application/json:
+ *             example:
+ *               status: 403
+ *               message: "Accès refusé"
+ *
  *       401:
  *         description: Non autorisé
+ *
  *       500:
  *         description: Erreur serveur
  */
@@ -170,7 +142,8 @@ import { apiResponse } from "@/lib/api-response";
 import { authMiddleware } from "@/middlewares/auth-middleware";
 import { handlePropertyFormData, PropertyFormDataResult } from "@/utils/handle-property-formData";
 import { roleMiddleware } from "@/middlewares/role-middleware";
-import { UserRole } from "@prisma/client";
+import { USER_ROLE_ENUM } from "@/types/enums";
+
 
 // -- Creer les Bien --
 export async function POST(req: NextRequest) {
@@ -179,7 +152,7 @@ export async function POST(req: NextRequest) {
     const authError = authMiddleware(req);
     if (authError) return authError;
     const roleError = roleMiddleware(
-      [UserRole.admin, UserRole.agency, UserRole.agent, UserRole.owner, UserRole.property_manager, UserRole.prospector]
+      [USER_ROLE_ENUM.admin, USER_ROLE_ENUM.agency, USER_ROLE_ENUM.agent, USER_ROLE_ENUM.owner, USER_ROLE_ENUM.property_manager, USER_ROLE_ENUM.prospector]
     )(req as any)
     if (roleError) return roleError
 
@@ -282,23 +255,25 @@ export async function GET(req: NextRequest) {
     const rooms = searchParams.get("rooms");
     const minPrice = searchParams.get("minPrice");
     const maxPrice = searchParams.get("maxPrice");
+    const userIdQuery = searchParams.get("userId");
 
     if (city) filters.city = city;
     if (neighborhood) filters.neighborhood = neighborhood;
     if (type) filters.type = type;
     if (offerType) filters.offerType = offerType;
     if (rooms) filters.rooms = parseInt(rooms);
+
     if (status === "available") filters.isAvailable = true;
     if (status === "unavailable") filters.isAvailable = false;
 
-    // Filtre prix
+    // Prix
     if (minPrice || maxPrice) {
       filters.price = {};
       if (minPrice) filters.price.gte = parseFloat(minPrice);
       if (maxPrice) filters.price.lte = parseFloat(maxPrice);
     }
 
-    // Recherche texte (titre + description)
+    // Recherche texte
     if (search) {
       filters.OR = [
         { title: { contains: search, mode: "insensitive" } },
@@ -306,9 +281,24 @@ export async function GET(req: NextRequest) {
       ];
     }
 
-    // Par défaut, un utilisateur ne voit que ses biens
-    if (currentUser?.role !== UserRole.admin) {
-      filters.userId = currentUser?.id;
+    // LOGIQUE USER / ADMIN
+
+    if (currentUser?.role === USER_ROLE_ENUM.admin) {
+      // admin peut filtrer par n'importe quel user
+      if (userIdQuery) {
+        filters.userId = userIdQuery;
+      }
+    } else {
+      // user normal :
+      if (userIdQuery && userIdQuery !== currentUser.id) {
+        return apiResponse({
+          status: 403,
+          message: "Accès refusé",
+        });
+      }
+
+      // sinon il voit seulement ses biens
+      filters.userId = currentUser.id;
     }
 
     const [properties, total] = await Promise.all([

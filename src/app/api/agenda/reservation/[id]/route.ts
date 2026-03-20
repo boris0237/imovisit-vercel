@@ -5,7 +5,7 @@
  *     tags:
  *       - Agenda
  *     summary: Récupérer une réservation
- *     description: Permet de récupérer une réservation précise par son ID.
+ *     description: Récupère une réservation précise par son ID.
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -18,18 +18,49 @@
  *     responses:
  *       200:
  *         description: Réservation récupérée avec succès
- *       404:
- *         description: Réservation introuvable
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                 propertyId:
+ *                   type: string
+ *                 ownerId:
+ *                   type: string
+ *                 clientId:
+ *                   type: string
+ *                 date:
+ *                   type: string
+ *                   format: date
+ *                 startTime:
+ *                   type: string
+ *                 endTime:
+ *                   type: string
+ *                 visitType:
+ *                   type: string
+ *                   enum: [in_person, remote]
+ *                 visitContext:
+ *                   type: string
+ *                   nullable: true
+ *                 status:
+ *                   type: string
+ *                   enum: [pending, confirmed, cancelled]
  *       401:
  *         description: Non autorisé
+ *       404:
+ *         description: Réservation introuvable
  *       500:
- *         description: Erreur serveur
+ *         description: Erreur interne du serveur
  *
  *   patch:
  *     tags:
  *       - Agenda
  *     summary: Mettre à jour une réservation
- *     description: Permet de modifier une réservation. Vérifie les chevauchements avec autres réservations et exceptions.
+ *     description: >
+ *       Modifie une réservation existante. Les champs non fournis conservent leur valeur actuelle.
+ *       Vérifie les exceptions de disponibilité (400) et les conflits avec d'autres réservations (409) avant d'appliquer la modification.
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -46,37 +77,79 @@
  *           schema:
  *             type: object
  *             properties:
- *               propertyId:
- *                 type: string
  *               date:
  *                 type: string
- *                 format: date-time
+ *                 format: date
+ *                 example: "2025-06-15"
+ *                 description: Nouvelle date (YYYY-MM-DD)
  *               startTime:
  *                 type: string
  *                 example: "13:30"
+ *                 description: Nouvelle heure de début (HH:MM)
  *               endTime:
  *                 type: string
  *                 example: "14:30"
+ *                 description: Nouvelle heure de fin (HH:MM)
+ *               visitType:
+ *                 type: string
+ *                 enum: [in_person, remote]
+ *                 description: Type de visite
+ *               visitContext:
+ *                 type: string
+ *                 nullable: true
+ *                 description: Contexte de la visite
  *               status:
  *                 type: string
  *                 enum: [pending, confirmed, cancelled]
+ *                 description: Statut de la réservation
  *     responses:
  *       200:
  *         description: Réservation mise à jour avec succès
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                 propertyId:
+ *                   type: string
+ *                 ownerId:
+ *                   type: string
+ *                 clientId:
+ *                   type: string
+ *                 date:
+ *                   type: string
+ *                   format: date
+ *                 startTime:
+ *                   type: string
+ *                 endTime:
+ *                   type: string
+ *                 visitType:
+ *                   type: string
+ *                   enum: [in_person, remote]
+ *                 visitContext:
+ *                   type: string
+ *                   nullable: true
+ *                 status:
+ *                   type: string
+ *                   enum: [pending, confirmed, cancelled]
  *       400:
- *         description: Créneau déjà réservé ou invalide
- *       404:
- *         description: Réservation introuvable
+ *         description: Plage horaire non disponible (exception de disponibilité)
  *       401:
  *         description: Non autorisé
+ *       404:
+ *         description: Réservation introuvable
+ *       409:
+ *         description: Conflit — cette plage horaire est déjà réservée
  *       500:
- *         description: Erreur serveur
+ *         description: Erreur interne du serveur
  *
  *   delete:
  *     tags:
  *       - Agenda
  *     summary: Supprimer une réservation
- *     description: Permet de supprimer une réservation par son ID.
+ *     description: Supprime définitivement une réservation par son ID.
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -89,12 +162,10 @@
  *     responses:
  *       200:
  *         description: Réservation supprimée avec succès
- *       404:
- *         description: Réservation introuvable
  *       401:
  *         description: Non autorisé
  *       500:
- *         description: Erreur serveur
+ *         description: Erreur interne du serveur
  */
 
 
@@ -132,30 +203,72 @@ export async function GET(req: NextRequest, { params }: Params) {
   }
 }
 
-// PATCH
+
+// Mofidier une reservation
 export async function PATCH(req: NextRequest, { params }: Params) {
   try {
     const authError = authMiddleware(req);
     if (authError) return authError;
 
     const body = await req.json();
+    const { date, startTime, endTime, ...rest } = body;
+
+    const existing = await prisma.reservation.findUnique({
+      where: { id: params.id }
+    });
+    if (!existing)
+      return apiResponse({ status: 404, message: "Réservation introuvable" });
+
+    // Fusionner les nouvelles valeurs avec les anciennes (si non fournies)
+    const newDate = date ? new Date(date) : existing.date;
+    const newStart = startTime ?? existing.startTime;
+    const newEnd = endTime ?? existing.endTime;
+
+    const timeFilter = {
+      AND: [{ startTime: { lt: newEnd } }, { endTime: { gt: newStart } }]
+    };
+
+    // Vérifier les exceptions de disponibilité
+    const exception = await prisma.availabilityException.findFirst({
+      where: {
+        ownerId: existing.ownerId,
+        OR: [
+          { date: newDate, ...timeFilter },
+          { dateStart: { lte: newDate }, dateEnd: { gte: newDate } }
+        ]
+      }
+    });
+    if (exception)
+      return apiResponse({ status: 400, message: "Plage horaire non disponible" });
+
+    // Vérifier les conflits avec d'autres réservation
+    const conflict = await prisma.reservation.findFirst({
+      where: {
+        id: { not: params.id },
+        propertyId: existing.propertyId,
+        date: newDate,
+        status: { in: ["pending", "confirmed"] },
+        ...timeFilter
+      }
+    });
+    if (conflict)
+      return apiResponse({ status: 409, message: "Cette plage horaire est déjà réservée" });
 
     const updated = await prisma.reservation.update({
       where: { id: params.id },
       data: {
-        ...body,
-        date: body.date ? new Date(body.date) : undefined
+        ...rest,
+        date: newDate,
+        startTime: newStart,
+        endTime: newEnd
       }
     });
 
-    return apiResponse({
-      status: 200,
-      message: "Réservation mise à jour",
-      data: updated
-    });
+    return apiResponse({ status: 200, message: "Réservation mise à jour", data: updated });
 
   } catch (err: any) {
-    return apiResponse({ status: 500, message: err.message });
+    console.error("[PATCH /reservation]", err);
+    return apiResponse({ status: 500, message: "Erreur interne du serveur" });
   }
 }
 

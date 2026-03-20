@@ -1,10 +1,7 @@
 import type { Metadata } from "next";
-import { LanguageProvider } from '@/contexts/LanguageContext'
 import "./globals.css";
 import "./App.css";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { CalendarProvider } from "@/contexts/CalendarContext";
-import { Toaster } from "@/components/ui/sonner";
+import Providers from "@/components/Providers";
 
 
 export const metadata: Metadata = {
@@ -17,23 +14,19 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout(
+  {
+    children,
+  }: {
+    children: React.ReactNode
+  }) {
   return (
     <html lang="fr">
-      <CalendarProvider>
-        <AuthProvider>
-          <LanguageProvider>
-            <body className="antialiased">
-              {children}
-              <Toaster />
-            </body>
-          </LanguageProvider>
-        </AuthProvider>
-      </CalendarProvider>
+      <body className="antialiased">
+        <Providers>
+          {children}
+        </Providers>
+      </body>
     </html>
   )
 }

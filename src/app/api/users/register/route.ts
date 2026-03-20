@@ -98,11 +98,11 @@
 import { prisma } from "@/services/db";
 import bcrypt from "bcryptjs"
 import { apiResponse } from "@/lib/api-response"
-import { AuthProvider, UserRole } from "@prisma/client"
 import { authMiddleware } from "@/middlewares/auth-middleware"
 import { roleMiddleware } from "@/middlewares/role-middleware"
 import { stringify } from "querystring";
 import { validatePassword } from "@/utils/validate-password";
+import { AUTH_PROVIDER_ENUM, AuthProvider, USER_ROLE_ENUM } from "@/types/enums";
 
 
 
@@ -114,7 +114,7 @@ export async function GET(req: Request) {
     // Middleware auth
     const authError = authMiddleware(req as any)
     if (authError) return authError
-    const roleError = roleMiddleware([UserRole.admin])(req as any)
+    const roleError = roleMiddleware([USER_ROLE_ENUM.admin])(req as any)
     if (roleError) return roleError
 
     const url = new URL(req.url)
@@ -158,8 +158,8 @@ export async function POST(req: Request) {
       })
     }
     
-    if (authProvider === AuthProvider.local) {
-      if (authProvider === AuthProvider.local && !password) {
+    if (authProvider === AUTH_PROVIDER_ENUM.local) {
+      if (authProvider === AUTH_PROVIDER_ENUM.local && !password) {
         return apiResponse({
           status: 400,
           message: "Le mot de passe est obligatoire pour un compte local",
@@ -181,7 +181,7 @@ export async function POST(req: Request) {
     }
 
     let hashedPassword: string | null = null
-    if (authProvider === AuthProvider.local) {
+    if (authProvider === AUTH_PROVIDER_ENUM.local) {
       hashedPassword = await bcrypt.hash(password, 10)
     }
 

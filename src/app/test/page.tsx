@@ -6,8 +6,6 @@ import UpdateRegister from '@/forms/updateRegister';
 
 export default function test() {
   return (
-    <Modal title=' ' isOpen={true} closeOnClickOutside={false} onClose={() => {}} rounded={false} locked={false} >
-        <UpdateRegister />
-    </Modal>
+        <MyAvalability />
   );
 }

@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from 'react'
 import { useBrowserLanguage } from '@/hooks/useBrowserLanguage'
+import { Button } from '@/components/ui/button'
 
 interface LanguageDropdownProps {
   currentLanguage: string
@@ -46,11 +47,12 @@ export default function LanguageDropdown({
 
   return (
     <div className="relative">
-      <button
+      <Button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700  rounded-md hover:bg-gray-50 focus:outline-none focus"
+        className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white-700  rounded-md hover:bg-gray-50 focus:outline-none focus"
         aria-haspopup="true"
-        aria-expanded={isOpen}
+        aria-expanded={isOpen ? 'true' : 'false'}
       >
         <span>{getCurrentLanguageCode()}</span>
         <svg 
@@ -61,19 +63,20 @@ export default function LanguageDropdown({
         >
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
-      </button>
+      </Button>
 
       {isOpen && (
         <div className="absolute right-0 z-10 mt-2 w-48 origin-top-right bg-white border border-gray-200 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
           <div className="py-1">
             {languages.map((language) => (
               <button
+                type="button"
                 key={language.name}
                 onClick={() => handleLanguageSelect(language.code as 'fr' | 'en')}
                 className={`block w-full text-left px-4 py-2 text-sm ${
                   currentLanguage === language.code
                     ? 'bg-indigo-100 text-indigo-900'
-                    : 'text-gray-700 hover:bg-gray-100'
+                    : 'text-white-700 hover:bg-gray-100'
                 }`}
               >
                 {language.name}
