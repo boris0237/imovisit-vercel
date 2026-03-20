@@ -50,7 +50,7 @@ export default function LanguageDropdown({
       <Button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white-700  rounded-md hover:bg-gray-50 focus:outline-none focus"
+        className="flex bg-white items-center gap-2 px-3 py-2 text-sm font-medium text-white-700  rounded-md hover:bg-gray-50 focus:outline-none focus"
         aria-haspopup="true"
         aria-expanded={isOpen ? 'true' : 'false'}
       >
