@@ -10,6 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useRouter, useSearchParams } from 'next/navigation'
+import { Suspense } from 'react'
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { useDictionary } from '@/hooks/useDictionary';
@@ -17,7 +18,7 @@ import { useGoogleAuth } from '@/hooks/useGoogleAuth';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { useAuth } from '@/contexts/AuthContext';
 
-export default function Login() {
+function LoginPageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [showPassword, setShowPassword] = useState(false);
@@ -431,4 +432,12 @@ export default function Login() {
       <Footer />
     </div>
   );
+}
+
+export default function Login() {
+  return (
+    <Suspense fallback={null}>
+      <LoginPageInner />
+    </Suspense>
+  )
 }

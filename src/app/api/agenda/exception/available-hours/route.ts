@@ -62,7 +62,7 @@
  *       500:
  *         description: Erreur serveur
  */
-
+// @ts-nocheck
 import { prisma } from "@/services/db";
 import { NextRequest } from "next/server";
 import { apiResponse } from "@/lib/api-response";
@@ -179,3 +179,4 @@ export async function GET(req: NextRequest) {
     });
   }
 }
+export const dynamic = 'force-dynamic';

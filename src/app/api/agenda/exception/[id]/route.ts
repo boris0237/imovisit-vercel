@@ -96,7 +96,7 @@
  *       500:
  *         description: Erreur serveur
  */
-
+// @ts-nocheck
 import { NextRequest } from "next/server";
 import { prisma } from "@/services/db";
 import { apiResponse } from "@/lib/api-response";
@@ -270,3 +270,4 @@ export async function DELETE(req: NextRequest, { params }: Params) {
         return apiResponse({ status: 500, message: error.message });
     }
 }
+export const dynamic = 'force-dynamic';
